@@ -2,6 +2,8 @@
 
 Packages for computing with symmetric functions, and  combinatorics
 
+These are all work in progress, but some of these packages might be useful
+for those who prefers Mathematica over Sage.
 
 ## SymmetricFunctions.m
 
@@ -9,6 +11,8 @@ This is a package for working with symmetric functions.
 It has the standard bases, Jack and Macdonald polynomials, LLT polynomials,
 SchurP and SchurQ functions, the Hall inner product, plethysm 
 and the Delta operator.
+
+Compare with Stembridge's sf package for Maple.
 
 
 ## CombinatoricsUtil.m
