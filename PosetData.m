@@ -29,8 +29,6 @@ weight gives the multiplicity of the variables.";
 (***************** Switch to private context *********************************)
 Begin["Private`"];
 
-
-
 PosetPlot::usage = "PosetPlot[StrictEdges->{}, WeakEdges-{},EqualEdges->{}] plots the poset";
 
 Options[PosetPlot] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges -> {}};
