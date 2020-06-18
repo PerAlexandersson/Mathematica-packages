@@ -6,14 +6,16 @@ Packages for computing with symmetric functions, and  combinatorics
 ## SymmetricFunctions.m
 
 This is a package for working with symmetric functions.
-It has the standard bases, Jack and Macdonald polynomials,
-the Hall inner product, plethysm and the Delta operator.
+It has the standard bases, Jack and Macdonald polynomials, LLT polynomials,
+SchurP and SchurQ functions, the Hall inner product, plethysm 
+and the Delta operator.
 
 
 ## CombinatoricsUtil.m
 
-Functions for permutation statistics, partitions, q-analogs,
-and various helper functions. It also has the Kostant partition function implemented.
+Functions for permutation statistics (major index, inversions, Bruhat order, etc.), 
+compositions, partitions, q-analogs, the Foata map,
+and various helper functions.
 
 
 ## NewTableaux.m

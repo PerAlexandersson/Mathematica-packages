@@ -53,10 +53,8 @@ OrthogonalSchurSymmetric;
 
 PetrieSymmetric;
 
-
-(* Simple polynomial functions *)
+(* Simple polynomial functions. This should be in a different package. *)
 SingleMonomial;
-
 
 DeltaOperator;
 NablaOperator;
@@ -802,10 +800,6 @@ SingleMonomial /: Format[SingleMonomial[a_List, x_]] :=
     Row[{Subscript["X", r], "(", ToString@x, ")"}]]];
 
 
-	
-	
-	
-	
 
 
 (****************************************************************************************************)
@@ -816,7 +810,8 @@ SingleMonomial /: Format[SingleMonomial[a_List, x_]] :=
 
 	
 	
-	
+DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
+
 DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
     (* Monomials defined by shape. *)
     
@@ -854,10 +849,8 @@ DeltaPrimOperator[f_, g_, q_, t_] :=
     Together[
      inH /. "hh"[lam_List] :> 
        val[lam] MacdonaldHSymmetric[lam, q, t]]
-    ];
-	
-	
-	
+];
+
 
 End[(* End private *)];
 EndPackage[];
