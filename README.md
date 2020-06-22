@@ -12,6 +12,9 @@ It has the standard bases, Jack and Macdonald polynomials, LLT polynomials,
 SchurP and SchurQ functions, the Hall inner product, plethysm 
 and the Delta operator.
 
+This has support for multiple alphabets.
+
+
 Compare with Stembridge's sf package for Maple.
 
 

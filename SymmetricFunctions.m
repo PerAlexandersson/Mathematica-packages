@@ -4,10 +4,13 @@
 (* TODO --- make change-of-basis accept several alphabets. *)
 (* TODO Make formatting compatible with TEX *)
 
+
 Clear["SymmetricFunctions`*"];
 BeginPackage["SymmetricFunctions`"];
 Needs["CombinatoricsUtil`"];
 Needs["NewTableaux`"];
+
+KostkaCoefficient;
 
 ChangeSymmetricAlphabet;
 MonomialSymmetric;
@@ -62,6 +65,40 @@ DeltaPrimOperator;
 
 
 Begin["Private`"];
+
+
+(* This is based on Macdonald, p.327, and is extremely fast. *)
+KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
+
+KostkaCoefficient[mu_List, mu_List, a_: 1] := 1;
+KostkaCoefficient[mu_List, nu_List, a_: 1] := 0 /; (! PartitionDominatesQ[nu, mu]);
+KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = Together[With[
+	{n = Length@mu,
+	ee = Function[{ll}, 
+		a PartitionN[ConjugatePartition@ll] - PartitionN[ll]
+		]
+	},
+
+	1/(ee[lam]-ee[mu])
+	Sum[
+		With[{mu2 =
+			Sort[DeleteCases[
+			ReplacePart[mu, {i -> mu[[i]] + r, j -> mu[[j]] - r}], 0],
+			Greater]
+			},
+			
+			(mu[[i]] - mu[[j]] + 2 r) KostkaCoefficient[lam, mu2, a]
+		]
+	, {i, n}
+	,{j, i + 1, n}
+	,{r, mu[[j]]}
+	]
+]];
+
+
+
+(********************************************************************)
+
 
 
 ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[ 
@@ -141,20 +178,21 @@ PowerSumSymmetric[lam_List, x_: None] := PowerSumSymmetric[lam, x] = Expand[Prod
 (******************************************************)
 
 HSYMBOLIC::usage = "HSYMBOLIC represents the complete homogeneous symmetric function.";
-(* TODO -- Use this for Schur *)
+(* TODO -- Use this for Schur. The ideas is to reuse for different alphabets. *)
 SymbolicJacobiTrudi[{lam_, mu_}, hh_:HSYMBOLIC] := SymbolicJacobiTrudi[{lam, mu}, hh] =
-	Module[{mup = PadRight[mu, Length@lam], i, j, jtDet},
+Module[{mup = PadRight[mu, Length@lam], i, j, jtDet},
 		jtDet = Expand@If[Length[DeleteCases[mu, 0]] > Length[lam],
 					0,
 					Det@Table[
 						hh[lam[[i]] - mup[[j]] - i + j],
 					{i, Length@lam}, {j, Length@lam}]];
 		Expand[jtDet]
-	];
+];
 
 (* Uses the Jacobi--Trudi identity. Also includes skew version. *)
 
 SchurSymmetric[lam_List, x_: None] := SchurSymmetric[{lam, {}}, x];
+
 
 (* Slinky rule. *)
 SchurSymmetric[{lam_List, {}}, x_: None] := With[{slr=CompositionSlinky[lam]},
@@ -164,7 +202,8 @@ SchurSymmetric[{lam_List, {}}, x_: None] := With[{slr=CompositionSlinky[lam]},
 	]
 ] /; Not[OrderedQ[Reverse@lam]];
 
-SchurSymmetric[{lam_List, mu_List}, x_: None] := 0 /; ! PartitionLessEqualQ[mu, lam];
+
+SchurSymmetric[{lam_List, mu_List}, x_: None] := 0 /; !PartitionLessEqualQ[mu, lam];
 SchurSymmetric[{lam_List, mu_List}, x_: None] := SchurSymmetric[{lam, mu}, x] = Module[
 {i, j, jtDet, bb, mup = PadRight[mu, Length@lam]},
 
@@ -177,8 +216,16 @@ jtDet[ll_, mm_, d_] := Expand[Det@Table[
 
 (* Use the smallest matrix. *)
 Expand@Which[
-	Length[lam]==0,
-		1,
+	Length[lam]==0, 
+		1
+	,
+	
+	(* In the non-skew case, use the quick monomial recursion for Kostka coefficients. *)
+	Tr[mu]==0,
+		Sum[
+			KostkaCoefficient[lam, nu,1] MonomialSymmetric[nu,x]
+		,{nu,IntegerPartitions[Tr@lam]}]
+	,
 	Length[lam] >= lam[[1]],
 		With[{d = lam[[1]]},
 		jtDet[

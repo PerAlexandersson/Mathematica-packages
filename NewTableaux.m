@@ -56,6 +56,8 @@ CrystalFi;
 CrystalSi;
 
 
+
+
 Begin["Private`"];
 
 SYTSize::usage = "SYTSize[tab] returns the number of boxes in the tableau.";
@@ -223,6 +225,7 @@ SSYTKPromotion[
  YoungTableau[{{1, 1, 2, 3}, {2, 3, 5, 7}, {7, 7}}]);
 
 
+(* This is broken! it has some issues, as it is not a bijection! *)
 SSYTKPromotionInverse::usage = "SSYTKPromotionInverse[ssyt,k] performs the inverse of k-promotion. This also works on skew shapes!";
 SSYTKPromotionInverse[ssyt_YoungTableau, k_Integer] := Module[
    {val, localMove, allMove, DOT, out, dots},
@@ -235,7 +238,7 @@ SSYTKPromotionInverse[ssyt_YoungTableau, k_Integer] := Module[
      IntegerQ[tt[[r, c]]], tt[[r, c]],
      True, -1
      ];
-   
+
    (* We have a list of dots to move.
    Performs a move and returns the new tab and new dotList.
     *)
@@ -248,7 +251,6 @@ SSYTKPromotionInverse[ssyt_YoungTableau, k_Integer] := Module[
      Which[
       val[tt, rc] =!= -1, {tt, rest},
       (* Cannot swap (is in a corner) *)
-      
       val[tt, lt] == -1 && val[tt, up] == -1, {tt, rest},
       (* Swap up. *)
       1 <= val[tt, up] >= val[tt, lt],
@@ -262,7 +264,7 @@ SSYTKPromotionInverse[ssyt_YoungTableau, k_Integer] := Module[
       True, 
       Print["Bad outcome"]; {tt, rest}
       ]];
-   
+
    out = If[
      (* If max entry is less than k, then increase all entries by 1. *)
 

@@ -27,6 +27,7 @@ PackedWords;
 PartitionList;
 ChargeWordDecompose;
 WordCharge;
+WordCocharge;
 
 MultiSubsets;
 
@@ -232,6 +233,9 @@ ChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
 
 WordCharge::usage = "WordCharge[w] returns the charge of a word with partition weight.";
 WordCharge[w_List]:=Tr[PermutationCharge/@ChargeWordDecompose[w]];
+
+WordCocharge::usage = "WordCocharge[w] returns the cocharge of a word with partition weight.";
+WordCocharge[w_List]:=Tr[PermutationCocharge/@ChargeWordDecompose[w]];
 
 
 
