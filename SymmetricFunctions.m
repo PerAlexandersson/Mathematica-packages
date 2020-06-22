@@ -35,6 +35,9 @@ SymmetricFunctionToPolynomial;
 PrincipalSpecialization;
 Plethysm;
 
+JackPSymmetric;
+JackJSymmetric;
+
 HallLittlewoodMSymmetric;
 HallLittlewoodTSymmetric;
 
@@ -488,6 +491,19 @@ ToSchurBasis[Plethysm[SchurSymmetric[{4}], SchurSymmetric[{2}]],
 	ss[{8}] + ss[{4, 4}] + ss[{6, 2}] + ss[{4, 2, 2}] + 
 	ss[{2, 2, 2, 2}]
 ];
+
+
+
+JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
+JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
+	KostkaCoefficient[lam,mu,a] MonomialSymmetric[mu,x]
+,{mu,IntegerPartitions[Tr@lam]}];
+
+JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization of Jack functions.";
+JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Product[
+	a*PartitionArm[lam,s] + PartitionLeg[lam,s]+1
+,{s,ShapeBoxes[lam]}]];
+
 
 (* This is not the modified Hall-Littlewood! *)
 (*
