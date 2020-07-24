@@ -8,7 +8,7 @@ BeginPackage["UnicellularChromatics`"];
 
 Needs["SymmetricFunctions`"];
 Needs["CombinatoricsUtil`"];
-Needs["NonCrossingMatchings`"]; (* For area plot *)
+Needs["CatalanObjects`"]; (* For area plot *)
 
 
 AreaLists;

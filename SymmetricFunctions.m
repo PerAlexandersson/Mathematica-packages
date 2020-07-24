@@ -4,13 +4,13 @@
 (* TODO --- make change-of-basis accept several alphabets. *)
 (* TODO Make formatting compatible with TEX *)
 
-
 Clear["SymmetricFunctions`*"];
 BeginPackage["SymmetricFunctions`"];
 Needs["CombinatoricsUtil`"];
 Needs["NewTableaux`"];
 
 KostkaCoefficient;
+InverseKostkaCoefficient;
 
 ChangeSymmetricAlphabet;
 MonomialSymmetric;
@@ -82,7 +82,7 @@ KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = T
 		a PartitionN[ConjugatePartition@ll] - PartitionN[ll]
 		]
 	},
-
+	
 	1/(ee[lam]-ee[mu])
 	Sum[
 		With[{mu2 =
@@ -100,35 +100,78 @@ KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = T
 ]];
 
 
+InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the inverse Kostka coefficient.";
 
+InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
+InverseKostkaCoefficient[lam_List, mu_List] := InverseKostkaKHelper[Reverse@lam, Reverse@mu];
+
+(* The convention in https://doi.org/10.1080/03081089008817966
+uses partitions with parts ordered increasingly, which makes notation easier.
+*)
+Clear[InverseKostkaKHelper];
+InverseKostkaKHelper[mu_List, mu_List] := 1;
+InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
+InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
+   -Sum[
+     With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
+      If[pos == {}, 0
+       , (-1)^(j)
+        InverseKostkaKHelper[
+         (* Remove a part equal to p *)
+         
+         ReplacePart[lam, pos -> Nothing]
+         ,
+         (* Subtract 1 from the first j-1 entries, 
+         and drop jth entry *)
+         
+         DeleteCases[
+          MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
+         ]
+       ]
+      ]
+     , {j, Length@mu}];
 (********************************************************************)
-
 
 
 ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[ 
 	to === from,
 	expr,
 	(expr /. MonomialSymmetric[mu__, from] :> MonomialSymmetric[mu, to])];
+	
+	
+(* This is slow! Must update --- make into compiled function if possible. *)
 
-
-MonomialProduct[lam_List, mu_List, x_: None] := Module[{n = Tr[lam] + Tr[mu], dim, lamp, mup, products, nu, mult},
+MonomialProduct[lam_List, mu_List, x_: None] := Module[
+	{n = Length[lam] + Length[mu], dim, lamp, mup, products, nu, mult, dimCoeff},
+	
 	(*
 	https://math.stackexchange.com/questions/395842/
 	decomposition-of-products-of-monomial-symmetric-polynomials-into-
 	sums-of-them
 	*)
-	dim[p_] := Times @@ (Last[#]! & /@ Tally[PadRight[p, n]]);
-
+	
+	dim[p_List] := Times @@ (Last[#]! & /@ Tally[PadRight[p, n]]);
+	
 	lamp = PadRight[lam, n];
 	mup = PadRight[mu, n];
+	
+	(* Here, decide which partition has fewest permutations? *)
+	If[(Multinomial@@(Last /@ Tally[lamp])) > (Multinomial@@(Last /@ Tally[mu])),
+		dimCoeff = (dim@lam);
+	,
+		{lamp,mup} = {mup,lamp};
+		dimCoeff = (dim@mu);
+	];
+	
+	(* TODO: THIS NOT THAT EFFICIENT IT SEEMS! *)
 	products = 
-		Sort[DeleteCases[#, 0], Greater] & /@ 
-		Table[lamp + muPerm, {muPerm, Permutations@mup}];
-	Sum[
-		{nu, mult} = term;
-		((dim@nu)/(dim@lam)) mult
-		MonomialSymmetric[nu, x]
-		, {term, Tally@products}]
+		Table[
+			Sort[DeleteCases[lamp + muPerm, 0], Greater]
+		, {muPerm, Permutations@mup}];
+	
+	Total[
+		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1])  & @@@ (Tally@products)
+	]
 ];
 
 
@@ -193,33 +236,37 @@ Module[{mup = PadRight[mu, Length@lam], i, j, jtDet},
 		Expand[jtDet]
 ];
 
-(* Uses the Jacobi--Trudi identity. Also includes skew version. *)
 
+(* Uses the Jacobi--Trudi identity, and quick Kostka coeffs. Also includes skew version. *)
 SchurSymmetric[lam_List, x_: None] := SchurSymmetric[{lam, {}}, x];
-
 
 (* Slinky rule. *)
 SchurSymmetric[{lam_List, {}}, x_: None] := With[{slr=CompositionSlinky[lam]},
-	If[slr[[2]]==0, 
+	If[slr[[2]]==0,
 	0, 
-	slr[[2]] SchurSymmetric[{slr[[1]], {}}, x]
+	slr[[2]]*SchurSymmetric[{slr[[1]], {}}, x]
 	]
 ] /; Not[OrderedQ[Reverse@lam]];
 
 
-SchurSymmetric[{lam_List, mu_List}, x_: None] := 0 /; !PartitionLessEqualQ[mu, lam];
-SchurSymmetric[{lam_List, mu_List}, x_: None] := SchurSymmetric[{lam, mu}, x] = Module[
-{i, j, jtDet, bb, mup = PadRight[mu, Length@lam]},
-
-(* Jacobi--Trudi determinant *)
-jtDet[ll_, mm_, 0] := 1;
-jtDet[ll_, mm_, d_] := Expand[Det@Table[
-	bb[ll[[i]] - mm[[j]] - i + j],
-	{i, d},
-	{j, d}]];
+(* Memoization seem to have an issue when using default parameters(?) *)
+SchurSymmetric[{lam_, mu_}]:=SchurSymmetric[{lam, mu}, None];
+SchurSymmetric[{lam_, mu_}, x_] := SchurSymmetric[{lam, mu}, x] = Module[
+	{i, j, jtDet, bb, mup = PadRight[mu, Length@lam]},
+	
+	(* Jacobi--Trudi determinant *)
+	jtDet[ll_, mm_, 0] := 1;
+	jtDet[ll_, mm_, d_] := Expand[Det@Table[
+		bb[ll[[i]] - mm[[j]] - i + j],
+		{i, d},
+		{j, d}]];
 
 (* Use the smallest matrix. *)
 Expand@Which[
+	!PartitionLessEqualQ[mu, lam],
+		0
+	,
+	
 	Length[lam]==0, 
 		1
 	,
@@ -245,7 +292,7 @@ Expand@Which[
 ];
 
 
-(* Util for converting between bases. Should be private. *)
+(* Private Util function for converting between bases. *)
 
 PartitionIndexedBasisRule[size_Integer, basisSymb_, toBasis_, 
 	monom_: MonomialSymmetric, x_: None] := 
@@ -264,6 +311,7 @@ PartitionIndexedBasisRule[size_Integer, basisSymb_, toBasis_,
 		Coefficient[toBasis[p], monom[q] ], {q, parts}]
 		, {p, parts}];
 	
+	(* Here we compute the matrix. *)
 	imat = Inverse[mat];
 	
 	Table[
@@ -368,19 +416,20 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon, pp}
 		ell = Length@mu},
 		Product[k - j, {j, 0, ell - 1}]/(Times @@ (ppc!))
 	];
-
+	
 	Which[
-		k == Infinity,
-		ToPowerSumBasis[poly, pp, x] /. 
-		pp[lam_] :> 1/Product[1 - q^i, {i, lam}],
+		k === Infinity,
+			ToPowerSumBasis[poly, pp, x] /. 
+			pp[lam_] :> 1/Product[1 - q^i, {i, lam}],
 		
-		q === 1,(* This is quite efficient. *)
 		
-		Expand[poly] /. MonomialSymmetric[lam_, x] :> psMon[lam],
+		(* This is quite efficient. *)
+		q === 1,
+			Expand[poly] /. MonomialSymmetric[lam_, x] :> psMon[lam],
 		
 		True,
-		ToPowerSumBasis[poly, pp, x] /. 
-		pp[lam_] :> Product[Sum[q^(i (j - 1)), {j, k}], {i, lam}]
+			ToPowerSumBasis[poly, pp, x] /. 
+			pp[lam_] :> Product[Sum[q^(i (j - 1)), {j, k}], {i, lam}]
 		]
 ];
 

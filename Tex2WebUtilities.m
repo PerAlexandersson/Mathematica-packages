@@ -15,46 +15,52 @@ where \begin{array} or \begin{tabular} matrices have been converted to html tabl
 (* This has color support. *)
 YoungTableauToHTMLRule::usage = "YoungTableauToHTMLRule[] returns a rule where \begin{youngtab} matrices have been converted to html tables.";
 
+(* This is deprecated? *)
 BibliographyHTMLRules::usage = "BibliographyHTMLRules[.bblFile-as-string] returns the bibliographic data in .bbl file as list of rules.";
 
-CreateBibliography::usage = "BibliographyHTMLRules[.bibFile-as-string] returns the bibliographic data in .bib file as list of associations.";
+
+CreateBibliography::usage = "CreateBibliography[.bibFile-as-string] returns the bibliographic data in .bib file as list of associations.";
 
 Doi2Bib;
 
 MemoizedImport;
 
+
 (***************** Switch to private context *********************************)
 Begin["Private`"];
 
 TeXToUTF8Rule[] := List[
-   "{\\'{}}" -> "\[CloseCurlyQuote]",
-   "{\\`{a}}" -> "à",
-   "{\\'{a}}" -> "á",
-   "{\\\"{a}}" -> "ä",
-   "{\\'{c}}" -> "ć",
-   "{\\c{c}}" -> "ç",
-   "{\\'{e}}" -> "é",
-   "{\\`{e}}" -> "è",
-   "{\\^{e}}" -> "ê",
-   "{\\k{e}}" -> "ę",
-   "{\\'{E}}" -> "É",
-   "{\\u{g}}" -> "ğ",
-   "{\\`{i}}" -> "ì",
-   "{\\\"{i}}" -> "ï",
-   "{\\l}" -> "ł",
-   "{\\'{o}}" -> "ó",
-   "{\\^{o}}" -> "ô",
-   "{\\\"{o}}" -> "ö",
-   "{\\\"{O}}" -> "Ö",
-   "{\\'{s}}" -> "ś",
-   "{\\v{s}}" -> "š",
-   "{\\'{S}}" -> "Ś",
-   "{\\v{z}}" -> "ž",
-   "{\\`{u}}" -> "ù",
-   "{\\'{u}}" -> "ú",
-   "{\\\"{u}}" -> "ü",
-   "{\\\"{U}}" -> "Ü"
-   ];
+	"{\\'{}}" -> "\[CloseCurlyQuote]",
+	"{\\`{a}}" -> "à",
+	"{\\'{a}}" -> "á",
+	"{\\\"{a}}" -> "ä",
+	"{\\'{c}}" -> "ć",
+	"{\\c{c}}" -> "ç",
+	"{\\'{e}}" -> "é",
+	"{\\`{e}}" -> "è",
+	"{\\^{e}}" -> "ê",
+	"{\\k{e}}" -> "ę",
+	"{\\'{E}}" -> "É",
+	"{\\u{g}}" -> "ğ",
+	"{\\`{i}}" -> "ì",
+	"{\\i}" -> "ı",
+	"{\\\"{i}}" -> "ï",
+	"{\\l}" -> "ł",
+	"{\\'{o}}" -> "ó",
+	"{\\^{o}}" -> "ô",
+	"{\\\"{o}}" -> "ö",
+	"{\\\"{O}}" -> "Ö",
+	"{\\'{s}}" -> "ś",
+	"{\\v{s}}" -> "š",
+	"{\\'{S}}" -> "Ś",
+	"{\\v{z}}" -> "ž",
+	"{\\`{u}}" -> "ù",
+	"{\\'{u}}" -> "ú",
+	"{\\\"{u}}" -> "ü",
+	"{\\\"{U}}" -> "Ü",
+	"\\textasciitilde "->"~"
+];
+
 UTF8ToTeXRule[] := Reverse /@ TeXToUTF8Rule[];
 
 
@@ -292,14 +298,14 @@ YoungTableauToHTMLRule[] := Module[{ytableaushortToHTML, youngtabToHTML},
 
 (* Process bibFile text and generate replacement rules. *)
 (* TODO - HANDLE MATH? *)
+(* IS THIS USED? NO? *)
 BibliographyHTMLRules[textBlob_String] := Module[
   {str, citations, citationToDataList, citeDatatoHTML, cleanStuff, 
     out},
   
 	str = textBlob;
 	str = StringReplace[str, {
-	"\\newblock" :> "===",  (* 
-	NOTE WE SEPARATE DATA TEMPORARILY USING === *)
+	"\\newblock" :> "===",  (* NOTE WE SEPARATE DATA TEMPORARILY USING === *)
 	
 	"\\end{thebibliography}" :> "",
 	"{\\etalchar{+}}" :> "+",
@@ -312,9 +318,10 @@ BibliographyHTMLRules[textBlob_String] := Module[
 	"\\phantom{x}" :> " ",
 	"--" :> "\[Dash]",
 	"~":>" ",
-	"\\textasciitilde"~~ (WhitespaceCharacter ..) :> "~",
+	"\\textasciitilde"~~(WhitespaceCharacter..) :> "~",
 	"\n" :> ""
 	}];
+	
   
   (* Format url data, and journal *)
   str = StringReplace[str, {
@@ -405,7 +412,7 @@ BibliographyHTMLRules[textBlob_String] := Module[
         "CiteToLinkRule" -> toLinkRule
        }
     ];
-  
+
   (* Process all pieces. *)
   
   out = (citeDatatoHTML @@ citationToDataList[#]) & /@ citations;
@@ -592,7 +599,7 @@ BibTeXURL[entry_Association] := Module[{eprint, doi, url, theURL},
     url=!=Missing, url,
     True, Missing
     ]
-   ];
+];
 
 AuthorsToString[authListIn_List] := Module[{authList},
    authList = (StringJoin @@ Riffle[#, " "]) & /@ authListIn;

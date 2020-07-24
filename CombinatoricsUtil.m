@@ -65,7 +65,6 @@ AbacusForm;
 
 KostantPartitionFunction;
 
-
 SubsetTuples;
 TupleDescents;
 TupleMajorIndex;
@@ -93,6 +92,7 @@ Is321AvoidingQ;
 
 PermutationAllCycles;
 PermutationType;
+PermutationCycleMap;
 ReducedWord;
 PermutationFromWord;
 PermutationCode;
@@ -695,6 +695,15 @@ PermutationAllCycles[perm_List]:=With[{cycles = PermutationCycles[perm][[1]]},
 
 PermutationType::usage = "PermutationType[pi] returns the partition of cycle lengths";
 PermutationType[pi_List]:=Sort[Length/@PermutationAllCycles[pi],Greater];
+
+
+PermutationCycleMap::usage = "PermutationCycleMap[p] is the map defined on p.23 Stanley's EC1, where one writes the permutation in cycle form, and removes parenthesises.";
+PermutationCycleMap[p_List] := (
+   Join @@ (
+     RotateRight@RotateLeft[#, Position[#, Max@#][[1, 1]]] &
+      /@ SortBy[PermutationAllCycles[p], Max])
+   );
+
 
 (* The genus of a permutation *)
 PermutationGenus[sigma_List] := PermutationGenus[sigma, RotateLeft[Range@Max@sigma]];

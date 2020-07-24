@@ -81,6 +81,9 @@ SchroederPathUpSteps;
 SchroederReverse;
 
 
+IncreasingParkingFunctions;
+ParkingFunctions;
+
 NCFComponents;
 NCFVertexDegree;
 NonCrossingForests;
@@ -767,6 +770,24 @@ RationalDyckPaths[{m_Integer, n_Integer},  k_, {x_Integer, y_Integer}] :=
      , {}]
     ];
 
+	
+(*******************************************************************************)
+	
+IncreasingParkingFunctions::usage = "IncreasingParkingFunctions[n] returns all parking functions which are weakly increasing. This is a Catalan family.";
+
+(*This is a Catalan family. *)
+Clear[IncreasingParkingFunctions];
+IncreasingParkingFunctions[1] := {{1}};
+IncreasingParkingFunctions[n_Integer] := 
+  IncreasingParkingFunctions[n] = Join @@ Table[
+     Append[pf, #] & /@ Range[pf[[-1]], n]
+     , {pf, IncreasingParkingFunctions[n - 1]}];
+
+	 
+ParkingFunctions::usage = "ParkingFunctions[n] returns all parking functions of length n.";
+ParkingFunctions[n_Integer] := ParkingFunctions[n] = Join @@ Map[
+     Permutations, IncreasingParkingFunctions[n]];
+	
 (*******************************************************************************)
 
    
