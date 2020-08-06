@@ -225,55 +225,64 @@ SSYTKPromotion[
  YoungTableau[{{1, 1, 2, 3}, {2, 3, 5, 7}, {7, 7}}]);
 
 
-(* This is broken! it has some issues, as it is not a bijection! *)
+
 SSYTKPromotionInverse::usage = "SSYTKPromotionInverse[ssyt,k] performs the inverse of k-promotion. This also works on skew shapes!";
 SSYTKPromotionInverse[ssyt_YoungTableau, k_Integer] := Module[
-   {val, localMove, allMove, DOT, out, dots},
-   (* Wrapper for tableau access. *)
-   val[tt_, {r_, c_}] := Which[
-     r == 0, -1,
-     c == 0, -1,
-     tt[[r, c]] === None, -1,
-     tt[[r, c]] === DOT, -1,
-     IntegerQ[tt[[r, c]]], tt[[r, c]],
-     True, -1
-     ];
-
-   (* We have a list of dots to move.
-   Performs a move and returns the new tab and new dotList.
-    *)
-   localMove[{tt_List, {}}] := {tt, {}};
-   localMove[{tt_List, dotList_List}] := 
-    Module[{rc, up, lt, rest = Rest@dotList},
-     rc = First@dotList;
-     up = rc - {1, 0};
-     lt = rc - {0, 1};
-     Which[
-      val[tt, rc] =!= -1, {tt, rest},
-      (* Cannot swap (is in a corner) *)
-      val[tt, lt] == -1 && val[tt, up] == -1, {tt, rest},
-      (* Swap up. *)
-      1 <= val[tt, up] >= val[tt, lt],
-      {ReplacePart[tt, {rc -> val[tt, up], up -> DOT}], 
-       Prepend[rest, up]},
-      (* Swap lt. *)
-      val[tt, lt] > val[tt, up],
-      {ReplacePart[tt, {rc -> val[tt, lt], lt -> DOT}], 
-       Prepend[rest, lt]},
-      (* This should not happen. *)
-      True, 
-      Print["Bad outcome"]; {tt, rest}
-      ]];
-
-   out = If[
-     (* If max entry is less than k, then increase all entries by 1. *)
-
-          Max[ssyt] < k, ssyt[[1]],
-     dots = Rest /@ Position[ssyt, k];
-     FixedPoint[localMove, {ssyt[[1]] /. k -> DOT, dots}][[1]] /. 
-      DOT -> 0
-     ];
-   YoungTableau@Map[If[IntegerQ[#], # + 1, #] &, out, {2}]
+		{val, localMove, allMove, DOT, out, dots},
+			
+		(* Wrapper for tableau access. *)
+		val[tt_, {r_, c_}] := Which[
+			r == 0, -1,
+			c == 0, -1,
+			tt[[r, c]] === None, -1,
+			tt[[r, c]] === DOT, -1,
+			IntegerQ[tt[[r, c]]], tt[[r, c]],
+			True, -1
+			];
+		
+		(* We have a list of dots to move.
+		Performs a move and returns the new tab and new dotList.
+			*)
+		localMove[{tt_List, {}}] := {tt, {}};
+		
+		localMove[{tt_List, dotList_List}] := Module[{rc, up, lt, rest = Rest@dotList},
+			
+			(* Row.Col coord for a dot. *)
+			
+			rc = First@dotList;
+			up = rc - {1, 0};
+			lt = rc - {0, 1};
+			
+			Which[
+				
+				(* Cannot swap (is in a corner) *)
+				val[tt, lt] == -1 && val[tt, up] == -1, 
+					{tt, rest},
+				
+				
+				(* Move dot up. *)
+				1 <= val[tt, up] >= val[tt, lt],
+					{ReplacePart[tt, {rc -> val[tt, up], up -> DOT}], 
+						Prepend[rest, up]},
+					
+				(* Swap lt. *)
+				1 <= val[tt, lt] > val[tt, up],
+					{ReplacePart[tt, {rc -> val[tt, lt], lt -> DOT}], 
+						Prepend[rest, lt]},
+				
+				
+				(* This should not happen. *)
+				True, 
+					Print["Bad outcome"]; {tt, rest}
+				]];
+				
+		out = If[
+			(* If max entry is less than k, then increase all entries by 1. *)
+						Max[ssyt] < k, ssyt[[1]],
+						dots = SortBy[ Rest /@ Position[ssyt, k], Last];
+						FixedPoint[localMove, {ssyt[[1]] /. k -> DOT, dots}][[1]] /. DOT -> 0
+			];
+		YoungTableau@Map[If[IntegerQ[#], # + 1, #] &, out, {2}]
 ];
 
 
