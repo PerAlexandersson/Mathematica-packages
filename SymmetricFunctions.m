@@ -170,7 +170,7 @@ MonomialProduct[lam_List, mu_List, x_: None] := Module[
 		, {muPerm, Permutations@mup}];
 	
 	Total[
-		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1])  & @@@ (Tally@products)
+		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1,x])  & @@@ (Tally@products)
 	]
 ];
 
@@ -250,8 +250,8 @@ SchurSymmetric[{lam_List, {}}, x_: None] := With[{slr=CompositionSlinky[lam]},
 
 
 (* Memoization seem to have an issue when using default parameters(?) *)
-SchurSymmetric[{lam_, mu_}]:=SchurSymmetric[{lam, mu}, None];
-SchurSymmetric[{lam_, mu_}, x_] := SchurSymmetric[{lam, mu}, x] = Module[
+SchurSymmetric[{lam_List, mu_List}]:=SchurSymmetric[{lam, mu}, None];
+SchurSymmetric[{lam_List, mu_List}, x_:None] := SchurSymmetric[{lam, mu}, x] = Module[
 	{i, j, jtDet, bb, mup = PadRight[mu, Length@lam]},
 	
 	(* Jacobi--Trudi determinant *)
