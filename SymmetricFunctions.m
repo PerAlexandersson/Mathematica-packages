@@ -12,6 +12,8 @@ Needs["NewTableaux`"];
 KostkaCoefficient;
 InverseKostkaCoefficient;
 
+PositiveCoefficientsQ;
+
 ChangeSymmetricAlphabet;
 MonomialSymmetric;
 AugmentedMonomialSymmetric;
@@ -23,6 +25,7 @@ ForgottenSymmetric;
 
 ToSchurBasis;
 ToPowerSumBasis;
+ToPowerSumZBasis;
 ToElementaryEBasis;
 ToCompleteHBasis;
 
@@ -59,6 +62,7 @@ SymplecticSchurSymmetric;
 OrthogonalSchurSymmetric;
 
 PetrieSymmetric;
+CylindricSchurSymmetric;
 
 (* Simple polynomial functions. This should be in a different package. *)
 SingleMonomial;
@@ -112,24 +116,24 @@ Clear[InverseKostkaKHelper];
 InverseKostkaKHelper[mu_List, mu_List] := 1;
 InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
 InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
-   -Sum[
-     With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
-      If[pos == {}, 0
-       , (-1)^(j)
-        InverseKostkaKHelper[
-         (* Remove a part equal to p *)
-         
-         ReplacePart[lam, pos -> Nothing]
-         ,
-         (* Subtract 1 from the first j-1 entries, 
-         and drop jth entry *)
-         
-         DeleteCases[
-          MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
-         ]
-       ]
-      ]
-     , {j, Length@mu}];
+	-Sum[
+		With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
+			If[pos == {}, 0
+			, (-1)^(j)
+				InverseKostkaKHelper[
+				(* Remove a part equal to p *)
+				
+				ReplacePart[lam, pos -> Nothing]
+				,
+				(* Subtract 1 from the first j-1 entries, 
+				and drop jth entry *)
+				
+				DeleteCases[
+					MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
+				]
+			]
+			]
+		, {j, Length@mu}];
 (********************************************************************)
 
 
@@ -139,8 +143,26 @@ ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[
 	(expr /. MonomialSymmetric[mu__, from] :> MonomialSymmetric[mu, to])];
 	
 	
-(* This is slow! Must update --- make into compiled function if possible. *)
 
+(* This is a private helper function, for utilizing memoization. *)
+(* TODO-MAKE IT KEEP TRACK OF DUPLICATES AUTOMATICALLY, and reuse *)
+monomialProducts[lam_List, {}] := {lam};
+monomialProducts[lam_List, mut_List] := 
+		monomialProducts[lam, mut] = 
+		Module[{addToPartition, done, lamp, new},
+			addToPartition[gam_List, {k_, m_Integer}] := 
+			With[{ll = Length@gam},
+				Table[
+				{k + gam[[ii]], gam[[Complement[Range@ll, ii]]]}
+				, {ii, Subsets[Range[ll], {m}]}]
+				];
+			Join @@ Table[
+				{done, lamp} = new;
+				Join[done, #] & /@ monomialProducts[lamp, Rest@mut]
+				, {new, addToPartition[lam, First@mut]}]
+	];
+	
+	
 MonomialProduct[lam_List, mu_List, x_: None] := Module[
 	{n = Length[lam] + Length[mu], dim, lamp, mup, products, nu, mult, dimCoeff},
 	
@@ -163,11 +185,16 @@ MonomialProduct[lam_List, mu_List, x_: None] := Module[
 		dimCoeff = (dim@mu);
 	];
 	
-	(* TODO: THIS NOT THAT EFFICIENT IT SEEMS! *)
+	(* TODO: THIS OLD CODE IS NOT THAT EFFICIENT IT SEEMS! *)
+	(*
 	products = 
 		Table[
 			Sort[DeleteCases[lamp + muPerm, 0], Greater]
 		, {muPerm, Permutations@mup}];
+	*)
+	
+	products = monomialProducts[lamp,DeleteCases[Tally@mup,0]];
+	
 	
 	Total[
 		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1,x])  & @@@ (Tally@products)
@@ -220,6 +247,25 @@ PowerSumSymmetric[0, x_: None] := 1;
 PowerSumSymmetric[d_Integer, x_: None] := If[d < 0, 0, MonomialSymmetric[{d}, x]];
 PowerSumSymmetric[lam_List, x_: None] := PowerSumSymmetric[lam, x] = Expand[Product[PowerSumSymmetric[k, x], {k, lam}]];
 
+
+PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
+PositiveCoefficientsQ::usage = "PositiveCoefficientsQ[expr, basis] returns true if all coeffs of basis[..] are positive. Only works for numbers.";
+PositiveCoefficientsQ[expr_, basisSymbol_: ss, extraSymbols_:{}] := 
+	With[{exp = Expand@expr},
+		And @@ 
+			Map[
+			With[{c=Last[#]},
+				If[ NumberQ[c], 
+					c>=0,
+					Message[PositiveCoefficientsQ::notnumber,c];
+					Abort[]
+				]
+			]
+			&
+			, CoefficientRules[exp, 
+				Join[ Cases[exp, basisSymbol[___], Infinity], extraSymbols] ]
+			]
+	];
 
 
 (******************************************************)
@@ -347,6 +393,9 @@ ToElementaryEBasis[poly_, ee_, x_: None] :=
 ToOtherSymmetricBasis[ElementaryESymmetric, poly, ee, x];
 ToCompleteHBasis[poly_, hh_, x_: None] := 
 ToOtherSymmetricBasis[CompleteHSymmetric, poly, hh, x];
+
+(* A normalized version, where we multiply by the z-coefficient. *)
+ToPowerSumZBasis[poly_, pp_, x_: None] := (ToPowerSumBasis[poly,pp,x]/.pp[lam_] :> ZCoefficient[lam] pp[lam]);
 
 (* The forgotten basis is given by omega(monomial) *)
 
@@ -873,7 +922,11 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 
 
 
+CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
 
+CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
+	MonomialSymmetric[YoungTableauWeight@ssyt,x]
+,{ssyt, CylindricTableaux[{lam, mu}, d]}];
 
 
 

@@ -544,25 +544,25 @@ ColumnLatticePaths[YoungTableau[ssytIn_]] := Module[
 CylindricTableaux::usage = "CylindricTableaux[{lam,mu},k] produces all cylindric tableaux with partition weight
 and shifted up k steps from minimal possible shift.";
 
+
 CylindricTableaux[lam_List,k_Integer:0]:=CylindricTableaux[{lam,{}},k];
 
 CylindricTableaux[{lam_List, mu_List}, k_Integer: 0] := Module[{
     isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes,
     minShift
     },
-   
    firstSkew = Length[DeleteCases[mu, 0]];
    firstTot = Length[DeleteCases[lam, 0]];
    lastBoxes = Last[ConjugatePartition@lam];
    firstBoxes = firstTot - firstSkew;
-   
+
    minShift = Max[firstTot - lastBoxes, firstSkew];
-   
+
    isValidQ[t_] := Module[{tt, firstCol, lastCol, j},
      tt = First@Transpose[t];
      firstCol = First[tt];
      lastCol = Last[tt];
-     
+
      And @@ Table[
        Or[
         ! (minShift + k + j <= Length[firstCol]),

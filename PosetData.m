@@ -103,8 +103,11 @@ PosetColorings[n_Integer,opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{
 	];
 	
 	Join@@Table[
-		colorings = Permutations[Join@@MapIndexed[ConstantArray[#2[[1]],#1]&, comp]];
+		colorings = Permutations[
+			Join@@MapIndexed[ConstantArray[#2[[1]],#1]&, comp]];
 		
+		Print[ comp, " ", PartitionPartCount /@ Select[colorings, isOkQ ]];
+			
 		PartitionPartCount /@ Select[colorings, isOkQ ]
 		
 	,{comp,IntegerCompositions[n]}]
