@@ -1,7 +1,13 @@
 (* ::Package:: *)
 
 
-(* TODO --- make change-of-basis accept several alphabets. *)
+(* TODO 
+
+--- Make change-of-basis accept several alphabets
+--- Allow abstract symbols for P, E, H and S bases, and add code to handle multiplication, basis conversion, Hall inner prod, etc.
+--- Some symmetric functions are more natural to express in other bases, so do that.
+
+*)
 (* TODO Make formatting compatible with TEX *)
 
 Clear["SymmetricFunctions`*"];
@@ -216,7 +222,8 @@ MonomialSymmetric /: Power[MonomialSymmetric[a_List, x_], 1] := MonomialSymmetri
 MonomialSymmetric /: Power[MonomialSymmetric[a_List, x_], n_Integer] := Expand[Power[MonomialSymmetric[a, x], n - 2] MonomialProduct[a, a, x]];
 
 
-(* TODO Make formatting compatible with TEX *)
+
+
 
 MonomialSymmetric /: Format[MonomialSymmetric[a_List, x_]] := With[
 	{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]},
@@ -227,7 +234,22 @@ MonomialSymmetric /: Format[MonomialSymmetric[a_List, x_]] := With[
 	]
 ];
 
+(* Make formatting compatible with TeXForm *)
+MonomialSymmetric /: HoldPattern[MakeBoxes[MonomialSymmetric[a_List, x_], TraditionalForm]]:=
+With[
+	{r = If[Max[a]<=9,
+				RowBox[ToString/@a],
+				RowBox[Riffle[ToString/@a,","]
+				]]},
+	If[
+		x === None,
+		SubscriptBox["m", r],
+		RowBox[{SubscriptBox["m", r], "(", ToString@x, ")"}]
+	]
+];
+
 AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymmetric[lam];
+
 
 CompleteHSymmetric[{}, x_: None] := 1;
 CompleteHSymmetric[d_Integer, x_: None] := If[d < 0, 0, Sum[MonomialSymmetric[mu, x], {mu, IntegerPartitions[d]}]];
@@ -267,12 +289,13 @@ PositiveCoefficientsQ[expr_, basisSymbol_: ss, extraSymbols_:{}] :=
 			, CoefficientRules[exp, 
 				Join[ Cases[exp, basisSymbol[___], Infinity], extraSymbols] ]
 			]
-	];
+];
 
 
 (******************************************************)
 
 HSYMBOLIC::usage = "HSYMBOLIC represents the complete homogeneous symmetric function.";
+
 (* TODO -- Use this for Schur. The ideas is to reuse for different alphabets. *)
 SymbolicJacobiTrudi[{lam_, mu_}, hh_:HSYMBOLIC] := SymbolicJacobiTrudi[{lam, mu}, hh] =
 Module[{mup = PadRight[mu, Length@lam], i, j, jtDet},
@@ -362,9 +385,10 @@ PartitionIndexedBasisRule[size_Integer, basisSymb_, toBasis_,
 	(* Here we compute the matrix. *)
 	imat = Inverse[mat];
 	
-	Table[
+	(* Use dispatch for quicker rule. *)
+	Dispatch@Table[
 		monom[parts[[p]], x] -> Expand@Together@Sum[ basisSymb[parts[[q]]]*imat[[p, q]]
-	, {q, Length@parts}]
+			, {q, Length@parts}]
 	, {p, Length@parts}]
 ];
 
@@ -934,7 +958,7 @@ CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
 
 
 
-
+(* Based on 7.10c in https://arxiv.org/pdf/1907.02645.pdf *)
 LahSymmetricFunction[n_Integer, k_Integer] := LahSymmetricFunction[n, k] = Expand[
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
@@ -943,7 +967,15 @@ LahSymmetricFunction[n_Integer, k_Integer] := LahSymmetricFunction[n, k] = Expan
 				]
 			, {alpha, IntegerPartitions[n - k]}]
 ];
-LahSymmetricFunctionNegative[n_Integer, k_Integer] := OmegaInvolution@LahSymmetricFunction[n, k];
+
+LahSymmetricFunctionNegative[n_Integer, k_Integer] := LahSymmetricFunctionNegative[n, k] = Expand[
+	((n - 1)!/(k - 1)!) Sum[
+			With[{ll = Table[Count[alpha, j], {j, n - k}]},
+				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
+				Product[(ElementaryESymmetric[j]/(j + 1))^ll[[j]], {j, n - k}]
+				]
+			, {alpha, IntegerPartitions[n - k]}]
+];
 
 
 
@@ -995,42 +1027,37 @@ SingleMonomial /: Format[SingleMonomial[a_List, x_]] :=
 DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
 
 DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
-    (* Monomials defined by shape. *)
-    
-    monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]);
-    
-    (* This correspond to f[B(mu)] -- it is quicker than plethysm *)
- 
-       val[mu_List] := 
-     SymmetricFunctionToPolynomial[f, x, Tr[mu]] /. 
-      x[i_] :> monoms[mu][[i]];
-    
-    inH = Expand[ToMacdonaldHBasis[g, "hh", q, t]];
-    Together[
-     inH /. "hh"[lam_List] :> 
-       val[lam] MacdonaldHSymmetric[lam, q, t]]
-    ];
-	
+		(* Monomials defined by shape. *)
+		
+		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]);
+		
+		(* This correspond to f[B(mu)] -- it is quicker than plethysm *)
+
+		val[mu_List] := SymmetricFunctionToPolynomial[f, x, Tr[mu]] /. x[i_] :> monoms[mu][[i]];
+		
+		inH = Expand[ToMacdonaldHBasis[g, "hh", q, t]];
+		Together[inH /. "hh"[lam_List] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
+];
+
 NablaOperator[g_, q_, t_] :=
 DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
 
-DeltaPrimOperator[f_, g_, q_, t_] := 
-  DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
-    (* Monomials defined by shape. *)
-    
-    monoms[mu_List] := 
-     Rest[q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]];
-    
-    (* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
+DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
+		(* Monomials defined by shape. *)
+		
+		monoms[mu_List] := 
+		Rest[q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]];
+		
+		(* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
 
-        val[mu_List] := 
-     SymmetricFunctionToPolynomial[f, x, Tr[mu] - 1] /. 
-      x[i_] :> monoms[mu][[i]];
-    
-    inH = Expand[ToMacdonaldHBasis[g, "hh", q, t]];
-    Together[
-     inH /. "hh"[lam_List] :> 
-       val[lam] MacdonaldHSymmetric[lam, q, t]]
+				val[mu_List] := 
+		SymmetricFunctionToPolynomial[f, x, Tr[mu] - 1] /. 
+			x[i_] :> monoms[mu][[i]];
+		
+		inH = Expand[ToMacdonaldHBasis[g, "hh", q, t]];
+		Together[
+		inH /. "hh"[lam_List] :> 
+			val[lam] MacdonaldHSymmetric[lam, q, t]]
 ];
 
 
