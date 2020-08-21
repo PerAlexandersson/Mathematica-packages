@@ -45,6 +45,7 @@ PartitionPartCount;
 PartitionCores;
 HookLengths;
 ConjugatePartition;
+PartitionJoin;
 PartitionLessEqualQ;
 PartitionDominatesQ;
 PartitionStrictDominatesQ;
@@ -341,7 +342,10 @@ CompositionSlinky[comp_List] := Module[{slink, doSlink, s = 0, final},
 ];
 
 
-  
+PartitionJoin::usage = "PartitionJoin[a,b] returns a new partition whose parts are the union of a and b.";
+PartitionJoin[a_List, b_List] := Sort[Join[a, b], Greater];
+
+
 PartitionPartCount::usage="PartitionPartCount[lam] returns (m1,m2,...) so that mi is then number of parts of size i.";
 PartitionPartCount[{}]:={};
 PartitionPartCount[lam_List] := Normal[SparseArray[#1 -> #2 & @@@ Tally[ DeleteCases[lam,0]  ]]];

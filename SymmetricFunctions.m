@@ -7,10 +7,14 @@
 --- Allow abstract symbols for P, E, H and S bases, and add code to handle multiplication, basis conversion, Hall inner prod, etc.
 --- Some symmetric functions are more natural to express in other bases, so do that.
 
+--- See what attributes can be used (listable, orderless, etc).
+
+--- Add DeclarePackage instead of loading NewTableaux.
+
 *)
 (* TODO Make formatting compatible with TEX *)
 
-Clear["SymmetricFunctions`*"];
+ClearAll["SymmetricFunctions`*"];
 BeginPackage["SymmetricFunctions`"];
 Needs["CombinatoricsUtil`"];
 Needs["NewTableaux`"];
@@ -20,7 +24,17 @@ InverseKostkaCoefficient;
 
 PositiveCoefficientsQ;
 
+(* Symbols for denoting the common bases. *)
+ElementaryESymbol;
+PowerSumSymbol;
+CompleteHSymbol;
+MonomialSymbol;
+SchurSymbol;
+ForgottenSymbol;
+
+
 ChangeSymmetricAlphabet;
+
 MonomialSymmetric;
 AugmentedMonomialSymmetric;
 CompleteHSymmetric;
@@ -73,8 +87,7 @@ CylindricSchurSymmetric;
 LahSymmetricFunction;
 LahSymmetricFunctionNegative;
 
-(* Simple polynomial functions. This should be in a different package. *)
-SingleMonomial;
+
 
 DeltaOperator;
 NablaOperator;
@@ -83,6 +96,177 @@ DeltaPrimOperator;
 
 Begin["Private`"];
 
+
+
+(* Abstract function for defining a symmetric function basis,
+	with formatting and basic multiplication. *)
+Options[createBasis] = {
+		MultiplicationFunction -> None, 
+		SortFunction -> "Standard",
+		PowerFunction -> "Mult"
+};
+createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
+	
+	bb[lam_List] := bb[lam, None];
+	bb[i_Integer] := bb[{i}, None];
+	bb[i_Integer,x_] := bb[{i}, x];
+	
+	bb[{lam__, 0}, x_: None] := bb[{lam}, x];
+	
+	sort = OptionValue[SortFunction];
+	
+	Which[
+		sort === "Standard",
+				bb[lam_List, x_: None] := bb[Sort[lam,Greater], x] /; Not[OrderedQ[Reverse@lam]];
+		,
+		sort =!= None,
+			bb[lam_List, x_: None] :=  (sort[lam, x]) /; Not[OrderedQ[Reverse@lam]];
+		,
+		True, Null
+	];
+	
+	mult = OptionValue[MultiplicationFunction];
+	If[mult =!= None,
+		bb /: Times[bb[a_List, x_], bb[b_List, x_]] := mult[a, b, x];
+	];
+	
+	
+	bb /: Power[bb[a_List, x_], 0] := 1;
+	bb /: Power[bb[a_List, x_], 1] := bb[a, x];
+	
+	pow = OptionValue[PowerFunction];
+	Which[
+		(* Use recursion, via multiplication *)
+		pow === "Mult", 
+			bb /: Power[bb[a_List, x_], n_Integer] := 
+				Expand[Power[bb[a, x], n - 2] bb[a, a, x]];
+		,
+		(* Use custom power function *)
+		pow =!= None,
+			bb /: Power[bb[a_List, x_], n_Integer] := pow[a,n,x];
+		,
+		True, Null
+	];
+	
+	
+	bb /: Format[bb[a_List, x_]] := 
+		With[{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]}, 
+		If[x === None, Subscript[symb, r], 
+			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]];
+	
+	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
+		With[{r = 
+			If[Max[a] <= 9, RowBox[ToString /@ a], 
+				RowBox[Riffle[ToString /@ a, ","]]]}, 
+		If[x === None, SubscriptBox[symb, r], 
+			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
+];
+
+
+(* This is a private helper function, for utilizing memoization. *)
+(* TODO-MAKE IT KEEP TRACK OF DUPLICATES AUTOMATICALLY, and reuse *)
+monomialProducts[lam_List, {}] := {lam};
+monomialProducts[lam_List, mut_List] := 
+		monomialProducts[lam, mut] = 
+		Module[{addToPartition, done, lamp, new},
+			addToPartition[gam_List, {k_, m_Integer}] := 
+			With[{ll = Length@gam},
+				Table[
+				{k + gam[[ii]], gam[[Complement[Range@ll, ii]]]}
+				, {ii, Subsets[Range[ll], {m}]}]
+				];
+			Join @@ Table[
+				{done, lamp} = new;
+				Join[done, #] & /@ monomialProducts[lamp, Rest@mut]
+				, {new, addToPartition[lam, First@mut]}]
+	];
+
+(* private helper function. *)
+monomialProduct[lam_List, mu_List, x_: None] := Module[
+	{n = Length[lam] + Length[mu], dim, lamp, mup, products, nu, mult, dimCoeff},
+	
+	(*
+	https://math.stackexchange.com/questions/395842/
+	decomposition-of-products-of-monomial-symmetric-polynomials-into-
+	sums-of-them
+	*)
+	
+	dim[p_List] := Times @@ (Last[#]! & /@ Tally[PadRight[p, n]]);
+	
+	lamp = PadRight[lam, n];
+	mup = PadRight[mu, n];
+	
+	(* Here, decide which partition has fewest permutations? *)
+	If[(Multinomial@@(Last /@ Tally[lamp])) > (Multinomial@@(Last /@ Tally[mu])),
+		dimCoeff = (dim@lam);
+	,
+		{lamp,mup} = {mup,lamp};
+		dimCoeff = (dim@mu);
+	];
+	
+	(* TODO: THIS OLD CODE IS NOT THAT EFFICIENT IT SEEMS! *)
+	(*
+	products = 
+		Table[
+			Sort[DeleteCases[lamp + muPerm, 0], Greater]
+		, {muPerm, Permutations@mup}];
+	*)
+	
+	products = monomialProducts[lamp,DeleteCases[Tally@mup,0]];
+	
+	Total[
+		((dim[#1]/dimCoeff)*#2*MonomialSymbol[#1,x])  & @@@ (Tally@products)
+	]
+];
+
+
+(* Create the three classical multiplicative bases. *)
+createBasis[ElementaryESymbol, "e", 
+	MultiplicationFunction -> (ElementaryESymbol[PartitionJoin[#1, #2], #3]&),
+	PowerFunction-> 
+		Function[{a,n,x},
+			ElementaryESymbol[Join@@(ConstantArray[#1, n]& /@a), x]]
+];
+
+createBasis[PowerSumSymbol, "p", 
+	MultiplicationFunction -> (PowerSumSymbol[PartitionJoin[#1, #2], #3]&),
+	PowerFunction-> 
+		Function[{a,n,x},
+			PowerSumSymbol[Join@@(ConstantArray[#1, n]& /@a), x]]
+];
+
+createBasis[CompleteHSymbol, "h", 
+	MultiplicationFunction -> (CompleteHSymbol[PartitionJoin[#1, #2], #3]&),
+	PowerFunction->
+		Function[{a,n,x},
+			CompleteHSymbol[Join@@(ConstantArray[#1, n]& /@a), x]]
+];
+
+createBasis[MonomialSymbol, "m", 
+	MultiplicationFunction -> (monomialProduct),
+	PowerFunction->"Mult"
+];
+
+createBasis[ForgottenSymbol, "f", 
+	MultiplicationFunction -> (monomialProduct),
+	PowerFunction->"Mult"
+];
+
+
+(* We use slinky rule for the Schur functions. *)
+createBasis[SchurSymbol, "s", 
+	MultiplicationFunction -> None,
+	PowerFunction -> None,
+	SortFunction -> (With[{slr=CompositionSlinky[#1]},
+		If[slr[[2]]==0, 0, 
+			slr[[2]]*SchurSymbol[slr[[1]], #2]
+			]
+	]&)
+];
+
+
+(* These are the same, for compatability reasons. *)
+MonomialSymmetric=MonomialSymbol;
 
 (* This is based on Macdonald, p.327, and is extremely fast. *)
 KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
@@ -121,7 +305,7 @@ InverseKostkaCoefficient[lam_List, mu_List] := InverseKostkaKHelper[Reverse@lam,
 (* The convention in https://doi.org/10.1080/03081089008817966
 uses partitions with parts ordered increasingly, which makes notation easier.
 *)
-Clear[InverseKostkaKHelper];
+
 InverseKostkaKHelper[mu_List, mu_List] := 1;
 InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
 InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
@@ -149,114 +333,20 @@ InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
 ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[ 
 	to === from,
 	expr,
-	(expr /. MonomialSymmetric[mu__, from] :> MonomialSymmetric[mu, to])];
+	(expr /. MonomialSymbol[mu__, from] :> MonomialSymbol[mu, to])];
 	
 	
 
-(* This is a private helper function, for utilizing memoization. *)
-(* TODO-MAKE IT KEEP TRACK OF DUPLICATES AUTOMATICALLY, and reuse *)
-monomialProducts[lam_List, {}] := {lam};
-monomialProducts[lam_List, mut_List] := 
-		monomialProducts[lam, mut] = 
-		Module[{addToPartition, done, lamp, new},
-			addToPartition[gam_List, {k_, m_Integer}] := 
-			With[{ll = Length@gam},
-				Table[
-				{k + gam[[ii]], gam[[Complement[Range@ll, ii]]]}
-				, {ii, Subsets[Range[ll], {m}]}]
-				];
-			Join @@ Table[
-				{done, lamp} = new;
-				Join[done, #] & /@ monomialProducts[lamp, Rest@mut]
-				, {new, addToPartition[lam, First@mut]}]
-	];
-	
-	
-MonomialProduct[lam_List, mu_List, x_: None] := Module[
-	{n = Length[lam] + Length[mu], dim, lamp, mup, products, nu, mult, dimCoeff},
-	
-	(*
-	https://math.stackexchange.com/questions/395842/
-	decomposition-of-products-of-monomial-symmetric-polynomials-into-
-	sums-of-them
-	*)
-	
-	dim[p_List] := Times @@ (Last[#]! & /@ Tally[PadRight[p, n]]);
-	
-	lamp = PadRight[lam, n];
-	mup = PadRight[mu, n];
-	
-	(* Here, decide which partition has fewest permutations? *)
-	If[(Multinomial@@(Last /@ Tally[lamp])) > (Multinomial@@(Last /@ Tally[mu])),
-		dimCoeff = (dim@lam);
-	,
-		{lamp,mup} = {mup,lamp};
-		dimCoeff = (dim@mu);
-	];
-	
-	(* TODO: THIS OLD CODE IS NOT THAT EFFICIENT IT SEEMS! *)
-	(*
-	products = 
-		Table[
-			Sort[DeleteCases[lamp + muPerm, 0], Greater]
-		, {muPerm, Permutations@mup}];
-	*)
-	
-	products = monomialProducts[lamp,DeleteCases[Tally@mup,0]];
-	
-	Total[
-		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1,x])  & @@@ (Tally@products)
-	]
-];
 
-
-(* Sort argument *)
-MonomialSymmetric[lam_List, x_: None] := MonomialSymmetric[Sort[lam,Greater], x] /; (lam!=Sort[lam,Greater]);
-MonomialSymmetric[{lam__,0}, x_: None] := MonomialSymmetric[{lam},x];
-
-MonomialSymmetric[{}, x_: None] := 1;
-MonomialSymmetric[lam_List] := MonomialSymmetric[lam, None];
-MonomialSymmetric /: Times[MonomialSymmetric[a_List, x_], MonomialSymmetric[b_List, x_]] := MonomialProduct[a, b, x];
-MonomialSymmetric /: Power[MonomialSymmetric[a_List, x_], 0] := 1;
-MonomialSymmetric /: Power[MonomialSymmetric[a_List, x_], 1] := MonomialSymmetric[a, x];
-MonomialSymmetric /: Power[MonomialSymmetric[a_List, x_], n_Integer] := Expand[Power[MonomialSymmetric[a, x], n - 2] MonomialProduct[a, a, x]];
-
-
-
-
-
-MonomialSymmetric /: Format[MonomialSymmetric[a_List, x_]] := With[
-	{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]},
-	If[
-		x === None,
-		Subscript["m", r],
-		Row[{Subscript["m", r], "(", ToString@x, ")"}]
-	]
-];
-
-(* Make formatting compatible with TeXForm *)
-MonomialSymmetric /: HoldPattern[MakeBoxes[MonomialSymmetric[a_List, x_], TraditionalForm]]:=
-With[
-	{r = If[Max[a]<=9,
-				RowBox[ToString/@a],
-				RowBox[Riffle[ToString/@a,","]
-				]]},
-	If[
-		x === None,
-		SubscriptBox["m", r],
-		RowBox[{SubscriptBox["m", r], "(", ToString@x, ")"}]
-	]
-];
-
-AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymmetric[lam];
+AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam];
 
 
 CompleteHSymmetric[{}, x_: None] := 1;
-CompleteHSymmetric[d_Integer, x_: None] := If[d < 0, 0, Sum[MonomialSymmetric[mu, x], {mu, IntegerPartitions[d]}]];
+CompleteHSymmetric[d_Integer, x_: None] := If[d < 0, 0, Sum[MonomialSymbol[mu, x], {mu, IntegerPartitions[d]}]];
 CompleteHSymmetric[lam_List, x_: None] := CompleteHSymmetric[lam, x] = Expand[Product[CompleteHSymmetric[k, x], {k, lam}]];
 
 ElementaryESymmetric[{}, x_: None] := 1;
-ElementaryESymmetric[d_Integer, x_: None] := If[d < 0, 0, MonomialSymmetric[ConstantArray[1, d], x]];
+ElementaryESymmetric[d_Integer, x_: None] := If[d < 0, 0, MonomialSymbol[ConstantArray[1, d], x]];
 ElementaryESymmetric[lam_List, x_: None] := ElementaryESymmetric[lam, x] = Expand[Product[ElementaryESymmetric[k, x], {k, lam}]];
 
 UnitTest[ElementaryESymmetric] := With[{m = 5},
@@ -268,7 +358,7 @@ Expand[Sum[
 
 PowerSumSymmetric[{}, x_: None] := 1;
 PowerSumSymmetric[0, x_: None] := 1;
-PowerSumSymmetric[d_Integer, x_: None] := If[d < 0, 0, MonomialSymmetric[{d}, x]];
+PowerSumSymmetric[d_Integer, x_: None] := If[d < 0, 0, MonomialSymbol[{d}, x]];
 PowerSumSymmetric[lam_List, x_: None] := PowerSumSymmetric[lam, x] = Expand[Product[PowerSumSymmetric[k, x], {k, lam}]];
 
 
@@ -345,7 +435,7 @@ Expand@Which[
 	(* In the non-skew case, use the quick monomial recursion for Kostka coefficients. *)
 	Tr[mu]==0,
 		Sum[
-			KostkaCoefficient[lam, nu,1] MonomialSymmetric[nu,x]
+			KostkaCoefficient[lam, nu,1] MonomialSymbol[nu,x]
 		,{nu,IntegerPartitions[Tr@lam]}]
 	,
 	Length[lam] >= lam[[1]],
@@ -366,7 +456,7 @@ Expand@Which[
 (* Private Util function for converting between bases. *)
 
 PartitionIndexedBasisRule[size_Integer, basisSymb_, toBasis_, 
-	monom_: MonomialSymmetric, x_: None] := 
+	monom_: MonomialSymbol, x_: None] := 
 	PartitionIndexedBasisRule[size, basisSymb, toBasis, monom, x] = Module[{parts, mat, imat,p,q},
 	parts = IntegerPartitions[size];
 	
@@ -392,7 +482,7 @@ PartitionIndexedBasisRule[size_Integer, basisSymb_, toBasis_,
 	, {p, Length@parts}]
 ];
 
-ToOtherSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialSymmetric] :=
+ToOtherSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialSymbol] :=
 Module[{mmVars, deg, maxDegree, monomList},
 	mmVars = Cases[Variables[pol], mm[__, x], {0, Infinity}];
 	maxDegree = Max[0, mmVars /. mm[lam__, x] :> Tr[lam]];
@@ -428,14 +518,14 @@ ToPowerSumZBasis[poly_, pp_, x_: None] := (ToPowerSumBasis[poly,pp,x]/.pp[lam_] 
 ForgottenSymmetric[mu_List, x_: None] := 
 ForgottenSymmetric[mu, x] = Module[{pp},
 	Expand[
-	ToPowerSumBasis[MonomialSymmetric[mu, x], pp] /. 
+	ToPowerSumBasis[MonomialSymbol[mu, x], pp] /. 
 	pp[lam_] :> (-1)^(Tr[lam] - Length[lam]) PowerSumSymmetric[lam, 
 		x]]];
 
 OmegaInvolution[poly_, x_: None] := Module[{pp},
 Expand[
 	Expand[poly] /. 
-	MonomialSymmetric[mu_, x] :> ForgottenSymmetric[mu, x]]
+	MonomialSymbol[mu_, x] :> ForgottenSymmetric[mu, x]]
 ];
 UnitTest[OmegaInvolution] := And[
 OmegaInvolution@OmegaInvolution@SchurSymmetric[{4, 2, 1}] === 
@@ -451,12 +541,12 @@ OmegaInvolution@ElementaryESymmetric[{4, 2, 1}] ===
 
 SymmetricFunctionDegree::usage = "SymmetricFunctionDegree[expr] returns the degree of the symmetric function.";
 SymmetricFunctionDegree[expr_, yy_: None] := Max[
-	Cases[expr, MonomialSymmetric[mu_List, yy] :> Tr[mu],{0,Infinity}]];
+	Cases[expr, MonomialSymbol[mu_List, yy] :> Tr[mu],{0,Infinity}]];
 
 SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr,x,[n]] expresses the function as a polynomial in n variables.";
 
-SymmetricFunctionToPolynomial[MonomialSymmetric[mu_List, None], x_, 0] := 0;
-SymmetricFunctionToPolynomial[MonomialSymmetric[mu_List, None], x_, n_Integer] := 
+SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, 0] := 0;
+SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] := 
 Which[
 Length[mu]>n,0,
 True, Sum[
@@ -469,8 +559,8 @@ SymmetricFunctionToPolynomial[expr_, x_] := SymmetricFunctionToPolynomial[expr, 
 SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] := 
   ReplaceAll[
    expr,
-   MonomialSymmetric[mu_List, yy] :> 
-    SymmetricFunctionToPolynomial[MonomialSymmetric[mu, None], x, n]];
+   MonomialSymbol[mu_List, yy] :> 
+    SymmetricFunctionToPolynomial[MonomialSymbol[mu, None], x, n]];
 
 
 (***********************************************************************************)
@@ -500,7 +590,7 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon, pp}
 		
 		(* This is quite efficient. *)
 		q === 1,
-			Expand[poly] /. MonomialSymmetric[lam_, x] :> psMon[lam],
+			Expand[poly] /. MonomialSymbol[lam_, x] :> psMon[lam],
 		
 		True,
 			ToPowerSumBasis[poly, pp, x] /. 
@@ -561,7 +651,7 @@ Sum[
 UnitTest[HallInnerProduct] := And[
 1 == HallInnerProduct[SchurSymmetric[{2, 1}], 
 	SchurSymmetric[{2, 1}]],
-1 == HallInnerProduct[MonomialSymmetric[{2, 1}], 
+1 == HallInnerProduct[MonomialSymbol[{2, 1}], 
 	CompleteHSymmetric[{2, 1}]],
 40 == HallInnerProduct[5 SchurSymmetric[{2, 1}], 
 	8 SchurSymmetric[{2, 1}]],
@@ -578,7 +668,7 @@ Block[{a, b, c, d},
 
 
 (* Computes f(-x1,-x2,...) *)
-NegateAlphabet[f_, x_: None] := Expand[f] /. MonomialSymmetric[mu__, x] :> (-1)^(Tr@mu) MonomialSymmetric[mu, x];
+NegateAlphabet[f_, x_: None] := Expand[f] /. MonomialSymbol[mu__, x] :> (-1)^(Tr@mu) MonomialSymbol[mu, x];
 
 
 (* Here, f is in the None alphabet, and plethysm act on ALL given \
@@ -621,7 +711,7 @@ ToSchurBasis[Plethysm[SchurSymmetric[{4}], SchurSymmetric[{2}]],
 
 JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
 JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
-	KostkaCoefficient[lam,mu,a] MonomialSymmetric[mu,x]
+	KostkaCoefficient[lam,mu,a] MonomialSymbol[mu,x]
 ,{mu,IntegerPartitions[Tr@lam]}];
 
 JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization of Jack functions.";
@@ -701,7 +791,7 @@ ChangeSymmetricAlphabet[
 (* 7.13' p. 346 in Macdonald's book. *)
 MacdonaldPSymmetricHelper[mu_List, q_, t_, x_: None] :=MacdonaldPSymmetricHelper[mu,q,t,x]=
 Together@Sum[
-   MonomialSymmetric[YoungTableauWeight[ssyt],x]
+   MonomialSymbol[YoungTableauWeight[ssyt],x]
     *
     With[{
       ribbons = Table[
@@ -733,8 +823,8 @@ ips = IntegerPartitions[n];
 (* Generic expression for Macdonald polynomial. *)
 
 ppExpr[nu_] :=
-	MonomialSymmetric[nu] + Sum[
-	uu[nu, mu] MonomialSymmetric[mu]
+	MonomialSymbol[nu] + Sum[
+	uu[nu, mu] MonomialSymbol[mu]
 	, {mu, Select[ips, PartitionStrictDominatesQ[#, nu] &]}];
 
 eqns1 = Table[PP[nu] == ppExpr[nu], {nu, ips}];
@@ -924,16 +1014,16 @@ Expand@Sum[
 SymplecticSchurSymmetric::usage = "SymplecticSchurSymmetric[mu] gives the symplectic Schur function.";
 SymplecticSchurSymmetric[{}] := 1;
 SymplecticSchurSymmetric[lam_List] := Expand[(1/2) Det@Table[
-      CompleteHSymmetric[lam[[i]] - i + j] + 
-       CompleteHSymmetric[lam[[i]] - i - j + 2], {i, Length@lam}, 
+      CompleteHSymbol[lam[[i]] - i + j] + 
+       CompleteHSymbol[lam[[i]] - i - j + 2], {i, Length@lam}, 
 		{j, Length@lam}]];
 
 
 OrthogonalSchurSymmetric::usage = "OrthogonalSchurSymmetric[mu] gives the orthogonal Schur function.";
 OrthogonalSchurSymmetric[{}] := 1;
 OrthogonalSchurSymmetric[lam_List] := Det@Table[
-    CompleteHSymmetric[lam[[i]] - i + j] - 
-     CompleteHSymmetric[lam[[i]] - i - j], 
+    CompleteHSymbol[lam[[i]] - i + j] - 
+     CompleteHSymbol[lam[[i]] - i - j], 
 	{i, Length@lam}, {j, Length@lam}];
 
 
@@ -942,7 +1032,7 @@ OrthogonalSchurSymmetric[lam_List] := Det@Table[
 PetrieSymmetric::usage = "PetrieSymmetric[k,m] gives the degree-m part of the kth Petrie symmetric function.";
 PetrieSymmetric[k_Integer,0,x_:None]:= 1;
 PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
-	MonomialSymmetric[lam,x]
+		MonomialSymbol[lam,x]
 ,{lam, Select[IntegerPartitions[m], #[[1]]<k &] }];
 
 
@@ -951,10 +1041,8 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
 
 CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
-	MonomialSymmetric[YoungTableauWeight@ssyt,x]
+	MonomialSymbol[YoungTableauWeight@ssyt,x]
 ,{ssyt, CylindricTableaux[{lam, mu}, d]}];
-
-
 
 
 
@@ -963,7 +1051,7 @@ LahSymmetricFunction[n_Integer, k_Integer] := LahSymmetricFunction[n, k] = Expan
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
 				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
-				Product[(CompleteHSymmetric[j]/(j + 1))^ll[[j]], {j, n - k}]
+				Product[(CompleteHSymbol[j]/(j + 1))^ll[[j]], {j, n - k}]
 				]
 			, {alpha, IntegerPartitions[n - k]}]
 ];
@@ -972,47 +1060,10 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer] := LahSymmetricFunctionNegati
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
 				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
-				Product[(ElementaryESymmetric[j]/(j + 1))^ll[[j]], {j, n - k}]
+				Product[(ElementaryESymbol[j]/(j + 1))^ll[[j]], {j, n - k}]
 				]
 			, {alpha, IntegerPartitions[n - k]}]
 ];
-
-
-
-(****************************************************************************************************)
-(****************************************************************************************************)
-(****************************************************************************************************)
-(****************************************************************************************************)
-
-
-
-
-SingleMonomialProduct[lam_List, mu_List, x_: None] := Module[
-   {n = Max[Length[lam], Length[mu]]},
-   SingleMonomial[PadRight[lam, n] + PadRight[mu, n], x]
-   ];
-
-(* Represents the variable x_v *)
-SingleMonomial[v_Integer, x_: None] := SingleMonomial[Normal@SparseArray[v->1],x];
-
-SingleMonomial[{}, x_: None] := 1;
-SingleMonomial[lam_List] := SingleMonomial[lam, None];
-SingleMonomial /: 
-  Times[SingleMonomial[a_List, x_], SingleMonomial[b_List, x_]] := 
-  SingleMonomialProduct[a, b, x];
-SingleMonomial /: Power[SingleMonomial[a_List, x_], 0] := 1;
-SingleMonomial /: Power[SingleMonomial[a_List, x_], 1] := 
-  SingleMonomial[a, x];
-SingleMonomial /: Power[SingleMonomial[a_List, x_], n_Integer] := 
-  SingleMonomial[a n, x];
-
-(*TODO Make formatting compatible with TEX*)
-
-SingleMonomial /: Format[SingleMonomial[a_List, x_]] := 
-  With[{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]}, 
-   If[x === None, Subscript["X", r], 
-    Row[{Subscript["X", r], "(", ToString@x, ")"}]]];
-
 
 
 
