@@ -64,6 +64,9 @@ OrthogonalSchurSymmetric;
 PetrieSymmetric;
 CylindricSchurSymmetric;
 
+LahSymmetricFunction;
+LahSymmetricFunctionNegative;
+
 (* Simple polynomial functions. This should be in a different package. *)
 SingleMonomial;
 
@@ -194,7 +197,6 @@ MonomialProduct[lam_List, mu_List, x_: None] := Module[
 	*)
 	
 	products = monomialProducts[lamp,DeleteCases[Tally@mup,0]];
-	
 	
 	Total[
 		((dim[#1]/dimCoeff)*#2*MonomialSymmetric[#1,x])  & @@@ (Tally@products)
@@ -928,6 +930,20 @@ CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
 	MonomialSymmetric[YoungTableauWeight@ssyt,x]
 ,{ssyt, CylindricTableaux[{lam, mu}, d]}];
 
+
+
+
+
+
+LahSymmetricFunction[n_Integer, k_Integer] := LahSymmetricFunction[n, k] = Expand[
+	((n - 1)!/(k - 1)!) Sum[
+			With[{ll = Table[Count[alpha, j], {j, n - k}]},
+				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
+				Product[(CompleteHSymmetric[j]/(j + 1))^ll[[j]], {j, n - k}]
+				]
+			, {alpha, IntegerPartitions[n - k]}]
+];
+LahSymmetricFunctionNegative[n_Integer, k_Integer] := OmegaInvolution@LahSymmetricFunction[n, k];
 
 
 
