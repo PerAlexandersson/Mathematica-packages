@@ -947,7 +947,6 @@ CrystalSi[YoungTableau[ssyt_], i_Integer] :=
 CrystalSi[w_List, i_Integer] := CrystalSi[YoungTableau[{w}], i][[1, 1]];
 
 
-
 End[]; (*End private*)
 
 EndPackage[];
