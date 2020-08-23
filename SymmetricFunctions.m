@@ -5,18 +5,25 @@
 
 --- Make converting to new bases easier. 
 		Might be an issue if these are not expressed in the monomial basis, but should be rare.
+
+--- Split Schur into Schur and SkewSchur, the latter returning expression in e.
 		
 --- Allow standard basis to handle
-			-Omega-involution
-			-Hall inner prod
-			
+		-Hall inner prod
+
+--- Improve Sn-character code
+	
 --- Hard-code algorithms for computing e-to-m and h-to-m using Kostka coeffs / other formulas instead?
 			
---- Make change-of-basis accept several alphabets at once
+--- Make change-of-basis accept several alphabets at once?
 
 --- See what attributes can be used (listable, orderless, etc).
 
 --- Add DeclarePackage instead of loading NewTableaux.
+
+--- Make a unit-test file.
+
+--- Update documentation.
 
 *)
 
@@ -28,6 +35,8 @@ Needs["NewTableaux`"];
 
 KostkaCoefficient;
 InverseKostkaCoefficient;
+LRCoefficient;
+LRExpand;
 
 PositiveCoefficientsQ;
 
@@ -48,6 +57,9 @@ ElementaryESymmetric;
 PowerSumSymmetric;
 SchurSymmetric;
 ForgottenSymmetric;
+
+(* This expands into e's *)
+SkewSchurSymmetric;
 
 ToSchurBasis;
 ToPowerSumBasis;
@@ -343,7 +355,79 @@ InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
 				]
 			]
 			]
-		, {j, Length@mu}];
+	, {j, Length@mu}];
+		
+		
+		
+		
+(* (0.3) in Okounkov-Olshanski, https://arxiv.org/pdf/q-alg/9605042.pdf *)
+
+shiftedSchurDet[lambda_List, mu_List] := Module[
+	{ff, ll, xx, n = Max[Length@lambda, Length@mu]},
+	ff[a_Integer, 0] := 1;
+	ff[a_Integer, k_Integer] := Product[a - j, {j, 0, k - 1}];
+	ll = PadRight[lambda, n];
+	xx = PadRight[mu, n];
+	Divide[
+		Det[Table[ff[xx[[i]] + n - i, ll[[j]] + n - j], {i, n}, {j, n}]]
+		,
+		Det[Table[ff[xx[[i]] + n - i, n - j], {i, n}, {j, n}]]
+	]
+];
+
+(* Base cases are values of shifted Schur functions. *)
+LRCoefficient[lambda_List, mu_List, mu_List] := LRCoefficient[lambda, mu, mu] = shiftedSchurDet[lambda, mu];
+LRCoefficient[nu_List, mu_List, nu_List] := LRCoefficient[nu, mu, nu] = shiftedSchurDet[mu, nu];
+
+(* General recursion - Based on recursion by Molev-Sagan, (1999) *)
+LRCoefficient[lambda_List, mu_List, nu_List] := LRCoefficient[lambda, mu, nu] =
+	Which[
+	! PartitionLessEqualQ[mu, nu] || ! 
+		PartitionLessEqualQ[lambda, nu], 0
+	,
+	(* Interchange accoring to size. *)
+	Tr[lambda] > Tr[mu], 
+	LRCoefficient[mu, lambda, nu]
+	,
+	(* Recursion *)
+	True,
+	1/(Tr@nu - Tr@mu) (
+		Sum[LRCoefficient[lambda, mup, nu], {mup, PartitionAddBox[mu]}] -
+		Sum[
+		LRCoefficient[lambda, mu, num], {num, 
+			PartitionRemoveBox[nu]}]
+		)
+];
+
+
+
+LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
+	schurProduct[lam_List, mu_List] := Sum[
+		LRCoefficient[lam, mu, nu] SchurSymbol[nu, x]
+		, {nu, IntegerPartitions[Tr[lam] + Tr[mu]]}];
+
+	schurPower[lam_List, 0] := 1;
+	schurPower[lam_List, 1] := SchurSymbol[lam, x];
+	schurPower[lam_List, d_Integer] := Which[
+		d == 2, schurProduct[lam, lam],
+		EvenQ[d], LRExpand[schurPower[lam, (d/2)]*schurPower[lam, (d/2)]],
+		True, 
+		LRExpand[
+		schurPower[lam, (d - 1)/2]*schurPower[lam, 1 + (d - 1)/2]]
+		];
+	(* This expands products and powers with the LR-rule. *)
+	rule = {
+		Times[SchurSymbol[lam_List, x], SchurSymbol[mu_List, x]] :> 
+		schurProduct[lam, mu]
+		,
+		Power[SchurSymbol[lam_List, x], d_] :> schurPower[lam, d]
+		};
+	(* Repeatedly expand and use LR-rule. *)
+
+	FixedPoint[Expand[#] /. rule &, expr]
+];
+		
+		
 (********************************************************************)
 
 
@@ -351,7 +435,7 @@ InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
 ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[ 
 	to === from,
 	expr,
-	(expr /. (s:coreBasesList)[mu__, from] :> s[mu, to])];
+	(expr /. (bb:coreBasesList)[mu__, from] :> bb[mu, to])];
 
 
 AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam];
@@ -429,24 +513,48 @@ PositiveCoefficientsQ[expr_, basisSymbol_: ss, extraSymbols_:{}] :=
 
 (******************************************************)
 
-HSYMBOLIC::usage = "HSYMBOLIC represents the complete homogeneous symmetric function.";
 
-(* TODO -- Use this for Schur. The ideas is to reuse for different alphabets. *)
-SymbolicJacobiTrudi[{lam_, mu_}, hh_:HSYMBOLIC] := SymbolicJacobiTrudi[{lam, mu}, hh] =
-Module[{mup = PadRight[mu, Length@lam], i, j, jtDet},
-		jtDet = Expand@If[Length[DeleteCases[mu, 0]] > Length[lam],
-					0,
-					Det@Table[
-						hh[lam[[i]] - mup[[j]] - i + j],
-					{i, Length@lam}, {j, Length@lam}]];
-		Expand[jtDet]
+
+(* Uses Kostka coeffs. *)
+
+SchurSymmetric[lam_List]:=SchurSymmetric[lam, None];
+SchurSymmetric[lam_List,None] := SchurSymmetric[lam,None] = Module[
+	{i, j, jtDet, bb},
+	
+	(* Jacobi--Trudi determinant *)
+	jtDet[ll_, mm_, 0] := 1;
+	jtDet[ll_, mm_, d_] := Expand[Det@Table[
+		bb[ll[[i]] - mm[[j]] - i + j],
+		{i, d},
+		{j, d}]];
+
+	Which[
+		Length[lam]==0, 
+		1
+	,
+
+		True,
+			Expand@Sum[
+				KostkaCoefficient[lam, nu,1] MonomialSymbol[nu]
+			,{nu,IntegerPartitions[Tr@lam]}]
+	]
 ];
 
+(* Slinky rule. *)
+SchurSymmetric[lam_List, x_] := With[{slr=CompositionSlinky[lam]},
+	If[slr[[2]]==0,
+	0, 
+	slr[[2]]*SchurSymmetric[slr[[1]], x]
+	]
+] /; Not[OrderedQ[Reverse@lam]];
 
-(* Uses the Jacobi--Trudi identity, and quick Kostka coeffs. Also includes the skew version. *)
+SchurSymmetric[lam_List, x_] := ChangeSymmetricAlphabet[ SchurSymmetric[lam, None], x];
 
-SchurSymmetric[{lam_List, mu_List}]:=SchurSymmetric[{lam, mu}, None];
-SchurSymmetric[{lam_List, mu_List},None] := SchurSymmetric[{lam, mu}, None] = Module[
+
+
+SkewSchurSymmetric[lam_List]:=SkewSchurSymmetric[{lam, {}}, None];
+SkewSchurSymmetric[{lam_List, mu_List}]:=SkewSchurSymmetric[{lam, mu}, None];
+SkewSchurSymmetric[{lam_List, mu_List},None] := SkewSchurSymmetric[{lam, mu}, None] = Module[
 	{i, j, jtDet, bb, mup = PadRight[mu, Length@lam]},
 	
 	(* Jacobi--Trudi determinant *)
@@ -456,49 +564,32 @@ SchurSymmetric[{lam_List, mu_List},None] := SchurSymmetric[{lam, mu}, None] = Mo
 		{i, d},
 		{j, d}]];
 
-(* Use the smallest matrix. *)
 Expand@Which[
 	!PartitionLessEqualQ[mu, lam],
 		0
 	,
-	
 	Length[lam]==0, 
 		1
 	,
 	
-	(* In the non-skew case, use the quick monomial recursion for Kostka coefficients. *)
-	Tr[mu]==0,
-		Sum[
-			KostkaCoefficient[lam, nu,1] MonomialSymbol[nu]
-		,{nu,IntegerPartitions[Tr@lam]}]
-	,
-	Length[lam] >= lam[[1]],
+	True,
 		With[{d = lam[[1]]},
 		jtDet[
 			PadRight[ConjugatePartition[lam], d],
 			PadRight[ConjugatePartition[mu], d], d]
 		] /. bb[v_] :> ElementaryESymbol[v]
 	,
-	True,
+	False, (* This never happens, we do not use this formula.*)
 		With[{d = Length[lam]},
 			jtDet[PadRight[lam, d], PadRight[mu, d], d]
 		] /. bb[v_] :> CompleteHSymbol[v]
 	]
 ];
 
+SkewSchurSymmetric[lam_List,x_]:=SkewSchurSymmetric[{lam, {}}, x];
+SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeSymmetricAlphabet[ SkewSchurSymmetric[{lam, mu}, None],  x];
 
-SchurSymmetric[lam_List] := SchurSymmetric[{lam, {}}, None];
-SchurSymmetric[lam_List, x_] := SchurSymmetric[{lam, {}}, x];
 
-(* Slinky rule. *)
-SchurSymmetric[{lam_List, {}}, x_] := With[{slr=CompositionSlinky[lam]},
-	If[slr[[2]]==0,
-	0, 
-	slr[[2]]*SchurSymmetric[{slr[[1]], {}}, x]
-	]
-] /; Not[OrderedQ[Reverse@lam]];
-
-SchurSymmetric[{lam_List, mu_List}, x_] := ChangeSymmetricAlphabet[ SchurSymmetric[{lam, mu}, None],  x];
 
 
 
@@ -629,6 +720,7 @@ ForgottenSymmetric[mu, x] = Module[{},
 ];
 
 
+OmegaInvolution::usage = "OmegaInvolution[expr, [x]] applies the omega involution on the expression.";
 OmegaInvolution[poly_, x_: None] := (
 	poly /. {
 		MonomialSymbol[mu_, x] :> ForgottenSymbol[mu, x],
@@ -649,7 +741,6 @@ OmegaInvolution@ElementaryESymmetric[{4, 2, 1}] ===
 
 
 
-
 (***********************************************************************************)
 
 (* Todo - update so that it takes all bases into account. *)
@@ -661,35 +752,36 @@ SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr,x,[n]
 
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, 0] := 0;
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] := 
-Which[
-Length[mu]>n,0,
-True, Sum[
-   Times @@ ((x /@ Range[n])^p)
-   , {p, Permutations[PadRight[mu, n]]}]
-];
+	If[
+		Length[mu]>n, 0
+		,
+		Sum[ Times @@ ((x /@ Range[n])^p)
+	, {p, Permutations[PadRight[mu, n]]}]
+	];
 
 SymmetricFunctionToPolynomial[expr_, x_] := SymmetricFunctionToPolynomial[expr, x, SymmetricFunctionDegree[expr]];
 
+(* TODO - This can be made more efficient if we replace expressions directly for some bases. *)
 SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] := 
-  ReplaceAll[
-   expr,
-   MonomialSymbol[mu_List, yy] :> 
-    SymmetricFunctionToPolynomial[MonomialSymbol[mu, None], x, n]];
+	ReplaceAll[
+		ToMonomialBasis[expr,yy]
+		,
+		MonomialSymbol[mu_List, yy] :> 
+		SymmetricFunctionToPolynomial[MonomialSymbol[mu, None], x, n]
+	];
 
 
 (***********************************************************************************)
 
 
 
-
-
-(* Todo --- Make more efficient *)
+(* TODO -- Optimize so that known formulas for princ. spec. is used. *)
 
 PrincipalSpecialization::usage = "PrincipalSpecialization[poly,q,[k],[x]], 
 gives the principal specialization. The parameter k tells how many 
 variables to replace - this can be infinity.";
 
-PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon, pp},
+PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 	psMon[mu_List] := With[{
 		ppc = PartitionPartCount[mu],
 		ell = Length@mu},
@@ -698,8 +790,8 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon, pp}
 	
 	Which[
 		k === Infinity,
-			ToPowerSumBasis[poly, pp, x] /. 
-			pp[lam_] :> 1/Product[1 - q^i, {i, lam}],
+			ToPowerSumBasis[poly, x] /. 
+			PowerSumSymbol[lam_,x] :> 1/Product[1 - q^i, {i, lam}],
 		
 		
 		(* This is quite efficient. *)
@@ -707,43 +799,44 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon, pp}
 			Expand[poly] /. MonomialSymbol[lam_, x] :> psMon[lam],
 		
 		True,
-			ToPowerSumBasis[poly, pp, x] /. 
-			pp[lam_] :> Product[Sum[q^(i (j - 1)), {j, k}], {i, lam}]
+			ToPowerSumBasis[poly,  x] /. 
+			PowerSumSymbol[lam_,x] :> Product[Sum[q^(i (j - 1)), {j, k}], {i, lam}]
 		]
 ];
 
 
+(* TODO -- Use the change of basis matrix directly instead. *)
 SnCharacter[lam_List, nu_List] := SnCharacter[{lam, {}}, nu];
-SnCharacter[{lam_List, mu_List}, nu_List] := Module[{schur, pp, n = Tr[lam] - Tr[mu], inP},
-schur = SchurSymmetric[{lam, mu}];
-inP = ToPowerSumBasis[schur, pp];
-(* Memoize all *)
-Do[
-	SnCharacter[{lam, mu}, tau] = 
-	ZCoefficient[tau] Coefficient[inP, pp[tau]];
-	, {tau, IntegerPartitions@n}];
-SnCharacter[{lam, mu}, nu]
+SnCharacter[{lam_List, mu_List}, nu_List] := Module[{schur, n = Tr[lam] - Tr[mu], inP},
+	schur = SchurSymbol[{lam, mu}];
+	inP = ToPowerSumBasis[schur];
+	
+	(* Memoize all *)
+	Do[
+		SnCharacter[{lam, mu}, tau] = 
+		ZCoefficient[tau] Coefficient[inP, PowerSumSymbol[tau]];
+		, {tau, IntegerPartitions@n}];
+	SnCharacter[{lam, mu}, nu]
 ];
+
 
 HallInnerProduct[f_, g_] := HallInnerProduct[f, g, {1, 1}, None];
 HallInnerProduct[f_, g_, {q_, t_}, x_: None] := Module[{
-	ff, gg, pp, lam,
+	ff, gg, lam,
 	vars, rulesF, rulesG, vF, vG, rF, rG
 	},
 	
-	
 	(* Convert to powersum *)
+	ff = ToPowerSumBasis[f, x];
+	gg = ToPowerSumBasis[g, x];
 	
-	ff = ToPowerSumBasis[f, pp, x];
-	gg = ToPowerSumBasis[g, pp, x];
+	vars = Cases[Variables[{ff, gg}], PowerSumSymbol[__,x], {0, Infinity}];
 	
-	vars = Cases[Variables[{ff, gg}], pp[__], {0, Infinity}];
 	rulesF = CoefficientRules[ff, vars];
 	rulesG = CoefficientRules[gg, vars];
-	
 
 (* Combine all power-sum terms. *)
-Sum[
+Expand@Sum[
 	vF = First@rF;
 	vG = First@rG;
 	
@@ -782,33 +875,34 @@ Block[{a, b, c, d},
 
 
 (* Computes f(-x1,-x2,...) *)
-NegateAlphabet[f_, x_: None] := Expand[f] /. MonomialSymbol[mu__, x] :> (-1)^(Tr@mu) MonomialSymbol[mu, x];
+(* TODO-UPDATE with rules for all bases. *)
+NegateAlphabet[f_, x_: None] := ToMonomialBasis[f] /. MonomialSymbol[mu__, x] :> (-1)^(Tr@mu) MonomialSymbol[mu, x];
 
 
-(* Here, f is in the None alphabet, and plethysm act on ALL given \
-alphabets in the G-expression. *)
+(* TODO - UPDATE! *)
+(* Here, f is in the None alphabet, and plethysm act on ALL given alphabets in the G-expression. *)
 Clear[Plethysm];
 Plethysm[f_, g_, alphabets_: {None}] := 
 Module[{PkPlethysmWithG, fpp, gpp, fInP, gInP,
 	fVars, gVars, auxVars, cF, k, v, vF
 	},
-fInP = ToPowerSumBasis[f, fpp, None];
-gInP = Fold[ToPowerSumBasis[#1, gpp[#2], #2 ] &, g, alphabets];
+	
+	fInP = ToPowerSumBasis[f, fpp, None];
+	gInP = Fold[ToPowerSumBasis[#1, gpp[#2], #2 ] &, g, alphabets];
+	
+	fVars = Cases[Variables[fInP], fpp[__], {0, Infinity}];
+	gVars = Cases[Variables[gInP], gpp[_][__], {0, Infinity}];
+	auxVars = Complement[Variables[{fInP, gInP}], fVars, gVars];
+	
+	PkPlethysmWithG[k_] :=
+		(gInP /. 
+		Table[v -> v^k, {v, auxVars}]) /. {gpp[x_][mu__] :> 
+		gpp[x][k mu]};
 
-fVars = Cases[Variables[fInP], fpp[__], {0, Infinity}];
-gVars = Cases[Variables[gInP], gpp[_][__], {0, Infinity}];
-auxVars = Complement[Variables[{fInP, gInP}], fVars, gVars];
-
-	PkPlethysmWithG[
-	k_] :=
-	(gInP /. 
-	Table[v -> v^k, {v, auxVars}]) /. {gpp[x_][mu__] :> 
-	gpp[x][k mu]};
-
-Expand@(Sum[
-	cF = Coefficient[fInP, vF];
-	cF Product[ PkPlethysmWithG[k], {k, First@vF}]
-	, {vF, fVars}] /. gpp[x_][mu__] :> PowerSumSymmetric[mu, x])
+	Expand@(Sum[
+		cF = Coefficient[fInP, vF];
+		cF Product[ PkPlethysmWithG[k], {k, First@vF}]
+		, {vF, fVars}] /. gpp[x_][mu__] :> PowerSumSymmetric[mu, x])
 ];
 
 UnitTest[Plethysm] := And[
@@ -838,6 +932,7 @@ JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Produc
 (*
 http://igm.univ-mlv.fr/~fpsac/FPSAC02/ARTICLES/Tudose.pdf
 *)
+HallLittlewoodTSymmetric::usage = "HallLittlewoodTSymmetric is the transformed Hall-Littlewood polynomial.";
 HallLittlewoodTSymmetric[lam_List, q_, x_: None] := 
 HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	res, operators, n = Tr@lam, applyIJ, hh, qq},
@@ -867,8 +962,8 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	res = Composition[Sequence @@ operators][ hh[PadRight[lam, n]] ];
 	(* Replace with complete homogeneous sym funcs.*)
 	
-	Expand[res /. {hh[a_] :> CompleteHSymmetric[a, x], qq -> q}]
-	];
+	Expand[res /. {hh[a_] :> CompleteHSymbol[a, x], qq -> q}]
+];
 
 (* Example 3.1 in https://www.mat.univie.ac.at/~slc/s/s32leclerc.pdf *)
 
@@ -895,7 +990,6 @@ SchursPSymmetric[lam_List, x_: None]:=Together[SchursQSymmetric[lam,x]/2^Length[
 HallLittlewoodMSymmetric[lam_List, q_, x_: None] := 
 Together[q^PartitionN[lam] HallLittlewoodTSymmetric[lam, 1/q, x]];
 
-
 MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := Module[{},
 ChangeSymmetricAlphabet[
 	MacdonaldPSymmetricHelper[lam, SPECIALQ, SPECIALT]
@@ -904,9 +998,9 @@ ChangeSymmetricAlphabet[
 
 (* 7.13' p. 346 in Macdonald's book. *)
 
-MacdonaldPSymmetricHelper[mu_List, q_, t_, x_: None] :=MacdonaldPSymmetricHelper[mu,q,t,x]=
+MacdonaldPSymmetricHelper[mu_List, q_, t_] :=MacdonaldPSymmetricHelper[mu,q,t]=
 Together@Sum[
-   MonomialSymbol[YoungTableauWeight[ssyt],x]
+   MonomialSymbol[YoungTableauWeight[ssyt]]
     *
     With[{
       ribbons = Table[
@@ -923,49 +1017,6 @@ Together@Sum[
 
 
 
-(* We always compute with the None alphabet *)
-(* Here, we need to have some private variables. *)
-MacdonaldPSymmetricOld[lam_List, q_, t_, x_: None] := Module[{},
-ChangeSymmetricAlphabet[
-	MacdonaldPPolynomialHelper[lam, SPECIALQ, SPECIALT]
-	, x] /. {SPECIALQ -> q, SPECIALT -> t}
-];
-
-MacdonaldPPolynomialHelper[lam_List, q_, t_] := Module[
-{uu, n = Tr@lam, ips, PP, polys, ppExpr, eqns1, eqns2, vars, sol},
-ips = IntegerPartitions[n];
-
-(* Generic expression for Macdonald polynomial. *)
-
-ppExpr[nu_] :=
-	MonomialSymbol[nu] + Sum[
-	uu[nu, mu] MonomialSymbol[mu]
-	, {mu, Select[ips, PartitionStrictDominatesQ[#, nu] &]}];
-
-eqns1 = Table[PP[nu] == ppExpr[nu], {nu, ips}];
-eqns2 = Join @@ Table[
-	If[mu == nu,
-	Sequence @@ {},
-	HallInnerProduct[ppExpr[mu], ppExpr[nu], {q, t}] == 0
-	]
-	, {mu, ips}, {nu, ips}];
-
-vars = Join[
-	Table[PP[mu], {mu, ips}],
-	Join @@ Table[uu[nu, mu]
-	, {nu, ips}
-	, {mu, Select[ips, PartitionStrictDominatesQ[#, nu] &]}]
-	];
-
-sol = Solve[Join[eqns1, eqns2], vars][[1]];
-Do[
-	MacdonaldPPolynomialHelper[mu, q, t] = Together[(PP[mu] /. sol)];
-	, {mu, ips}];
-MacdonaldPPolynomialHelper[lam, q, t]
-];
-
-
-
 (****************************************************************************************************)
 (****************************************************************************************************)
 (****************************************************************************************************)
@@ -973,6 +1024,7 @@ MacdonaldPPolynomialHelper[lam, q, t]
 
 
 
+(* TODO: allow for optional alphabet. *)
 
 MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam,q,t] is the modified Macdonald polynomial.";
 MacdonaldHSymmetric[lam_List, q_, t_] := MacdonaldHSymmetric[{lam, {}}, q, t];
@@ -994,11 +1046,10 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := MacdonaldHSymmet
 		desSet = DescentSet@Ordering[rw];
 		alpha = DescentSetToComposition[desSet, n];
 		
-		SchurSymmetric[alpha]
+		SchurSymbol[alpha]
 		SPECIALQ^inv SPECIALT^maj
 	, {p, Permutations[Range[n]]}]
 ];
-
 
 
 ToMacdonaldHBasis[poly_, q_, t_, mh_:MacdonaldHSymbol, x_: None] := 
@@ -1011,9 +1062,10 @@ PostfixedCharge[mu_List, w_List] := Module[{postFix, decomp},
       MapIndexed[ConstantArray[#2[[1]], #1] &, ConjugatePartition@mu]];
    decomp = ChargeWordDecompose[Join[w, postFix]];
    Total[PermutationCharge /@ decomp]
-   ];
+];
 
 
+(* TODO: allow for optional alphabet. *)
 
 SkewMacdonaldESymmetric::usage = "SkewMacdonaldESymmetric[{lam,mu},q] gives the skew Macdonald polynomial.";
 
@@ -1027,7 +1079,7 @@ SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := SkewMacdonaldESymmetri
     nn = Tr[lam], muc = ConjugatePartition[mu]},
    alpha = PadRight[ConjugatePartition[lam], nn] - PadRight[muc, nn];
    Sum[
-    SchurSymmetric[nu]
+    SchurSymbol[nu]
      Sum[
       SPECIALQ^PostfixedCharge[mu, SYTReadingWord[t]]
       , {t, 
@@ -1129,8 +1181,9 @@ SymplecticSchurSymmetric::usage = "SymplecticSchurSymmetric[mu] gives the symple
 SymplecticSchurSymmetric[{}] := 1;
 SymplecticSchurSymmetric[lam_List] := Expand[(1/2) Det@Table[
       CompleteHSymbol[lam[[i]] - i + j] + 
-       CompleteHSymbol[lam[[i]] - i - j + 2], {i, Length@lam}, 
-		{j, Length@lam}]];
+       CompleteHSymbol[lam[[i]] - i - j + 2], 
+	{i, Length@lam}, 
+	{j, Length@lam}]];
 
 
 OrthogonalSchurSymmetric::usage = "OrthogonalSchurSymmetric[mu] gives the orthogonal Schur function.";
@@ -1138,7 +1191,8 @@ OrthogonalSchurSymmetric[{}] := 1;
 OrthogonalSchurSymmetric[lam_List] := Det@Table[
     CompleteHSymbol[lam[[i]] - i + j] - 
      CompleteHSymbol[lam[[i]] - i - j], 
-	{i, Length@lam}, {j, Length@lam}];
+	{i, Length@lam}, 
+	{j, Length@lam}];
 
 
 	
@@ -1157,7 +1211,6 @@ CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a c
 CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
 	MonomialSymbol[YoungTableauWeight@ssyt,x]
 ,{ssyt, CylindricTableaux[{lam, mu}, d]}];
-
 
 
 (* Based on 7.10c in https://arxiv.org/pdf/1907.02645.pdf *)
@@ -1187,8 +1240,8 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer] := LahSymmetricFunctionNegati
 (****************************************************************************************************)
 
 
-	
-	
+
+
 DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
 
 DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
@@ -1204,8 +1257,7 @@ DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH
 		Together[inH /. "hh"[lam_List] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
 ];
 
-NablaOperator[g_, q_, t_] :=
-DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
+NablaOperator[g_, q_, t_] := DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
 
 DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
 		(* Monomials defined by shape. *)
@@ -1215,15 +1267,14 @@ DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, 
 		
 		(* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
 
-				val[mu_List] := 
-		SymmetricFunctionToPolynomial[f, x, Tr[mu] - 1] /. 
-			x[i_] :> monoms[mu][[i]];
+		val[mu_List] := SymmetricFunctionToPolynomial[f, x, Tr[mu] - 1] /. x[i_] :> monoms[mu][[i]];
 		
 		inH = Expand[ToMacdonaldHBasis[g, "hh", q, t]];
 		Together[
 		inH /. "hh"[lam_List] :> 
 			val[lam] MacdonaldHSymmetric[lam, q, t]]
 ];
+
 
 
 End[(* End private *)];

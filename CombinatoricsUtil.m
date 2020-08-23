@@ -409,8 +409,7 @@ ZCoefficient[lam_List] := Times@@MapIndexed[ (#1!) * First[#2]^#1 &, PartitionPa
 
 
 PartitionAddBox::usage = "PartitionAddBox[lam] returns all partitions with one box more than lambda.";
-PartitionAddBox[lam_List] := Module[{lamP},
-   lamP = DeleteCases[lam, 0];
+PartitionAddBox[lam_List] := With[{lamP = DeleteCases[lam, 0]},
    Append[
     Table[
      Which[r == 1, MapAt[# + 1 &, lamP, 1],
@@ -420,7 +419,7 @@ PartitionAddBox[lam_List] := Module[{lamP},
     ,
     Append[lamP, 1](* Can create new row with one box.*)
     ]
-   ];
+];
 UnitTest[PartitionAddBox] := SameQ[
    PartitionAddBox[{5, 4, 4, 3, 3, 1, 1, 0}],
    {
@@ -435,7 +434,7 @@ UnitTest[PartitionAddBox] := SameQ[
 PartitionRemoveBox::usage = "PartitionRemoveBox[lam] lists all partitions obtainable from lambda with one box removed.";
 PartitionRemoveBox[{}] := {};
 PartitionRemoveBox[{lam__, 0}] := PartitionRemoveBox[{lam}];
-PartitionRemoveBox[lam_List] := Module[{ll = Length[lam]},
+PartitionRemoveBox[lam_List] := With[{ll = Length[lam]},
    Table[
     Which[
      r == ll && lam[[ll]] == 1, Most[lam],
@@ -444,7 +443,7 @@ PartitionRemoveBox[lam_List] := Module[{ll = Length[lam]},
      MapAt[# - 1 &, lam, r],
      True, Nothing]
     ,
-    {r, ll}]];
+{r, ll}]];
 UnitTest[PartitionRemoveBox] := SameQ[
    PartitionRemoveBox[{5, 4, 4, 3, 3, 1, 1, 0}],
    {
