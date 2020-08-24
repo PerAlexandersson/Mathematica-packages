@@ -3,12 +3,18 @@
 
 (* TODO 
 
+--- Create a test suite.
+
 --- Make converting to new bases easier. 
 		Might be an issue if these are not expressed in the monomial basis, but should be rare.
 
+--- Use ExpandM instead of automatic.
+
+--- Use the e-basis as intermediate basis instead(?)
+		
 --- Allow standard basis to handle Hall inner product in a more efficient way?
 
---- Improve Sn-character code
+--- Improve Sn-character code(?)
 	
 --- Hard-code algorithms for computing e-to-m and h-to-m using Kostka coeffs / other formulas instead?
 			
@@ -17,8 +23,6 @@
 --- See what attributes can be used (listable, orderless, etc).
 
 --- Add DeclarePackage instead of loading NewTableaux.
-
---- Make a unit-test file.
 
 --- Update documentation.
 
@@ -47,6 +51,7 @@ ForgottenSymbol;
 
 SymmetricAlphabets;
 ChangeSymmetricAlphabet;
+SymmetricMonomialList;
 
 MonomialSymmetric;
 AugmentedMonomialSymmetric;
@@ -115,8 +120,6 @@ DeltaPrimOperator;
 Begin["Private`"];
 
 coreBasesList=(MonomialSymbol|SchurSymbol|ElementaryESymbol|CompleteHSymbol|ForgottenSymbol|PowerSumSymbol);
-
-
 
 
 
@@ -440,13 +443,24 @@ ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[
 	expr,
 	(expr /. (bb:coreBasesList)[mu__, from] :> bb[mu, to])];
 
+	
+SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__, x_]]},
+		MonomialList[expr,mm]
+];
 
-(* TODO - This is not super accurate, if there are products of different bases in expr. *)
+
 SymmetricFunctionDegree::usage = "SymmetricFunctionDegree[expr] returns the degree of the symmetric function.";
-SymmetricFunctionDegree[expr_, yy_:None] := Max[
-		Cases[expr, (bb:coreBasesList)[mu_List, yy] :> Tr[mu]
-,{0,Infinity}]];
 
+SymmetricFunctionDegree[expr_, All] := Max[
+	Table[
+			Cases[mm, (bb:coreBasesList)[mu_List, x_] :> Tr[mu],{0,Infinity}]
+		,{mm,SymmetricMonomialList[expr]}]
+];
+SymmetricFunctionDegree[expr_, yy_:None] := Max[
+	Table[
+			Cases[mm, (bb:coreBasesList)[mu_List, yy] :> Tr[mu],{0,Infinity}]
+		,{mm,SymmetricMonomialList[expr]}]
+];
 
 
 AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam];
@@ -786,11 +800,11 @@ SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] :=
 
 
 
-(* TODO -- Optimize so that known formulas for princ. spec. is used. *)
+(* TODO -- Optimize so that known formulas for princ. spec. is used? *)
 
 PrincipalSpecialization::usage = "PrincipalSpecialization[poly,q,[k],[x]], 
 gives the principal specialization. The parameter k tells how many 
-variables to replace - this can be infinity.";
+variables to replace -- this can be infinity.";
 
 PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 	psMon[mu_List] := With[{
@@ -842,7 +856,7 @@ HallInnerProduct[f_, g_, {q_, t_}, x_: None] := Module[{
 	
 	rulesF = CoefficientRules[ff, vars];
 	rulesG = CoefficientRules[gg, vars];
-
+	
 (* Combine all power-sum terms *)
 Expand@Sum[
 	vF = First@rF;
