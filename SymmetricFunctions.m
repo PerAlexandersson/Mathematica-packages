@@ -806,7 +806,7 @@ SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] :=
 		,
 		MonomialSymbol[mu_List, yy] :> 
 		SymmetricFunctionToPolynomial[MonomialSymbol[mu, None], x, n]
-	];
+];
 
 
 (***********************************************************************************)
@@ -1099,7 +1099,7 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := MacdonaldHSymmet
 ];
 
 (* Make a symbol for this. *)
-ToMacdonaldHBasis[poly_, q_, t_, mh_:MacdonaldHSymbol, x_: None] := 
+ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] := 
 Expand@Together@toOtherSymmetricBasis[ {ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
 
 
@@ -1284,37 +1284,35 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer] := LahSymmetricFunctionNegati
 
 
 
-
 DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
 
 DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
-		(* Monomials defined by shape. *)
 		
+		(* Monomials defined by shape. *)
 		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]);
 		
 		(* This correspond to f[B(mu)] -- it is quicker than plethysm *)
 		
 		val[mu_List] := SymmetricFunctionToPolynomial[f, x, Tr[mu]] /. x[i_] :> monoms[mu][[i]];
 		
-		inH = Expand[ToMacdonaldHBasis[g, q, t, "hh"]];
-		Together[inH /. "hh"[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
+		inH = Expand[ToMacdonaldHBasis[g, q, t]];
+		Together[inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
 ];
 
 NablaOperator[g_, q_, t_] := DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
 
 DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
+
 		(* Monomials defined by shape. *)
-		
-		monoms[mu_List] := 
-		Rest[q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]];
+		monoms[mu_List] := Rest[q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]];
 		
 		(* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
-
+		
 		val[mu_List] := SymmetricFunctionToPolynomial[f, x, Tr[mu] - 1] /. x[i_] :> monoms[mu][[i]];
 		
-		inH = Expand[ToMacdonaldHBasis[g, q, t, "hh"]];
+		inH = Expand[ToMacdonaldHBasis[g, q, t]];
 		Together[
-		inH /. "hh"[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
+		inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
 ];
 
 
