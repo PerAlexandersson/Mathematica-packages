@@ -5,21 +5,12 @@
 
 --- Create a test suite.
 
---- E-in-M matrix is same as E-in-S times S-in-M
-
---- (Inverse) Kostka coefficients can be computed from the Jacobi--Trudi matrix.
-
---- Hard-code algorithms for computing e-to-m and h-to-m using Kostka coeffs / other formulas instead?
-
---- Use ExpandM instead of automatic.
-
---- Use the e-basis as intermediate basis instead(?)
-		
 --- Allow standard basis to handle Hall inner product in a more efficient way?
+		(Use Schur basis as intermediate instead, as that one is always computed.
 
 --- Improve Sn-character code(?)
 	
---- Make change-of-basis accept several/All alphabets at once?
+--- Make change-of-basis accept several/All alphabets at once
 
 --- See what attributes can be used (listable, orderless, etc).
 
@@ -35,14 +26,11 @@ Needs["CombinatoricsUtil`"];
 Needs["NewTableaux`"];
 
 
-fromToBasis; (* Debug *)
-basisInElementary; (* Debug. *)
-
 KostkaCoefficient;
 InverseKostkaCoefficient;
 LRCoefficient;
-ExpandLR;
-ExpandM;
+LRExpand;
+MExpand;
 
 PositiveCoefficientsQ;
 
@@ -58,6 +46,16 @@ SymmetricAlphabets;
 ChangeSymmetricAlphabet;
 SymmetricMonomialList;
 
+
+SymFuncTransMat;
+
+ToSchurBasis;
+ToPowerSumBasis;
+ToPowerSumZBasis;
+ToElementaryEBasis;
+ToCompleteHBasis;
+ToMonomialBasis;
+
 MonomialSymmetric;
 AugmentedMonomialSymmetric;
 CompleteHSymmetric;
@@ -66,15 +64,7 @@ PowerSumSymmetric;
 SchurSymmetric;
 ForgottenSymmetric;
 
-(* This expands into e's *)
-SkewSchurSymmetric;
 
-ToSchurBasis;
-ToPowerSumBasis;
-ToPowerSumZBasis;
-ToElementaryEBasis;
-ToCompleteHBasis;
-ToMonomialBasis;
 
 OmegaInvolution;
 HallInnerProduct;
@@ -85,6 +75,10 @@ SymmetricFunctionToPolynomial;
 PrincipalSpecialization;
 Plethysm;
 
+
+
+(* This expands into e's *)
+SkewSchurSymmetric;
 
 JackPSymmetric;
 JackJSymmetric;
@@ -258,7 +252,7 @@ monomialProduct[lam_List, mu_List, x_: None] := Module[
 ];
 
 
-ExpandM[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
+MExpand[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
 	
 	monomPower[lam_List, 0,x_] := 1;
 	monomPower[lam_List, 1,x_] := bb[lam, x];
@@ -353,76 +347,8 @@ jacobiTrudiDet[{ll_List, mm_List}, bb_, d_Integer] := Expand@Det@Table[
 		,{i, d},{j, d}];
 
 
-
-
-(* These are the same, for compatability reasons. *)
-MonomialSymmetric=MonomialSymbol;
-
-(* This is based on Macdonald, p.327, and is extremely fast. *)
-KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
-
-KostkaCoefficient[mu_List, mu_List, a_: 1] := 1;
-KostkaCoefficient[mu_List, nu_List, a_: 1] := 0 /; (! PartitionDominatesQ[nu, mu]);
-KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = Together[With[
-	{n = Length@mu,
-	ee = Function[{ll}, 
-		a PartitionN[ConjugatePartition@ll] - PartitionN[ll]
-		]
-	},
-	
-	1/(ee[lam]-ee[mu])
-	Sum[
-		With[{mu2 =
-			Sort[DeleteCases[
-			ReplacePart[mu, {i -> mu[[i]] + r, j -> mu[[j]] - r}], 0],
-			Greater]
-			},
-			
-			(mu[[i]] - mu[[j]] + 2 r) KostkaCoefficient[lam, mu2, a]
-		]
-	, {i, n}
-	,{j, i + 1, n}
-	,{r, mu[[j]]}
-	]
-]];
-
-
-InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the inverse Kostka coefficient.";
-
-InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
-InverseKostkaCoefficient[lam_List, mu_List] := InverseKostkaKHelper[Reverse@lam, Reverse@mu];
-
-(* The convention in https://doi.org/10.1080/03081089008817966
-uses partitions with parts ordered increasingly, which makes notation easier.
-*)
-
-InverseKostkaKHelper[mu_List, mu_List] := 1;
-InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
-InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
-	-Sum[
-		With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
-			If[pos == {}, 0
-			, (-1)^(j)
-				InverseKostkaKHelper[
-				(* Remove a part equal to p *)
-				
-				ReplacePart[lam, pos -> Nothing]
-				,
-				(* Subtract 1 from the first j-1 entries, 
-				and drop jth entry *)
-				
-				DeleteCases[
-					MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
-				]
-			]
-			]
-	, {j, Length@mu}];
-		
-		
-		
-		
 (* (0.3) in Okounkov-Olshanski, https://arxiv.org/pdf/q-alg/9605042.pdf *)
-
+(* Used to compute LR-coefficients *)
 shiftedSchurDet[lambda_List, mu_List] := Module[
 	{ff, ll, xx, n = Max[Length@lambda, Length@mu]},
 	ff[a_Integer, 0] := 1;
@@ -461,7 +387,7 @@ LRCoefficient[lambda_List, mu_List, nu_List] := LRCoefficient[lambda, mu, nu] =
 ];
 
 
-ExpandLR[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
+LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 	schurProduct[lam_List, mu_List] := Sum[
 		LRCoefficient[lam, mu, nu] SchurSymbol[nu, x]
 		, {nu, IntegerPartitions[Tr[lam] + Tr[mu]]}];
@@ -470,9 +396,9 @@ ExpandLR[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 	schurPower[lam_List, 1] := SchurSymbol[lam, x];
 	schurPower[lam_List, d_Integer] := Which[
 		d == 2, schurProduct[lam, lam],
-		EvenQ[d], ExpandLR[schurPower[lam, (d/2)]^2],
+		EvenQ[d], LRExpand[schurPower[lam, (d/2)]^2],
 		True, 
-		ExpandLR[
+		LRExpand[
 			schurPower[lam, (d - 1)/2]*schurPower[lam, 1 + (d - 1)/2]]
 		];
 	(* This expands products and powers with the LR-rule. *)
@@ -486,10 +412,8 @@ ExpandLR[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 	
 	FixedPoint[Expand[#] /. rule &, expr]
 ];
-		
-		
-(********************************************************************)
 
+(********************************************************************)
 
 SymmetricAlphabets[expr_]:=Cases[expr, (bb:coreBasesList)[mu__, x_] :> x, {0, Infinity}];
 
@@ -497,7 +421,6 @@ ChangeSymmetricAlphabet[expr_, to_, from_: None] := If[
 	to === from,
 	expr,
 	(expr /. (bb:coreBasesList)[mu__, from] :> bb[mu, to])];
-
 	
 SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__, x_]]},
 		MonomialList[expr,mm]
@@ -516,58 +439,6 @@ SymmetricFunctionDegree[expr_, yy_:None] := Max[
 			Cases[mm, (bb:coreBasesList)[mu_List, yy] :> Tr[mu],{0,Infinity}]
 		,{mm,SymmetricMonomialList[expr]}]
 ];
-
-
-AugmentedMonomialSymmetric[lam_List] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam];
-
-
-(* This setup is for making sure memoization works. *)
-CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
-CompleteHSymmetric[{}, None] := 1;
-CompleteHSymmetric[d_Integer, None] :=  Which[
-	d < 0, 0, 
-	d==0, 1,
-	True, Sum[MonomialSymbol[mu], {mu, IntegerPartitions[d]}]];
-CompleteHSymmetric[lam_List, None] := CompleteHSymmetric[lam, None] = ExpandM[
-	CompleteHSymmetric[First@lam, None]*CompleteHSymmetric[Rest@lam, None]
-];
-CompleteHSymmetric[{}, x_] := 1;
-CompleteHSymmetric[lam_List, x_] := ChangeSymmetricAlphabet[CompleteHSymmetric[lam,None],x];
-
-
-ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
-ElementaryESymmetric[{}, None] := 1;
-ElementaryESymmetric[d_Integer, None] := Which[
-	d < 0, 0,
-	d ==0, 1,
-	True, MonomialSymbol[ConstantArray[1, d]]];
-
-ElementaryESymmetric[lam_List, None] := ElementaryESymmetric[lam, None] = ExpandM[
-	ElementaryESymmetric[First@lam, None]*ElementaryESymmetric[Rest@lam, None]
-];
-ElementaryESymmetric[{}, x_] := 1;
-ElementaryESymmetric[lam_List, x_] := ChangeSymmetricAlphabet[ElementaryESymmetric[lam,None],x];
-
-
-
-UnitTest[ElementaryESymmetric] := With[{m = 5},
-Expand[Sum[
-	(-1)^i ElementaryESymmetric[i] CompleteHSymmetric[m - i], {i, 0,
-		m}]] === 0
-];
-
-
-PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
-PowerSumSymmetric[{}, None] := 1;
-PowerSumSymmetric[d_Integer, None] :=  Which[
-	d < 0, 0, 
-	d==0, 1, 
-	True, MonomialSymbol[{d}, None]];
-PowerSumSymmetric[lam_List, None] := PowerSumSymmetric[lam, None] = ExpandM[
-	PowerSumSymmetric[First@lam, None]*PowerSumSymmetric[Rest@lam, None]
-];
-PowerSumSymmetric[{}, x_] := 1;
-PowerSumSymmetric[lam_List, x_] := ChangeSymmetricAlphabet[PowerSumSymmetric[lam,None],x];
 
 
 PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
@@ -590,63 +461,6 @@ PositiveCoefficientsQ[expr_, basisSymbol_: ss, extraSymbols_:{}] :=
 ];
 
 
-(******************************************************)
-
-
-
-(* Uses Kostka coeffs. *)
-
-
-SchurSymmetric[lam_List]:=SchurSymmetric[lam, None];
-
-
-(* Slinky rule. *)
-SchurSymmetric[lam_List, None] := With[{slr=CompositionSlinky[lam]},
-	If[slr[[2]]==0,
-	0, 
-	slr[[2]]*SchurSymmetric[slr[[1]], None]
-	]
-] /; Not[OrderedQ[Reverse@lam]];
-
-SchurSymmetric[{},None]:=1;
-SchurSymmetric[lam_List,None] := SchurSymmetric[lam,None] = 
-	Expand@Sum[
-		KostkaCoefficient[lam, nu,1] MonomialSymbol[nu]
-			,{nu,IntegerPartitions[Tr@lam]}];
-
-
-SchurSymmetric[lam_List, x_] := ChangeSymmetricAlphabet[ SchurSymmetric[lam, None], x];
-
-
-
-SkewSchurSymmetric[lam_List]:=SkewSchurSymmetric[{lam, {}}, None];
-SkewSchurSymmetric[{lam_List, mu_List}]:=SkewSchurSymmetric[{lam, mu}, None];
-SkewSchurSymmetric[{lam_List, mu_List},None] := SkewSchurSymmetric[{lam, mu}, None] = Module[
-	{bb, mup = PadRight[mu, Length@lam]},
-	
-Expand@Which[
-	!PartitionLessEqualQ[mu, lam],
-		0
-	,
-	Length[lam]==0, 
-		1
-	,
-	(* Use Jacob-Trudi *)
-	True,
-		With[{d = lam[[1]]},
-			jacobiTrudiDet[
-				{PadRight[ConjugatePartition[lam], d],
-				PadRight[ConjugatePartition[mu], d]}
-				, bb, d]
-		] /. bb[v_] :> ElementaryESymbol[v]
-	]
-];
-
-SkewSchurSymmetric[lam_List,x_]:=SkewSchurSymmetric[{lam, {}}, x];
-SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeSymmetricAlphabet[ SkewSchurSymmetric[{lam, mu}, None],  x];
-
-
-
 (**********************************************************)
 (**********************************************************)
 (**********************************************************)
@@ -657,12 +471,16 @@ Code to generate transition matrices efficiently.
 The idea is to avoid any multiplication in the monomial basis, as this is slow.
 *)
 
+SymFuncTransMat::usage = "SymFuncTransMat[fromBasis, toBasis, d] returns the transition matrix
+in degree d. Here, fromBasis and toBasis are functions which given a partition, returns the monomial expansion.";
+
+
 (* If from and to are the same, we have identity. *)
-fromToBasis[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[PartitionsP@deg];
+SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[PartitionsP@deg];
 
 
-fromToBasis[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
-fromToBasis[SchurSymmetric, CompleteHSymmetric, deg]=Table[
+SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
+SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
 		With[{det=jacobiTrudiDet[lam,CompleteHSymbol,Length[lam]]},
 		
 		Table[
@@ -674,27 +492,27 @@ fromToBasis[SchurSymmetric, CompleteHSymmetric, deg]=Table[
 
 
 (* Change-of-basis involving S and H *)
-fromToBasis[CompleteHSymmetric, SchurSymmetric, deg_Integer]:=
-fromToBasis[CompleteHSymmetric, SchurSymmetric, deg]=
-Inverse@fromToBasis[SchurSymmetric, CompleteHSymmetric, deg];
+SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg_Integer]:=
+SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]=
+Inverse@SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg];
 
-fromToBasis[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
-Transpose@fromToBasis[CompleteHSymmetric, SchurSymmetric, deg];
+SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
+Transpose@SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg];
 
-fromToBasis[CompleteHSymmetric, MonomialSymmetric, deg_]:=
-fromToBasis[CompleteHSymmetric, SchurSymmetric, deg].fromToBasis[SchurSymmetric,MonomialSymmetric, deg];
+SymFuncTransMat[CompleteHSymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
 
 
 (* There is a simple relation between StoH and StoE matrices, where index is conjugated. *)
-fromToBasis[SchurSymmetric, ElementaryESymmetric, deg_]:=
-fromToBasis[SchurSymmetric, CompleteHSymmetric, deg][[ conjugatePermutation[deg] ]];
+SymFuncTransMat[SchurSymmetric, ElementaryESymmetric, deg_]:=
+SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg][[ conjugatePermutation[deg] ]];
 
-fromToBasis[ElementaryESymmetric, SchurSymmetric, deg_]:=Transpose[
-	Transpose[fromToBasis[CompleteHSymmetric, SchurSymmetric, deg]][[ conjugatePermutation[deg] ]]
+SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg_]:=Transpose[
+	Transpose[SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]][[ conjugatePermutation[deg] ]]
 ];
 
-fromToBasis[ElementaryESymmetric, MonomialSymmetric, deg_]:=
-fromToBasis[ElementaryESymmetric, SchurSymmetric, deg].fromToBasis[SchurSymmetric,MonomialSymmetric, deg];
+SymFuncTransMat[ElementaryESymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
 
 
 
@@ -712,8 +530,8 @@ Expand[Expand[elementaryInPowerSum@Most@mu]*elementaryInPowerSum[Last@mu]];
 
 
 (* Matrix for elementary to power-sum *)
-fromToBasis[ElementaryESymmetric, PowerSumSymmetric, deg_]:=
-fromToBasis[ElementaryESymmetric, PowerSumSymmetric, deg]=Table[
+SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg_]:=
+SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg]=Table[
 		With[{EinP = elementaryInPowerSum[lam]},
 		
 		Table[
@@ -722,35 +540,35 @@ fromToBasis[ElementaryESymmetric, PowerSumSymmetric, deg]=Table[
 		]
 ,{lam, IntegerPartitions[deg]}];
 
-fromToBasis[PowerSumSymmetric, ElementaryESymmetric, deg_]:=
-fromToBasis[PowerSumSymmetric, ElementaryESymmetric, deg]=
-Inverse@fromToBasis[ElementaryESymmetric, PowerSumSymmetric, deg];
+SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg_]:=
+SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg]=
+Inverse@SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg];
 
 (*Power-sum to monomial. *)
-fromToBasis[PowerSumSymmetric, MonomialSymmetric, deg_]:=
-fromToBasis[PowerSumSymmetric, ElementaryESymmetric, deg].fromToBasis[ElementaryESymmetric,MonomialSymmetric, deg];
+SymFuncTransMat[PowerSumSymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg].SymFuncTransMat[ElementaryESymmetric,MonomialSymmetric, deg];
 
 
 (* Forgotten to monomial. *)
-fromToBasis[ForgottenSymmetric, MonomialSymmetric, deg_]:=Transpose@fromToBasis[ElementaryESymmetric, CompleteHSymmetric, deg];
+SymFuncTransMat[ForgottenSymmetric, MonomialSymmetric, deg_]:=Transpose@SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg];
 
 
 
 (* Remaining transition matrices are calculated as below. *)
 
-fromToBasis[fromBasisFunc_, MonomialSymmetric, deg_Integer]:=
-	fromToBasis[fromBasisFunc, MonomialSymmetric, deg]=Table[
+SymFuncTransMat[fromBasisFunc_, MonomialSymmetric, deg_Integer]:=
+	SymFuncTransMat[fromBasisFunc, MonomialSymmetric, deg]=Table[
 		Coefficient[fromBasisFunc[lam], MonomialSymbol[mu] ]
 	,{lam, IntegerPartitions[deg]},
 	{mu, IntegerPartitions[deg]}
 ];
 
-fromToBasis[MonomialSymmetric,toBasisFunc_, deg_Integer]:=
-	fromToBasis[MonomialSymmetric,toBasisFunc,deg]=Inverse@fromToBasis[toBasisFunc,MonomialSymmetric, deg];
+SymFuncTransMat[MonomialSymmetric,toBasisFunc_, deg_Integer]:=
+	SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg]=Inverse@SymFuncTransMat[toBasisFunc,MonomialSymmetric, deg];
 
 (* Simply matrix multiplication *)
-fromToBasis[fromBasisFunc_, toBasisFunc_, deg_Integer] := 
-fromToBasis[fromBasisFunc, MonomialSymmetric,deg].fromToBasis[MonomialSymmetric,toBasisFunc, deg];
+SymFuncTransMat[fromBasisFunc_, toBasisFunc_, deg_Integer] := 
+SymFuncTransMat[fromBasisFunc, MonomialSymmetric,deg].SymFuncTransMat[MonomialSymmetric,toBasisFunc, deg];
 
 
 (**********************************************************)
@@ -771,7 +589,7 @@ fromMonomialToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}]:
 				MonomialSymbol[lam,x]
 			,{lam,IntegerPartitions[deg]}]
 		,
-			fromToBasis[MonomialSymmetric,toBasisFunc,deg].Table[
+			SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg].Table[
 				toBasisSymb[lam,y]
 			,{lam,IntegerPartitions[deg]}]
 
@@ -783,9 +601,10 @@ fromMonomialToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}]:
 (* 
 Given a function for producing the monomial expansion,
 	and a symbol for the new basis, produce a replacement rule to do this conversion.
-It maps from alphabet x, to alphabet y.
+	It maps from alphabet x, to alphabet y.
+	
+	We prefer to use the elementary basis, as it multiplies easy. 
 *)
-(* We prefer to use the elementary basis, as it multiplies easy. *)
 fromElementaryToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}]:=
 	MapThread[
 		Rule,
@@ -794,7 +613,7 @@ fromElementaryToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}
 				ElementaryESymbol[lam,x]
 			,{lam,IntegerPartitions[deg]}]
 		,
-			fromToBasis[ElementaryESymmetric,toBasisFunc,deg].Table[
+			SymFuncTransMat[ElementaryESymmetric,toBasisFunc,deg].Table[
 				toBasisSymb[lam,y]
 			,{lam,IntegerPartitions[deg]}]
 		}
@@ -802,45 +621,8 @@ fromElementaryToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}
 	1
 ];
 
-
-(* Uses monomial as intermediate func *)
-toOtherSymmetricBasisOld[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
-	{bases,replaceRule,degrees,inMonomBasis},
-	
-	bases = {
-		{MonomialSymmetric, MonomialSymbol},
-		{PowerSumSymmetric, PowerSumSymbol},
-		{ElementaryESymmetric,ElementaryESymbol},
-		{CompleteHSymmetric,CompleteHSymbol},
-		{SchurSymmetric,SchurSymbol},
-		{ForgottenSymmetric, ForgottenSymbol}
-	}; 
-	
-	(* 
-		Rule for doing conversion to monomial basis in expression.
-	*)
-	replaceRule = (#2[lam_,x]->#1[lam,x])& @@@ Select[bases, Last[#] =!= basisSymbol &];
-	
-	
-	(* Convert everything to monomial basis, except expressions in the basis itself. *)
-	inMonomBasis = Expand[ Expand[poly] /. replaceRule ];
-	
-	
-	(* Which degrees appear *)
-	degrees = Union[Cases[inMonomBasis, MonomialSymbol[lam__, x] :> Tr[lam], {0, Infinity}]];
-	
-	(* Replace everything to desired basis *)
-	Do[
-		inMonomBasis =  inMonomBasis /. fromMonomialToCoreBasisRule[{basisFunc,basisSymbol},d,{x,x}]
-	, {d, degrees}];
-	
-	Expand[inMonomBasis]
-];
-
-
-
 basisInElementary[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
-	transMat = fromToBasis[bb,ElementaryESymmetric,n];
+	transMat = SymFuncTransMat[bb,ElementaryESymmetric,n];
 	ip = IntegerPartitions[n];
 	
 	(* Vector such that elem j, is the e-expansion of bb[ lam[[j]] ] *)
@@ -858,11 +640,29 @@ basisInElementary[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
 basisInElementary[bb_,lam_,x_]:=ChangeSymmetricAlphabet[basisInElementary[bb,lam],x];
 
 
+(* This is used to define the core bases via the transition matrices. *)
+basisInMonomial[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
+	transMat = SymFuncTransMat[bb,MonomialSymmetric,n];
+	ip = IntegerPartitions[n];
+	
+	(* Vector such that elem j, is the m-expansion of bb[ lam[[j]] ] *)
+	vec = transMat.(MonomialSymbol[#]&/@ip);
+	
+	(* Memoize expansion for all partitions of same size. *)
+	Do[
+		basisInMonomial[bb,ip[[j]]] = vec[[ j ]];
+	,{j,Length@ip}];
+	
+	(* Return specific. *)
+	basisInMonomial[bb,lam]
+];
+basisInMonomial[bb_,lam_,x_]:=ChangeSymmetricAlphabet[basisInMonomial[bb,lam],x];
+
+
+
 (* Uses elementary as intermediate basis. *)
 toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 	{bases,replaceRule,degrees,inEBasis},
-	
-	Print["Converting to ", basisFunc];
 	
 	bases = {
 		{MonomialSymmetric, MonomialSymbol},
@@ -878,7 +678,6 @@ toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 	*)
 	replaceRule = (#2[lam_,x] :> basisInElementary[#1,lam,x])& @@@ bases;
 	
-	
 	(* Convert everything to elementary basis. Here, do replace first, THEN expand. *)
 	inEBasis = Expand[ poly /. replaceRule ];
 	
@@ -886,10 +685,6 @@ toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 	(* Which degrees appear *)
 	degrees = Union[Cases[inEBasis, ElementaryESymbol[lam__, x] :> Tr[lam], {0, Infinity}]];
 	
-	Print["deg: ",degrees," inE: ", inEBasis  ];
-	
-	
-	Print[ fromElementaryToCoreBasisRule[{basisFunc,basisSymbol},6,{x,x}] ];
 	
 	(* Replace everything to desired basis, in each degree *)
 	(* Since we expanded before, there are no product in this, only sum/difference *)
@@ -898,9 +693,7 @@ toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 			fromElementaryToCoreBasisRule[{basisFunc,basisSymbol},d,{x,x}]
 		, {d, degrees}])
 	]
-
 ];
-
 
 ToSchurBasis[poly_, x_: None] := toOtherSymmetricBasis[{SchurSymmetric,SchurSymbol},Expand@poly, x];
 ToPowerSumBasis[poly_, x_: None] := toOtherSymmetricBasis[{PowerSumSymmetric,PowerSumSymbol},Expand@poly, x];
@@ -910,16 +703,62 @@ ToMonomialBasis[poly_, x_: None] := toOtherSymmetricBasis[{MonomialSymmetric,Mon
 
 
 (* A normalized version, where we multiply by the z-coefficient. *)
-ToPowerSumZBasis[poly_, x_: None] := (ToPowerSumBasis[poly,x]/.PowerSumSymbol[lam_,x] :> ZCoefficient[lam] PowerSumSymbol[lam,x]);
+ToPowerSumZBasis[poly_, x_: None] := 
+	(ToPowerSumBasis[poly,x]/.PowerSumSymbol[lam_,x] :> ZCoefficient[lam] PowerSumSymbol[lam,x]);
 
-(* The forgotten basis is given by omega(monomial) *)
-(* We compute it in the monomial basis here. *)
-ForgottenSymmetric[mu_List, x_: None] := 
-ForgottenSymmetric[mu, x] = Module[{},
-	Expand[
-		ToPowerSumBasis[MonomialSymbol[mu, x]] /. 
-	PowerSumSymbol[lam_,x] :> (-1)^(Tr[lam] - Length[lam]) PowerSumSymmetric[lam, x]]
-];
+
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*
+	Define core symmetric functions via transition matrices.
+*)
+
+
+MonomialSymmetric[lam_List,x_:None]:=MonomialSymbol[lam,x];
+
+AugmentedMonomialSymmetric[lam_List] :=AugmentedMonomialSymmetric[lam,None];
+AugmentedMonomialSymmetric[lam_List,x_] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam,x];
+
+CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
+CompleteHSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, None]];
+CompleteHSymmetric[{}, x_] := 1;
+CompleteHSymmetric[lam_List, x_] := basisInMonomial[CompleteHSymmetric, lam, x];
+
+ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
+ElementaryESymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, None]];
+ElementaryESymmetric[{}, x_] := 1;
+ElementaryESymmetric[lam_List, x_] := basisInMonomial[ElementaryESymmetric, lam, x];
+
+PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
+PowerSumSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, None]];
+PowerSumSymmetric[{}, x_] := 1;
+PowerSumSymmetric[lam_List, x_] := basisInMonomial[PowerSumSymmetric, lam,x];
+
+
+ForgottenSymmetric[mu_List] := ForgottenSymmetric[mu, None];
+ForgottenSymmetric[mu_List, x_] := basisInMonomial[ForgottenSymmetric, mu, x];
+
+
+SchurSymmetric[lam_List]:=SchurSymmetric[lam, None];
+SchurSymmetric[{},x_]:=1;
+
+(* Slinky rule. *)
+SchurSymmetric[lam_List, x_] := With[{slr=CompositionSlinky[lam]},
+	If[slr[[2]]==0,
+	0, 
+	slr[[2]]*SchurSymmetric[slr[[1]], x]
+	]
+] /; Not[OrderedQ[Reverse@lam]];
+
+SchurSymmetric[mu_List, x_]:=basisInMonomial[SchurSymmetric, mu,x];
+
+
+
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*********************************************************************************************)
+
 
 
 OmegaInvolution::usage = "OmegaInvolution[expr, [x]] applies the omega involution on the expression.";
@@ -1004,17 +843,19 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 ];
 
 
-SnCharacter[lam_List, nu_List] := Module[{ n = Tr[lam], inP},
-	inP = ToPowerSumBasis@SchurSymbol[lam];
+SnCharacter[lam_List, nu_List] := With[
+	{n = Tr[lam]},
+	{ip = IntegerPartitions[n]},
 	
-	(* Memoize all while we're at it *)
-	Do[
-		SnCharacter[lam, tau] = 
-		ZCoefficient[tau] Coefficient[inP, PowerSumSymbol[tau]];
-		, {tau, IntegerPartitions@n}];
-	SnCharacter[lam, nu]
+	lami = Position[ip,lam][[1,1]];
+	nui  = Position[ip,nu][[1,1]];
+	
+	SymFuncTransMat[PowerSumSymmetric, SchurSymmetric,n][[nui,lami]]
 ];
 
+
+
+(* Use power-sum, as this is compatible with q,t-extension. *)
 
 HallInnerProduct[f_, g_] := HallInnerProduct[f, g, {1, 1}, None];
 HallInnerProduct[f_, g_, {q_, t_}, x_: None] := Module[{
@@ -1051,32 +892,12 @@ Expand@Sum[
 	, {rF, rulesF}, {rG, rulesG}]
 ];
 
-UnitTest[HallInnerProduct] := And[
-1 == HallInnerProduct[SchurSymmetric[{2, 1}], 
-	SchurSymmetric[{2, 1}]],
-1 == HallInnerProduct[MonomialSymbol[{2, 1}], 
-	CompleteHSymmetric[{2, 1}]],
-40 == HallInnerProduct[5 SchurSymmetric[{2, 1}], 
-	8 SchurSymmetric[{2, 1}]],
-0 == HallInnerProduct[5 SchurSymmetric[{2, 1}], 
-	8 SchurSymmetric[{3}]],
-Block[{a, b, c, d},
-	Expand[5 (c + d) - 10 (a + b)] == 
-	Expand[HallInnerProduct[
-	5 SchurSymmetric[{2, 1}] - (a + b) SchurSymmetric[{3}]
-	, (c + d) SchurSymmetric[{2, 1}] + (10) SchurSymmetric[{3}]]]
-	]
-];
-
-
-
 (* Computes f(-x1,-x2,...) *)
 (* TODO-UPDATE with rules for all bases *)
 NegateAlphabet[f_, x_: None] := ToMonomialBasis[f] /. MonomialSymbol[mu__, x] :> (-1)^(Tr@mu) MonomialSymbol[mu, x];
 
 
 (* Here, f is in the xx alphabet, and plethysm act on ALL given alphabets in the g-expression. *)
-Clear[Plethysm];
 Plethysm[f_, g_, xx_: None] := Module[
 	{PkPlethysmWithG, fpp, gpp, fInP, gInP,
 		fVars, gVars, auxVars, cF, k, v, vF,alphabets
@@ -1094,7 +915,6 @@ Plethysm[f_, g_, xx_: None] := Module[
 	
 	auxVars = Complement[Variables[{fInP, gInP}], fVars, gVars];
 	
-	
 	PkPlethysmWithG[k_] :=
 		(gInP /. 
 		Table[v -> v^k, {v, auxVars}]) /. {PowerSumSymbol[mu__,x_] :> PowerSumSymbol[k*mu,x]};
@@ -1108,6 +928,50 @@ Plethysm[f_, g_, xx_: None] := Module[
 ];
 
 
+
+
+
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*
+		Definitions of other bases below. These are defined in the natural core basis.
+*)
+(*********************************************************************************************)
+(*********************************************************************************************)
+(*********************************************************************************************)
+
+
+SkewSchurSymmetric[lam_List]:=SkewSchurSymmetric[{lam, {}}, None];
+SkewSchurSymmetric[lam_List, x_]:=SkewSchurSymmetric[{lam, {}}, x];
+SkewSchurSymmetric[{lam_List, mu_List}]:=SkewSchurSymmetric[{lam, mu}, None];
+
+SkewSchurSymmetric[{lam_List, mu_List},None] := SkewSchurSymmetric[{lam, mu}, None] = Module[
+	{bb, mup = PadRight[mu, Length@lam]},
+	
+Expand@Which[
+	!PartitionLessEqualQ[mu, lam],
+		0
+	,
+	Length[lam]==0, 
+		1
+	,
+	(* Use Jacob-Trudi *)
+	True,
+		With[{d = lam[[1]]},
+			jacobiTrudiDet[
+				{PadRight[ConjugatePartition[lam], d],
+				PadRight[ConjugatePartition[mu], d]}
+				, bb, d]
+		] /. bb[v_] :> ElementaryESymbol[v]
+	]
+];
+
+SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeSymmetricAlphabet[ SkewSchurSymmetric[{lam, mu}, None],  x];
+
+
+
+
 JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
 JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
 	KostkaCoefficient[lam,mu,a] MonomialSymbol[mu,x]
@@ -1117,6 +981,7 @@ JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization 
 JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Product[
 	a*PartitionArm[lam,s] + PartitionLeg[lam,s]+1
 ,{s,ShapeBoxes[lam]}]];
+
 
 
 (* This is not the modified Hall-Littlewood! *)
@@ -1145,7 +1010,7 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	];
 	
 	(* Operators must appear in this order, in order to optimize *)
-
+	
 	operators = 
 	Reverse[Join @@ 
 	Table[applyIJ[i, j], {j, n, 1, -1}, {i, j - 1, 1, -1}]];
@@ -1155,6 +1020,7 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	
 	Expand[res /. {hh[a_] :> CompleteHSymbol[a, x], qq -> q}]
 ];
+
 
 (* Example 3.1 in https://www.mat.univie.ac.at/~slc/s/s32leclerc.pdf *)
 
@@ -1254,6 +1120,7 @@ PostfixedCharge[mu_List, w_List] := Module[{postFix, decomp},
    decomp = ChargeWordDecompose[Join[w, postFix]];
    Total[PermutationCharge /@ decomp]
 ];
+
 
 
 (* TODO: allow for optional alphabet. *)
@@ -1386,14 +1253,11 @@ OrthogonalSchurSymmetric[lam_List] := Det@Table[
 	{j, Length@lam}];
 
 
-
-
 PetrieSymmetric::usage = "PetrieSymmetric[k,m] gives the degree-m part of the kth Petrie symmetric function.";
 PetrieSymmetric[k_Integer,0,x_:None]:= 1;
 PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 		MonomialSymbol[lam,x]
 ,{lam, Select[IntegerPartitions[m], #[[1]]<k &] }];
-
 
 
 CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";

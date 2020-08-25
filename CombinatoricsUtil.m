@@ -106,6 +106,9 @@ PermutationCocharge;
 
 HStarPolynomial;
 
+KostkaCoefficient;
+InverseKostkaCoefficient;
+
 Begin["Private`"];
 
 Nicify::usage = "Rewrites polynomial expression in a nice form";
@@ -915,6 +918,68 @@ HStarPolynomial[poly_,x_,t_] := Module[{bb, c, d,y},
 		Reverse[vars] /. Solve[Thread[tbz == 0], vars][[1]]
 	].(t^Range[0,d])
 ];
+
+
+
+
+(* This is based on Macdonald, p.327, and is extremely fast. *)
+KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
+
+KostkaCoefficient[mu_List, mu_List, a_: 1] := 1;
+KostkaCoefficient[mu_List, nu_List, a_: 1] := 0 /; (! PartitionDominatesQ[nu, mu]);
+KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = Together[With[
+	{n = Length@mu,
+	ee = Function[{ll}, 
+		a PartitionN[ConjugatePartition@ll] - PartitionN[ll]
+		]
+	},
+	
+	1/(ee[lam]-ee[mu])
+	Sum[
+		With[{mu2 =
+			Sort[DeleteCases[
+			ReplacePart[mu, {i -> mu[[i]] + r, j -> mu[[j]] - r}], 0],
+			Greater]
+			},
+			
+			(mu[[i]] - mu[[j]] + 2 r) KostkaCoefficient[lam, mu2, a]
+		]
+	, {i, n}
+	,{j, i + 1, n}
+	,{r, mu[[j]]}
+	]
+]];
+
+
+InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the inverse Kostka coefficient.";
+
+InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
+InverseKostkaCoefficient[lam_List, mu_List] := InverseKostkaKHelper[Reverse@lam, Reverse@mu];
+
+(* The convention in https://doi.org/10.1080/03081089008817966
+uses partitions with parts ordered increasingly, which makes notation easier.
+*)
+InverseKostkaKHelper[mu_List, mu_List] := 1;
+InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
+InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
+	-Sum[
+		With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
+			If[pos == {}, 0
+			, (-1)^(j)
+				InverseKostkaKHelper[
+				(* Remove a part equal to p *)
+				
+				ReplacePart[lam, pos -> Nothing]
+				,
+				(* Subtract 1 from the first j-1 entries, 
+				and drop jth entry *)
+				
+				DeleteCases[
+					MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
+				]
+			]
+			]
+, {j, Length@mu}];
 
 
 
