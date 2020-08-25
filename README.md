@@ -8,14 +8,19 @@ for those who prefers Mathematica over Sage.
 ## SymmetricFunctions.m
 
 This is a package for working with symmetric functions.
-It has the standard bases, Jack and Macdonald polynomials, LLT polynomials,
+It has the core bases, as well as Jack and Macdonald polynomials, LLT polynomials,
 SchurP and SchurQ functions, the Hall inner product, plethysm 
 and the Delta operator.
 
-This has support for multiple alphabets.
+This also has support for working multiple alphabets, which is useful when dealing with plethysm calculus.
 
+Compare with Stembridge's sf package for Maple, or Curtis Greene's symfun13 package.
 
-Compare with Stembridge's sf package for Maple.
+See the SymmetricFunctions-Introduction.nb for a brief introduction.
+
+*Updates*
+- 2020-08-25 Finished big refactoring. 
+  Many functions are now more intuitive, and basis conversion is quicker.
 
 
 ## CombinatoricsUtil.m

@@ -5,11 +5,6 @@
 
 --- Create a test suite.
 
---- Allow standard basis to handle Hall inner product in a more efficient way?
-		(Use Schur basis as intermediate instead, as that one is always computed.
-
---- Improve Sn-character code(?)
-	
 --- Make change-of-basis accept several/All alphabets at once
 
 --- See what attributes can be used (listable, orderless, etc).
@@ -190,7 +185,9 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 	];
 	
 	bb /: Format[bb[a_List, x_]] := 
-		With[{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]}, 
+		With[{r = 
+			If[Max[a]<10, Row[a],Row[a,","]]
+		}, 
 		If[x === None, Subscript[symb, r], 
 			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]];
 	
@@ -443,20 +440,28 @@ SymmetricFunctionDegree[expr_, yy_:None] := Max[
 
 PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
 PositiveCoefficientsQ::usage = "PositiveCoefficientsQ[expr, basis] returns true if all coeffs of basis[..] are positive. Only works for numbers.";
-PositiveCoefficientsQ[expr_, basisSymbol_: ss, extraSymbols_:{}] := 
-	With[{exp = Expand@expr},
+
+PositiveCoefficientsQ[expr_List, basisSymbol_:MonomialSymbol, extraSymbols_:{}]:=And@@(
+	PositiveCoefficientsQ[#, basisSymbol, extraSymbols]&/@expr
+);
+
+PositiveCoefficientsQ[expr_, basisSymbol_:MonomialSymbol, extraSymbols_:{}] := 
+	Module[{exp = Expand@expr, DUMMY},
+	
+		(* We need the dummy variable, since if the list of variables is empty, 
+				it pretends everything are variables. *)
 		And @@ 
 			Map[
 			With[{c=Last[#]},
 				If[ NumberQ[c], 
 					c>=0,
 					Message[PositiveCoefficientsQ::notnumber,c];
-					Abort[]
+					False
 				]
 			]
 			&
 			, CoefficientRules[exp, 
-				Join[ Cases[exp, basisSymbol[___], Infinity], extraSymbols] ]
+				Join[{DUMMY}, Cases[exp, basisSymbol[__,_], {0,Infinity}], extraSymbols] ]
 			]
 ];
 
@@ -477,7 +482,6 @@ in degree d. Here, fromBasis and toBasis are functions which given a partition, 
 
 (* If from and to are the same, we have identity. *)
 SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[PartitionsP@deg];
-
 
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
@@ -659,6 +663,17 @@ basisInMonomial[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
 basisInMonomial[bb_,lam_,x_]:=ChangeSymmetricAlphabet[basisInMonomial[bb,lam],x];
 
 
+
+
+(* Support for several alphabets at once *)
+toOtherSymmetricBasis[{basisFunc_,basisSymbol_}, poly_, alphabet_List] :=Fold[
+	toOtherSymmetricBasis[{basisFunc,basisSymbol}, #1, #2]&,
+poly, alphabet];
+
+(* Make listable *)
+toOtherSymmetricBasis[{basisFunc_,basisSymbol_}, polyList_List, x_: None] :=Table[
+	toOtherSymmetricBasis[{basisFunc,basisSymbol}, poly, x]
+	, {poly, polyList}];
 
 (* Uses elementary as intermediate basis. *)
 toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
