@@ -1022,23 +1022,13 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 ];
 
 
-(* Example 3.1 in https://www.mat.univie.ac.at/~slc/s/s32leclerc.pdf *)
-
-UnitTest[HallLittlewoodTSymmetric] := And[
-Block[{q, ss},
-	SameQ[
-	Coefficient[
-	ToSchurBasis[HallLittlewoodTSymmetric[{2, 2, 2, 2}, q], ss], 
-	ss[{3, 3, 2}]],
-	(q^3 + q^4 + q^5)]]
-];
-
-
 
 SchursQSymmetric::usage = "SchursQSymmetric[lam]";
-SchursQSymmetric[lam_List, x_: None]:=SchursQSymmetric[lam,x] = ToMonomialBasis@Plethysm[
+SchursQSymmetric[lam_List, x_: None]:=SchursQSymmetric[lam,x] = ToMonomialBasis@Module[{q},
+	Plethysm[
 	HallLittlewoodTSymmetric[lam, q,x]
-	, (1 - q) PowerSumSymmetric[{1},x],{x}] /. q -> -1;
+	, (1 - q) PowerSumSymmetric[{1},x]
+] /. q -> -1];
 
 SchursPSymmetric[lam_List, x_: None]:=Together[SchursQSymmetric[lam,x]/2^Length[lam]];
 
@@ -1108,7 +1098,7 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := MacdonaldHSymmet
 	, {p, Permutations[Range[n]]}]
 ];
 
-
+(* Make a symbol for this. *)
 ToMacdonaldHBasis[poly_, q_, t_, mh_:MacdonaldHSymbol, x_: None] := 
 Expand@Together@toOtherSymmetricBasis[ {ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
 
