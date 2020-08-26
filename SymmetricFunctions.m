@@ -5,13 +5,21 @@
 
 --- Create a test suite.
 
---- Make change-of-basis accept several/All alphabets at once
+--- Can we make an external C program that compute transition matrices? Will this be quicker?
 
---- See what attributes can be used (listable, orderless, etc).
+--- Write better recursion for Kostka coefficients by removing border-strips.
+
+--- https://reference.wolfram.com/language/ref/SyntaxInformation.html
+
+--- Use Local objects to store transition matrices: https://reference.wolfram.com/language/ref/LocalObject.html
 
 --- Add DeclarePackage instead of loading NewTableaux.
 
 --- Update documentation.
+
+--- Use https://reference.wolfram.com/language/ref/$Failed.html for failures
+
+Check out https://github.com/jkuczm/MathematicaCellsToTeX for how to write packages.
 
 *)
 
@@ -21,8 +29,6 @@ Needs["CombinatoricsUtil`"];
 Needs["NewTableaux`"];
 
 
-KostkaCoefficient;
-InverseKostkaCoefficient;
 LRCoefficient;
 LRExpand;
 MExpand;
@@ -42,7 +48,9 @@ ChangeSymmetricAlphabet;
 SymmetricMonomialList;
 
 
+(* Transition matrices *)
 SymFuncTransMat;
+
 
 ToSchurBasis;
 ToPowerSumBasis;
@@ -201,7 +209,7 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 
 
 (* This is a private helper function, for utilizing memoization. *)
-(* TODO-MAKE IT KEEP TRACK OF DUPLICATES AUTOMATICALLY, and reuse *)
+(* TODO-MAKE IT KEEP TRACK OF DUPLICATES AUTOMATICALLY, and reuse? *)
 monomialProducts[lam_List, {}] := {lam};
 monomialProducts[lam_List, mut_List] := 
 		monomialProducts[lam, mut] = 
@@ -483,22 +491,37 @@ in degree d. Here, fromBasis and toBasis are functions which given a partition, 
 (* If from and to are the same, we have identity. *)
 SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[PartitionsP@deg];
 
+
+
+(* Change-of-basis involving S and H *)
+(* Old version, slow. *)
+(*
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
 		With[{det=jacobiTrudiDet[lam,CompleteHSymbol,Length[lam]]},
-		
 		Table[
 			Coefficient[Expand@det, CompleteHSymbol[mu] ]
 			,{mu, IntegerPartitions[deg]}]
 		]
-		
 ,{lam, IntegerPartitions[deg]}];
+*)
+
+SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
+SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
+	InverseKostkaCoefficient[lam,mu]
+	,{mu, IntegerPartitions[deg]},
+{lam, IntegerPartitions[deg]}];
 
 
-(* Change-of-basis involving S and H *)
+
+
+
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg_Integer]:=
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]=
 Inverse@SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg];
+
+
+
 
 SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
 Transpose@SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg];

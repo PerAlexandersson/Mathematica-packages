@@ -3,6 +3,15 @@
 (* MathKernel -script file.m *)
 
 
+
+(* ::TODO:: *)
+(*
+	--- Add some flag $French to display tableaux in French.
+	
+*)
+
+
+
 Clear["NewTableaux`*"];
 BeginPackage["NewTableaux`"];
 
@@ -54,7 +63,6 @@ SYTEvacuationDual;
 CrystalEi;
 CrystalFi;
 CrystalSi;
-
 
 
 

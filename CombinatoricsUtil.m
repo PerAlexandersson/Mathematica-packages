@@ -53,6 +53,8 @@ PartitionN;
 ZCoefficient;
 PartitionAddBox;
 PartitionRemoveBox;
+PartitionRemoveHorizontalStrip;
+PartitionRemoveVerticalStrip;
 
 PartitionArm;
 PartitionLeg;
@@ -457,6 +459,29 @@ UnitTest[PartitionRemoveBox] := SameQ[
     }];
 
 
+PartitionRemoveHorizontalStrip::usage = "PartitionRemoveHorizontalStrip[lam, k] returns all partitions obtainable from lam, by removing a horizontal strip of size k.";
+
+PartitionRemoveHorizontalStrip[la_List, k_Integer] := PartitionRemoveHorizontalStrip[la, k] = PartitionRemoveHorizontalStrip[la, k, 1];
+
+PartitionRemoveHorizontalStrip[la_List, k_Integer, r_Integer] := 
+  With[{ll = Length@la},
+   Which[
+    k == 0, {DeleteCases[la, 0]},
+    r > ll, {},
+    True,
+    (* Max possible boxes to remove from row r. 
+    Also, cannot remove more than k boxes.
+    *)
+    With[{bb = Min[la[[r]] - If[r < ll, la[[r + 1]], 0], k]},
+     Join @@ Table[
+       PartitionRemoveHorizontalStrip[MapAt[# - b &, la, r], k - b, r + 1]
+       , {b, 0, bb}]
+]]];
+		
+PartitionRemoveVerticalStrip[la_List, k_Integer] := Map[ 
+	ConjugatePartition, PartitionRemoveHorizontalStrip[ConjugatePartition@la, k], 1];
+
+		
 PartitionArm[mu_List,{r_Integer,c_Integer}]:= If[r> Length@mu, 0, mu[[r]] - c];
 PartitionLeg[mu_List,{r_Integer,c_Integer}]:= PartitionArm[ ConjugatePartition@mu, {c,r} ];
 
@@ -951,35 +976,74 @@ KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = T
 ]];
 
 
+(* Recursion via removing horizontal strips.*)
+(* If we remove the larger parts first, once we hit only 1s, we can use hook-formula. *)
+(* This is not as fast as the KostkaCoefficient code. *) 
+naiveKostka[la_List, la_List] := 1;
+naiveKostka[la_List, mu_List] := 0 /; ! PartitionDominatesQ[mu, la];
+naiveKostka[la_List, mu_List] := qHookFormula[la] /; Max[mu] == 1;
+naiveKostka[la_List, mu_List] := 
+  Sum[naiveKostka[nu, Rest@mu], {nu, 
+    PartitionRemoveHorizontalStrip[la, First@mu]}];
+
+
+(* This code is comparably very fast. *)
 InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the inverse Kostka coefficient.";
 
+InverseKostkaCoefficient[mu_List, mu_List]  :=1;
 InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
-InverseKostkaCoefficient[lam_List, mu_List] := InverseKostkaKHelper[Reverse@lam, Reverse@mu];
+InverseKostkaCoefficient[lam_List, mu_List] := inverseKostkaHelper[Reverse@lam, Reverse@mu];
 
 (* The convention in https://doi.org/10.1080/03081089008817966
 uses partitions with parts ordered increasingly, which makes notation easier.
 *)
-InverseKostkaKHelper[mu_List, mu_List] := 1;
-InverseKostkaKHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
-InverseKostkaKHelper[lam_List, mu_List] := InverseKostkaKHelper[lam, mu] =
+inverseKostkaHelper[mu_List, mu_List] := 1;
+
+(*
+TODO-rework so that lam is represented using part multiplicities instead.
+*)
+inverseKostkaHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
+inverseKostkaHelper[lam_List, mu_List] := inverseKostkaHelper[lam, mu] = If[
+	
+	Max[mu]==1, 
+			(* Special case if mu=11...1 *)
+			With[{n=Tr@lam}, (-1)^(n - Length[lam]) Multinomial @@ (PartitionPartCount@lam)]
+			,
 	-Sum[
 		With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
 			If[pos == {}, 0
-			, (-1)^(j)
-				InverseKostkaKHelper[
-				(* Remove a part equal to p *)
+				, (-1)^(j)
+				inverseKostkaHelper[
 				
-				ReplacePart[lam, pos -> Nothing]
-				,
-				(* Subtract 1 from the first j-1 entries, 
-				and drop jth entry *)
-				
-				DeleteCases[
-					MapIndexed[#1 - Boole[#2[[1]] < j] &, Drop[mu, {j}]], 0]
+					(* Remove a part equal to p *)
+					ReplacePart[lam, pos -> Nothing]
+					,
+						(* Subtract 1 from the first j-1 entries, and drop jth entry *)
+						MapAt[ If[#==1,Nothing,#-1]&, Drop[mu, {j}], List/@Range[j-1] ]
 				]
 			]
-			]
-, {j, Length@mu}];
+		]
+, {j, Length@mu}]
+];
+
+
+
+
+(* This is marginally slower than Remmel's alg, but can perhaps be improved? *)
+inverseKostkaHuan[mu_List, mu_List] := 1;
+inverseKostkaHuan[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
+inverseKostkaHuan[mu_List, {i_Integer}] := Boole[mu === {i}];
+inverseKostkaHuan[{}, mu_List] := Boole[mu === {}];
+inverseKostkaHuan[la_List, mu_List] := 
+  inverseKostkaHuan[la, mu] = Module[
+    {mu1 = First@mu, mm = Rest@mu},
+    Sum[
+     (-1)^(rj - mu1)
+      Sum[
+       inverseKostkaHuan[DeleteCases[la, rj, 1, 1], omega]
+       , {omega, PartitionRemoveVerticalStrip[mm, rj - mu1]}]
+     , {rj, Union@Select[la, # >= mu1 &]}]
+];
 
 
 
