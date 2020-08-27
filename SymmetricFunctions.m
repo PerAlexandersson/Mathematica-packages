@@ -494,7 +494,6 @@ in degree d. Here, fromBasis and toBasis are functions which given a partition, 
 SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[PartitionsP@deg];
 
 
-
 (* Change-of-basis involving S and H *)
 (* This uses a quick recursion for inverse Kostka coefficients. *)
 
@@ -513,6 +512,7 @@ SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
 Transpose@SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg];
 
 SymFuncTransMat[CompleteHSymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[CompleteHSymmetric, MonomialSymmetric, deg]=
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
 
 
@@ -520,11 +520,13 @@ SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSy
 SymFuncTransMat[SchurSymmetric, ElementaryESymmetric, deg_]:=
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg][[ conjugatePermutation[deg] ]];
 
-SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg_]:=Transpose[
+SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg_]:=
+Transpose[
 	Transpose[SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]][[ conjugatePermutation[deg] ]]
 ];
 
 SymFuncTransMat[ElementaryESymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[ElementaryESymmetric, MonomialSymmetric, deg]=
 SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
 
 
@@ -578,6 +580,18 @@ SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg]=Table[
 SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg_]:=
 SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg]=
 Inverse@SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg];
+
+
+SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg_]:=
+SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg]=
+SymFuncTransMat[ElementaryESymmetric, MonomialSymmetric,deg].SymFuncTransMat[MonomialSymmetric,PowerSumSymmetric, deg];
+
+
+(* We have this simple relation. *)
+SymFuncTransMat[CompleteHSymmetric,PowerSumSymmetric,deg_]:=
+SymFuncTransMat[CompleteHSymmetric,PowerSumSymmetric,deg]=
+Abs@SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg];
+
 
 
 (* Forgotten to monomial. *)
