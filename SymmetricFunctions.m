@@ -7,7 +7,9 @@
 
 --- Can we make an external C program that compute transition matrices? Will this be quicker?
 
---- Write better recursion for Kostka coefficients by removing border-strips.
+--- Transition matrix for M and P, recursion
+		https://link.springer.com/content/pdf/10.1186/s40064-015-1506-5.pdf (Corollary 3)
+		Compare w. combinatorial formula, Remmel et al
 
 --- https://reference.wolfram.com/language/ref/SyntaxInformation.html
 
@@ -494,17 +496,7 @@ SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[Par
 
 
 (* Change-of-basis involving S and H *)
-(* Old version, slow. *)
-(*
-SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
-SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
-		With[{det=jacobiTrudiDet[lam,CompleteHSymbol,Length[lam]]},
-		Table[
-			Coefficient[Expand@det, CompleteHSymbol[mu] ]
-			,{mu, IntegerPartitions[deg]}]
-		]
-,{lam, IntegerPartitions[deg]}];
-*)
+(* This uses a quick recursion for inverse Kostka coefficients. *)
 
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
@@ -512,15 +504,9 @@ SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
 	,{mu, IntegerPartitions[deg]},
 {lam, IntegerPartitions[deg]}];
 
-
-
-
-
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg_Integer]:=
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]=
 Inverse@SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg];
-
-
 
 
 SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
@@ -543,59 +529,82 @@ SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg].SymFuncTransMat[Schur
 
 
 
-(* Util func, for elementary in power-sum *)
-elementaryInPowerSum[1]:=PowerSumSymbol[1];
-elementaryInPowerSum[n_Integer] := elementaryInPowerSum[n] = Expand[
-	(1/n!) Det[
-		ToeplitzMatrix[PowerSumSymbol /@ Range[n], Join[{PowerSumSymbol[1]}, ConstantArray[0, n - 1]]]
-		+ 
-		SparseArray[Table[{r,r+1}->r, {r, n-1}], {n, n}]]
-];
-elementaryInPowerSum[{a_Integer}]:=elementaryInPowerSum[a];
-elementaryInPowerSum[mu_List]:=elementaryInPowerSum[mu]=
-Expand[Expand[elementaryInPowerSum@Most@mu]*elementaryInPowerSum[Last@mu]];
+(* Util for expressing monomial in power-sum *)
+
+mTop[lam_, mu_] := 0 /; (! PartitionDominatesQ[lam, mu]);
+mTop[lam_, lam_] := 1/(Times @@ (PartitionPartCount[lam]!));
+mTop[lam_, mu_] := With[{n=Tr@lam},
+	augMinPHelper[
+		PadRight[PartitionPartCount@lam, n],
+		PadRight[PartitionPartCount@mu, n], n]]/(Times @@ (PartitionPartCount[lam]!));
+
+(* This is based on Corollary 3, of  10.1186/s40064-015-1506-5, 
+	Mircea Merca - Augmented monomials in terms of power sums 
+*)
+augMinPHelper[{}, {}, 0] := 1;
+augMinPHelper[muPC_List, muPC_List, n_Integer] := 1;
+augMinPHelper[lamPC_List, muPC_List, n_Integer] := 
+	augMinPHelper[lamPC, muPC, n] = With[
+		{j = FirstPosition[lamPC, i_ /; i > 0][[1]]},
+		With[{
+			lamPCi = Function[{i}, Table[
+				lamPC[[r]] + Which[
+					r == i || r == j, -1 - KroneckerDelta[i, j],
+					r == i + j, 1,
+					True, 0]
+				, {r, n}]]
+			},
+			
+		If[
+			Length[muPC] >= j && muPC[[j]] != 0,
+			augMinPHelper[
+				MapAt[# - 1 &, lamPC, j][[1 ;; n - j]],
+				MapAt[# - 1 &, muPC, j][[1 ;; n - j]], n - j],
+			0]
+			-
+			Sum[
+			With[{coeff = (lamPC[[i]] - KroneckerDelta[i, j])},
+				If[coeff != 0, coeff *augMinPHelper[lamPCi[i], muPC, n], 0]]
+			, {i, n}]
+]];
+
+SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg_]:=
+SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg]=Table[
+		mTop[lam,mu]
+	,{lam, IntegerPartitions[deg]},
+{mu, IntegerPartitions[deg]}];
 
 
-(* Matrix for elementary to power-sum *)
-SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg_]:=
-SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg]=Table[
-		With[{EinP = elementaryInPowerSum[lam]},
-		
-		Table[
-			Coefficient[EinP, PowerSumSymbol[mu] ]
-			,{mu, IntegerPartitions[deg]}]
-		]
-,{lam, IntegerPartitions[deg]}];
-
-SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg_]:=
-SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg]=
-Inverse@SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg];
-
-(*Power-sum to monomial. *)
-SymFuncTransMat[PowerSumSymmetric, MonomialSymmetric, deg_]:=
-SymFuncTransMat[PowerSumSymmetric, ElementaryESymmetric, deg].SymFuncTransMat[ElementaryESymmetric,MonomialSymmetric, deg];
+SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg_]:=
+SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg]=
+Inverse@SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg];
 
 
 (* Forgotten to monomial. *)
-SymFuncTransMat[ForgottenSymmetric, MonomialSymmetric, deg_]:=Transpose@SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg];
+SymFuncTransMat[ForgottenSymmetric, MonomialSymmetric, deg_]:=
+Transpose@SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg];
 
 
+(* Remaining transition matrices are calculated as below via matrix inverse and composition *)
 
-(* Remaining transition matrices are calculated as below. *)
+(* Simply matrix multiplication *)
+SymFuncTransMat[fromBasisFunc_, toBasisFunc_, deg_Integer] := 
+SymFuncTransMat[fromBasisFunc, MonomialSymmetric,deg].SymFuncTransMat[MonomialSymmetric,toBasisFunc, deg];
 
+
+SymFuncTransMat[MonomialSymmetric,toBasisFunc_, deg_Integer]:=
+	SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg]=
+	Inverse@SymFuncTransMat[toBasisFunc,MonomialSymmetric, deg];
+
+
+(* Generic basis (defined by user) is calculated via its monomial expansion function. *)
+(* This is not used for core bases *)
 SymFuncTransMat[fromBasisFunc_, MonomialSymmetric, deg_Integer]:=
 	SymFuncTransMat[fromBasisFunc, MonomialSymmetric, deg]=Table[
 		Coefficient[fromBasisFunc[lam], MonomialSymbol[mu] ]
 	,{lam, IntegerPartitions[deg]},
 	{mu, IntegerPartitions[deg]}
 ];
-
-SymFuncTransMat[MonomialSymmetric,toBasisFunc_, deg_Integer]:=
-	SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg]=Inverse@SymFuncTransMat[toBasisFunc,MonomialSymmetric, deg];
-
-(* Simply matrix multiplication *)
-SymFuncTransMat[fromBasisFunc_, toBasisFunc_, deg_Integer] := 
-SymFuncTransMat[fromBasisFunc, MonomialSymmetric,deg].SymFuncTransMat[MonomialSymmetric,toBasisFunc, deg];
 
 
 (**********************************************************)
