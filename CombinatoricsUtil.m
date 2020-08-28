@@ -108,6 +108,8 @@ PermutationCocharge;
 
 HStarPolynomial;
 
+
+SnCharacter;
 KostkaCoefficient;
 InverseKostkaCoefficient;
 
@@ -947,6 +949,64 @@ HStarPolynomial[poly_,x_,t_] := Module[{bb, c, d,y},
 
 
 
+(* Special case for hook shapes. *)
+SnCharacter[la_List, {k_Integer}] := Which[
+	la == {k}, 1,
+	la[[2]] > 1, 0,
+	True, (-1)^(k - la[[1]])
+];
+
+(* Special case when all parts of mu=1, has closed form. *)
+SnCharacter[la_List, mu_List] := qHookFormula[la]/;(Max[mu]==1);
+
+(* Branching thm, James-Kerber *)
+SnCharacter[la_List, {muS__, 1}] := SnCharacter[la, {muS, 1}] =  With[{mu = {muS}},
+	Sum[
+		If[i == Length[la] || la[[i]] > la[[i + 1]],
+			SnCharacter[
+				If[la[[i]]==1, 
+					Drop[la,{i}]
+					,
+					MapAt[(# - 1)&, la, i]
+				]
+			, mu]
+		, 0], {i, Length@la}]
+];
+
+(* https://arxiv.org/pdf/1712.08023.pdf *)
+SnCharacter[la_List, {muS___, m_Integer}] := SnCharacter[la, {muS, m}] =
+With[{mu = {muS}},
+	1/(m - 1) (
+		Sum[
+			If[i == Length[la] || la[[i]] > la[[i + 1]],
+				Times[
+					(la[[i]] - i),
+					SnCharacter[
+						If[la[[i]]==1, 
+							Drop[la,{i}]
+							,
+							MapAt[(# - 1)&, la, i]
+						]
+						,
+						Append[mu, m - 1]
+					]
+				]
+			, 0], {i, Length@la}]
+		-
+		Sum[
+				If[ j == 1 || mu[[j - 1]] > mu[[j]],
+					Times[
+						Count[Append[mu,m-1],  mu[[j]]]
+						,
+						mu[[j]]
+						,
+							SnCharacter[la,Append[MapAt[# + 1 &, mu, j], m - 1]]
+						]
+				, 0]
+			,{j, Length@mu}])
+];
+
+
 (* This is based on Macdonald, p.327, and is extremely fast. *)
 KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
 
@@ -992,29 +1052,28 @@ InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the 
 
 InverseKostkaCoefficient[mu_List, mu_List]  :=1;
 InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
-InverseKostkaCoefficient[lam_List, mu_List] := inverseKostkaHelper[Reverse@lam, Reverse@mu];
+InverseKostkaCoefficient[lam_List, mu_List] := inverseKostkaHelper[
+Reverse@lam, Reverse@mu];
+
+
 
 (* The convention in https://doi.org/10.1080/03081089008817966
 uses partitions with parts ordered increasingly, which makes notation easier.
 *)
-inverseKostkaHelper[mu_List, mu_List] := 1;
 
-(*
-TODO-rework so that lam is represented using part multiplicities instead.
-*)
-inverseKostkaHelper[mu_List, {i_Integer}] := Boole[mu === {i}];
+inverseKostkaHelper[mu_List, mu_List] := 1;
+inverseKostkaHelper[lam_List, {i_Integer}] := Boole[lam==={i}];
 inverseKostkaHelper[lam_List, mu_List] := inverseKostkaHelper[lam, mu] = If[
 	
 	Max[mu]==1, 
 			(* Special case if mu=11...1 *)
 			With[{n=Tr@lam}, (-1)^(n - Length[lam]) Multinomial @@ (PartitionPartCount@lam)]
 			,
-	-Sum[
+	Sum[
 		With[{pos = Position[lam, mu[[j]] + j - 1, 1, 1]},
 			If[pos == {}, 0
-				, (-1)^(j)
+				, (-1)^(j-1)
 				inverseKostkaHelper[
-				
 					(* Remove a part equal to p *)
 					ReplacePart[lam, pos -> Nothing]
 					,
@@ -1026,6 +1085,38 @@ inverseKostkaHelper[lam_List, mu_List] := inverseKostkaHelper[lam, mu] = If[
 , {j, Length@mu}]
 ];
 
+
+
+(* Uses partcount, much slower!? *)
+(*
+inverseKostkaHelper[mu_List, mu_List] := 1;
+
+inverseKostkaHelper[{}, {}]:=1;
+inverseKostkaHelper[lamPPC_List, {i_Integer}] := Boole[lamPPC[[i]] == 1];
+
+inverseKostkaHelper[lamPPC_List, mu_List] := inverseKostkaHelper[lamPPC, mu] = If[
+	
+	Max[mu]==1, 
+			(* Special case if mu=11...1 *)
+			With[{n=Tr@mu}, (-1)^(n - Tr[lamPPC]) Multinomial @@ (lamPPC)]
+	,
+	Sum[
+		With[{a =  mu[[j]] + j - 1},
+			If[lamPPC[[a]] == 0, 0
+				, (-1)^(j-1)
+				inverseKostkaHelper[
+				
+					(* Remove a part equal to p *)
+					MapAt[#-1&, lamPPC, a][[1;;Tr[mu]-a]]
+					,
+						(* Subtract 1 from the first j-1 entries, and drop jth entry *)
+						MapAt[ If[#==1,Nothing,#-1]&, Drop[mu, {j}], List/@Range[j-1] ]
+				]
+			]
+		]
+, {j, Length@mu}]
+];
+*)
 
 
 

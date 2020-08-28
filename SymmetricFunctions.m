@@ -9,10 +9,10 @@
 
 --- Transition matrix for M and P, recursion
 		https://link.springer.com/content/pdf/10.1186/s40064-015-1506-5.pdf (Corollary 3)
-		Compare w. combinatorial formula, Remmel et al
-
---- https://reference.wolfram.com/language/ref/SyntaxInformation.html
-
+		Compare w. combinatorial formula, Remmel et al.
+		
+		Use relation for P-S vs S-P bases instead of computing inverse.
+		
 --- Use Local objects to store transition matrices: https://reference.wolfram.com/language/ref/LocalObject.html
 
 --- Add DeclarePackage instead of loading NewTableaux.
@@ -20,6 +20,8 @@
 --- Update documentation.
 
 --- Use https://reference.wolfram.com/language/ref/$Failed.html for failures
+
+--- https://reference.wolfram.com/language/ref/SyntaxInformation.html
 
 Check out https://github.com/jkuczm/MathematicaCellsToTeX for how to write packages.
 
@@ -94,7 +96,6 @@ HallLittlewoodTSymmetric;
 SchursQSymmetric;
 SchursPSymmetric;
 
-SnCharacter;
 
 MacdonaldPSymmetric;
 MacdonaldHSymmetric;
@@ -496,6 +497,7 @@ SymFuncTransMat[fromBasisFunc_, fromBasisFunc_, deg_Integer]:=IdentityMatrix[Par
 
 (* Change-of-basis involving S and H *)
 (* This uses a quick recursion for inverse Kostka coefficients. *)
+(* There is only one matrix inversion used among all these computations. *)
 
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg_Integer]:=
 SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg]=Table[
@@ -507,13 +509,20 @@ SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg_Integer]:=
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg]=
 Inverse@SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg];
 
-
 SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg_Integer]:=
 Transpose@SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg];
+
+SymFuncTransMat[MonomialSymmetric,SchurSymmetric, deg_Integer]:=
+Transpose@SymFuncTransMat[SchurSymmetric,CompleteHSymmetric, deg];
 
 SymFuncTransMat[CompleteHSymmetric, MonomialSymmetric, deg_]:=
 SymFuncTransMat[CompleteHSymmetric, MonomialSymmetric, deg]=
 SymFuncTransMat[CompleteHSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
+
+
+SymFuncTransMat[MonomialSymmetric, CompleteHSymmetric, deg_]:=
+SymFuncTransMat[MonomialSymmetric, CompleteHSymmetric, deg]=
+SymFuncTransMat[MonomialSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric, CompleteHSymmetric, deg];
 
 
 (* There is a simple relation between StoH and StoE matrices, where index is conjugated. *)
@@ -530,9 +539,50 @@ SymFuncTransMat[ElementaryESymmetric, MonomialSymmetric, deg]=
 SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,MonomialSymmetric, deg];
 
 
+SymFuncTransMat[MonomialSymmetric, ElementaryESymmetric, deg_]:=
+SymFuncTransMat[MonomialSymmetric, ElementaryESymmetric, deg]=
+SymFuncTransMat[MonomialSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,ElementaryESymmetric, deg];
 
+(* This particular transition matrix is used when converting
+   anything to H-basis, so make sure its memoized. *)
+SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg_]:=
+SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg]=
+SymFuncTransMat[ElementaryESymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric,CompleteHSymmetric, deg];
+
+
+
+(* Use quick recursion for characters. *)
+
+SymFuncTransMat[PowerSumSymmetric, SchurSymmetric, deg_Integer]:=
+SymFuncTransMat[PowerSumSymmetric, SchurSymmetric, deg]=Table[
+	SnCharacter[lam,mu]
+	,{mu, IntegerPartitions[deg]},
+{lam, IntegerPartitions[deg]}];
+
+(* Use relation for computing the inverse *)
+SymFuncTransMat[SchurSymmetric,PowerSumSymmetric, deg_Integer]:=
+SymFuncTransMat[SchurSymmetric,PowerSumSymmetric, deg]=Table[
+	SnCharacter[mu,lam]/ZCoefficient[lam]
+	,{mu, IntegerPartitions[deg]},
+{lam, IntegerPartitions[deg]}];
+
+
+(* Now we have M-to-P basis *)
+SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg_]:=
+SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg]=
+SymFuncTransMat[MonomialSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric, PowerSumSymmetric, deg];
+
+
+(* Now we have P-to-M basis *)
+SymFuncTransMat[PowerSumSymmetric, MonomialSymmetric, deg_]:=
+SymFuncTransMat[PowerSumSymmetric, MonomialSymmetric, deg]=
+SymFuncTransMat[PowerSumSymmetric, SchurSymmetric, deg].SymFuncTransMat[SchurSymmetric, MonomialSymmetric, deg];
+
+
+
+(* Thm. 5.1 in https://arxiv.org/pdf/1712.08023.pdf *)
 (* Util for expressing monomial in power-sum *)
-
+(* This is not used --- computing transition matrices is quicker using characters. *)
 mTop[lam_, mu_] := 0 /; (! PartitionDominatesQ[lam, mu]);
 mTop[lam_, lam_] := 1/(Times @@ (PartitionPartCount[lam]!));
 mTop[lam_, mu_] := With[{n=Tr@lam},
@@ -570,16 +620,6 @@ augMinPHelper[lamPC_List, muPC_List, n_Integer] :=
 			, {i, n}]
 ]];
 
-SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg_]:=
-SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg]=Table[
-		mTop[lam,mu]
-	,{lam, IntegerPartitions[deg]},
-{mu, IntegerPartitions[deg]}];
-
-
-SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg_]:=
-SymFuncTransMat[PowerSumSymmetric,MonomialSymmetric,deg]=
-Inverse@SymFuncTransMat[MonomialSymmetric, PowerSumSymmetric, deg];
 
 
 SymFuncTransMat[ElementaryESymmetric, PowerSumSymmetric, deg_]:=
@@ -602,23 +642,23 @@ Transpose@SymFuncTransMat[ElementaryESymmetric, CompleteHSymmetric, deg];
 (* Remaining transition matrices are calculated as below via matrix inverse and composition *)
 
 (* Simply matrix multiplication *)
-SymFuncTransMat[fromBasisFunc_, toBasisFunc_, deg_Integer] := 
+SymFuncTransMat[fromBasisFunc_, toBasisFunc_, deg_Integer] :=
 SymFuncTransMat[fromBasisFunc, MonomialSymmetric,deg].SymFuncTransMat[MonomialSymmetric,toBasisFunc, deg];
 
 
 SymFuncTransMat[MonomialSymmetric,toBasisFunc_, deg_Integer]:=
-	SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg]=
-	Inverse@SymFuncTransMat[toBasisFunc,MonomialSymmetric, deg];
+	SymFuncTransMat[MonomialSymmetric,toBasisFunc,deg]=(
+	Inverse@SymFuncTransMat[toBasisFunc, MonomialSymmetric, deg]);
 
 
 (* Generic basis (defined by user) is calculated via its monomial expansion function. *)
 (* This is not used for core bases *)
 SymFuncTransMat[fromBasisFunc_, MonomialSymmetric, deg_Integer]:=
-	SymFuncTransMat[fromBasisFunc, MonomialSymmetric, deg]=Table[
+	SymFuncTransMat[fromBasisFunc, MonomialSymmetric, deg]=(Table[
 		Coefficient[fromBasisFunc[lam], MonomialSymbol[mu] ]
 	,{lam, IntegerPartitions[deg]},
 	{mu, IntegerPartitions[deg]}
-];
+]);
 
 
 (**********************************************************)
@@ -901,17 +941,6 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 			ToPowerSumBasis[poly,  x] /. 
 			PowerSumSymbol[lam_,x] :> Product[Sum[q^(i (j - 1)), {j, k}], {i, lam}]
 		]
-];
-
-
-SnCharacter[lam_List, nu_List] := With[
-	{n = Tr[lam]},
-	{ip = IntegerPartitions[n]},
-	
-	lami = Position[ip,lam][[1,1]];
-	nui  = Position[ip,nu][[1,1]];
-	
-	SymFuncTransMat[PowerSumSymmetric, SchurSymmetric,n][[nui,lami]]
 ];
 
 
