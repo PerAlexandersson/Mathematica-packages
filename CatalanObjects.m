@@ -96,6 +96,8 @@ RookInversionList;
 AreaToFerrersBoard;
 RookPlacementPlot;
 
+PermutationMatrixPlot;
+
 Begin["Private`"];
 
 
@@ -903,6 +905,13 @@ RookPlacementPlot[board_List, rp_List] := Module[{flip, data, n = Max@board},
 ];
 
 
+
+PermutationMatrixPlot[p_List] := With[{n = Max@p},
+   ArrayPlot[
+    Normal@SparseArray[Transpose[{Range[n], p}] -> 1, {n, n}]
+    , Mesh -> True, Frame -> False
+    ]
+   ];
 
 End[(* End private *)];
 

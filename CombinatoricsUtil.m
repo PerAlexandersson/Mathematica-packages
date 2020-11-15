@@ -20,6 +20,7 @@ MajorIndex;
 CoMajorIndex;
 Inversions;
 CoInversions;
+Runs;
 RightToLeftMinima;
 WeakStandardize;
 StandardizeList;
@@ -32,6 +33,9 @@ WordCocharge;
 MultiSubsets;
 
 PathExceedanceDecreaseMap;
+
+IntegerPartitionQ;
+SetPartitions;
 IntegerCompositions;
 WeakIntegerCompositions;
 CompositionRefinements;
@@ -165,8 +169,14 @@ RightToLeftMinima::usage = "RightToLeftMinima returns the elements in p which ar
 
 RightToLeftMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
 
-WeakStandardize[list_List]:=With[{rule = Thread[Union[list]->Ordering@Union[list]]}, list /. rule];
+Runs[{}] := {};
+Runs[lst_List] := With[
+   {ds = Join[{0}, DescentSet@lst, {Length@lst}]},
+   lst[[#1 + 1 ;; #2]] & @@@ Partition[ds, 2, 1]
+];
 
+
+WeakStandardize[list_List]:=With[{rule = Thread[Union[list]->Ordering@Union[list]]}, list /. rule];
 
 StandardizeList::usage = "StandardizeList[list] standardizes the list. For equal entries, order from the left.";
 StandardizeList[list_List]:=Ordering[ Range[Length[list]][[Ordering@list]] ];
@@ -290,6 +300,30 @@ PathExceedanceDecreaseMap[{0,1,0,0,1,1,1,1,0,0,1,0,0,0,1,1}]=={1,0,0,0,1,1,0,0,1
 
 
 (**PARTITIONS and compositions**)
+
+
+IntegerPartitionQ::usage = "IntegerPartitionQ[lam] returns 
+true only if lam is a weakly decreasing list of positive integers.";
+
+IntegerPartitionQ[lam_List] := And[
+	VectorQ[lam, IntegerQ[#] && # > 0 &],
+	Max[Differences[lam]] <= 0
+];
+
+
+SetPartitions::usage = "SetPartitions[n] returns all set partitions of {1,2,...,n}. The cardinalities are given by the Bell numbers, A000110.";
+
+SetPartitions[1] := {{{1}}};
+SetPartitions[n_Integer] := SetPartitions[n] = Module[{sp},
+    sp = SetPartitions[n - 1];
+    Join @@ Table[
+      Append[
+       Table[MapAt[Append[#, n] &, p, k], {k, Length[p]}]
+       ,
+       Append[p, {n}]
+       ]
+      , {p, sp}]
+];
 
 
 IntegerCompositions::usage = "IntegerCompositions[n] returns all interger compositions of n. IntegerCompositions[n,k] gives all compositions with length k.";
@@ -839,31 +873,30 @@ StrongBruhatGreaterQ[p1_List,p2_List]:=StrongBruhatGreaterQ[p1,p2]=MemberQ[
 StrongBruhatDownSet[p1],p2];
 
 StrongBruhatDownSet[p_List] := ({p} /; p == Range[Max@p]);
-StrongBruhatDownSet[p_List] := 
-  StrongBruhatDownSet[p] = Module[{ss, n = Max@p},
-    Union[
-     Append[
-      Join @@ Table[
-        If[Greater @@ p[[ss]]
-         ,
-         With[{a = ss[[1]], b = ss[[2]]},
-          With[{pSort = ReplacePart[p, {a -> p[[b]], b -> p[[a]]}]},
-           Append[StrongBruhatDownSet[pSort], pSort]
-           ]
-          ],
-         Nothing
-         ]
-        , {ss, Subsets[Range[n], {2}]}]
-      ,
-      p
-      ]]
-    ];
+StrongBruhatDownSet[p_List] := StrongBruhatDownSet[p] = Module[{ss, n = Max@p},
+	Union[
+	Append[
+		Join @@ Table[
+			If[Greater @@ p[[ss]]
+			,
+			With[{a = ss[[1]], b = ss[[2]]},
+				With[{pSort = ReplacePart[p, {a -> p[[b]], b -> p[[a]]}]},
+				Append[StrongBruhatDownSet[pSort], pSort]
+				]
+				],
+			Nothing
+			]
+			, {ss, Subsets[Range[n], {2}]}]
+		,
+		p
+		]]
+];
 
 
 
 
 
-(**Q-ANALOGUES**)
+(**Q-ANALOGS**)
 qBinomial[n_Integer,k_Integer,q_:1]:=0 /; Not[ 0<= k <=n ];
 qBinomial[n_Integer,k_Integer,q_:1]:=qBinomial[n,k,q]=FunctionExpand[QBinomial[n,k,q]];
 qFactorial[n_Integer,q_:1]:=qFactorial[n,q]=FunctionExpand[QFactorial[n,q]];
@@ -893,13 +926,13 @@ Sum[q^Tr[a], {a, DyckAreaLists[4]}]
 qCarlitzCatalan[4, q] // Expand
 *)
 
-(* This is basically thm 3.4 in Jims book *)
+(* This recursion is basically thm 3.4 in Jims book *)
 qtH[n_, n_, q_, t_] := q^Binomial[n, 2];
 qtH[n_, k_, q_, t_] := 
   qtH[n, k, q, t] = t^(n - k) q^Binomial[k, 2] Sum[
      qBinomial[r + k - 1, r, q] qtH[n - k, r, q, t], {r, n - k}];
 qtCatalan::usage = "qtCatalan[n,q,t] is the qt-Catalan polynomial.";
-qtCatalan[n_, q_: 1, t_: 1] := Together[qtH[n + 1, 1, q, t]/t^n];
+qtCatalan[n_Integer, q_: 1, t_: 1] := Together[qtH[n + 1, 1, q, t]/t^n];
 
 
 
@@ -934,6 +967,8 @@ qIntegerFactorize[expr_, q_] := Module[{pow, quot, rem, val},
     ]
 ];
 
+
+(* TODO: Make into a substitution instead? *)
 HStarPolynomial::usage="HStarPolynomial[pol,x,t] returns the h*-polynomial (in t).";
 HStarPolynomial[poly_,x_,t_] := Module[{bb, c, d,y},
 	bb[xx_, i_, s_] := 1/i! Product[(xx - k + s), {k, 0, i - 1}];

@@ -3,16 +3,12 @@
 
 (* TODO 
 
---- Create a test suite.
+--- Create a test suite?
 
---- Can we make an external C program that compute transition matrices? Will this be quicker?
+--- Ask Mike Zabrocki about sage and symfuns
 
---- Transition matrix for M and P, recursion
-		https://link.springer.com/content/pdf/10.1186/s40064-015-1506-5.pdf (Corollary 3)
-		Compare w. combinatorial formula, Remmel et al.
-		
-		Use relation for P-S vs S-P bases instead of computing inverse.
-		
+--- Can we make an external C program that compute transition matrices? Is it worth it?
+
 --- Use Local objects to store transition matrices: https://reference.wolfram.com/language/ref/LocalObject.html
 
 --- Add DeclarePackage instead of loading NewTableaux.
@@ -124,6 +120,9 @@ DeltaPrimOperator;
 
 Begin["Private`"];
 
+sortToPartition[mu_List]:=Sort[Select[mu,Positive],Greater];
+
+
 coreBasesList=(MonomialSymbol|SchurSymbol|ElementaryESymbol|CompleteHSymbol|ForgottenSymbol|PowerSumSymbol);
 
 
@@ -154,7 +153,7 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 	
 	bb[{}, x_: None] := 1;
 	bb[{0}, x_: None] := 1;
-	bb[{lam__, 0}, x_: None] := bb[{lam}, x];
+	bb[{lam__, 0..}, x_: None] := bb[{lam}, x];
 	
 	sort = OptionValue[SortFunction];
 	
@@ -448,7 +447,6 @@ SymmetricFunctionDegree[expr_, yy_:None] := Max[
 		,{mm,SymmetricMonomialList[expr]}]
 ];
 
-
 PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
 PositiveCoefficientsQ::usage = "PositiveCoefficientsQ[expr, basis] returns true if all coeffs of basis[..] are positive. Only works for numbers.";
 
@@ -727,13 +725,15 @@ basisInElementary[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
 	basisInElementary[bb,lam]
 ];
 
-basisInElementary[bb_,lam_,x_]:=ChangeSymmetricAlphabet[basisInElementary[bb,lam],x];
+basisInElementary[bb_,lam_List,x_]:=ChangeSymmetricAlphabet[basisInElementary[bb,lam],x];
 
 
 (* This is used to define the core bases via the transition matrices. *)
-basisInMonomial[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
+basisInMonomial[bb_,{}]:=1;
+basisInMonomial[bb_,lam_List]:=Module[{n=Tr@lam, transMat, ip, lamFixed},
 	transMat = SymFuncTransMat[bb,MonomialSymmetric,n];
 	ip = IntegerPartitions[n];
+	
 	
 	(* Vector such that elem j, is the m-expansion of bb[ lam[[j]] ] *)
 	vec = transMat.(MonomialSymbol[#]&/@ip);
@@ -782,10 +782,8 @@ toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 	(* Convert everything to elementary basis. Here, do replace first, THEN expand. *)
 	inEBasis = Expand[ poly /. replaceRule ];
 	
-	
 	(* Which degrees appear *)
 	degrees = Union[Cases[inEBasis, ElementaryESymbol[lam__, x] :> Tr[lam], {0, Infinity}]];
-	
 	
 	(* Replace everything to desired basis, in each degree *)
 	(* Since we expanded before, there are no product in this, only sum/difference *)
@@ -818,30 +816,30 @@ ToPowerSumZBasis[poly_, x_: None] :=
 
 MonomialSymmetric[lam_List,x_:None]:=MonomialSymbol[lam,x];
 
-AugmentedMonomialSymmetric[lam_List] :=AugmentedMonomialSymmetric[lam,None];
-AugmentedMonomialSymmetric[lam_List,x_] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[lam,x];
+AugmentedMonomialSymmetric[lam_] :=AugmentedMonomialSymmetric[lam,None];
+AugmentedMonomialSymmetric[lam_?VectorQ,x_] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[sortToPartition@lam,x];
 
 CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
 CompleteHSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, None]];
 CompleteHSymmetric[{}, x_] := 1;
-CompleteHSymmetric[lam_List, x_] := basisInMonomial[CompleteHSymmetric, lam, x];
+CompleteHSymmetric[lam_?VectorQ, x_] := basisInMonomial[CompleteHSymmetric, sortToPartition@lam, x];
 
 ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
 ElementaryESymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, None]];
 ElementaryESymmetric[{}, x_] := 1;
-ElementaryESymmetric[lam_List, x_] := basisInMonomial[ElementaryESymmetric, lam, x];
+ElementaryESymmetric[lam_?VectorQ, x_] := basisInMonomial[ElementaryESymmetric,sortToPartition@lam, x];
 
 PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
 PowerSumSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, None]];
 PowerSumSymmetric[{}, x_] := 1;
-PowerSumSymmetric[lam_List, x_] := basisInMonomial[PowerSumSymmetric, lam,x];
+PowerSumSymmetric[lam_?VectorQ, x_] := basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x];
 
 
-ForgottenSymmetric[mu_List] := ForgottenSymmetric[mu, None];
-ForgottenSymmetric[mu_List, x_] := basisInMonomial[ForgottenSymmetric, mu, x];
+ForgottenSymmetric[mu_] := ForgottenSymmetric[mu, None];
+ForgottenSymmetric[mu_?VectorQ, x_] := basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x];
 
 
-SchurSymmetric[lam_List]:=SchurSymmetric[lam, None];
+SchurSymmetric[lam_?VectorQ]:=SchurSymmetric[lam, None];
 SchurSymmetric[{},x_]:=1;
 
 (* Slinky rule. *)
@@ -852,7 +850,7 @@ SchurSymmetric[lam_List, x_] := With[{slr=CompositionSlinky[lam]},
 	]
 ] /; Not[OrderedQ[Reverse@lam]];
 
-SchurSymmetric[mu_List, x_]:=basisInMonomial[SchurSymmetric, mu,x];
+SchurSymmetric[mu_?VectorQ, x_]:=basisInMonomial[SchurSymmetric, mu,x];
 
 
 
@@ -915,6 +913,12 @@ SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] :=
 
 
 (* TODO -- Optimize so that known formulas for princ. spec. is used? *)
+(*
+
+ PrincipalSpecialization[ElementaryESymbol[n], q, k]  ===     q^Binomial[n, 2] qBinomial[k, n, q] 
+ PrincipalSpecialization[CompleteHSymbol[n], q, k] ===  qBinomial[n + k - 1, n, q] 
+ PrincipalSpecialization[PowerSumSymbol[n], q, k] === (1 - q^(k n))/(1 - q^n) 
+*)
 
 PrincipalSpecialization::usage = "PrincipalSpecialization[poly,q,[k],[x]], 
 gives the principal specialization. The parameter k tells how many 

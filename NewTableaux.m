@@ -429,7 +429,7 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 		
 		Which[
 			n===None,
-				 Item["", Frame -> {{LightGray,Black}, {Black,LightGray}}],
+				 Item["", Frame -> {{LightGray, Black}, {Black, LightGray}}],
 			
 			OptionValue[DescentSet]===True && 
 			IntegerQ[n] && 
@@ -453,7 +453,7 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 	Grid[gridItems,
 		ItemSize -> {is, is},
 		Spacings -> {0.1, 0.1},
-		ItemStyle -> {Black,FontSize -> 16*1, If[is<1,Bold, Plain]}
+		ItemStyle -> {Black, FontSize -> 16*1, If[is<1,Bold, Plain]}
 	]
 ];
 

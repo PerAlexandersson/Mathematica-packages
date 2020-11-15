@@ -6,6 +6,7 @@ BeginPackage["PosetData`"];
 
 Needs["CombinatoricsUtil`"];
 
+Poset;
 PosetPlot;
 GetPosets;
 PosetToHasseDiagram;
@@ -19,6 +20,7 @@ StrictEdges;
 EqualEdges;
 
 
+
 WSEPosetFunction::"WSEPosetFunction[weak,strict,equal,n,x] returns the generating 
 function of colorings that are weak(<=), strict(<) and equal(=) on the specified edge lists.";
 
@@ -29,11 +31,40 @@ weight gives the multiplicity of the variables.";
 (***************** Switch to private context *********************************)
 Begin["Private`"];
 
-PosetPlot::usage = "PosetPlot[StrictEdges->{}, WeakEdges-{},EqualEdges->{}] plots the poset";
 
-Options[PosetPlot] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges -> {}};
-PosetPlot[opts : OptionsPattern[]] := 
-  Module[{vrf, erf, allEdges, weakEdges, strictEdges, equalEdges},
+
+(* This assumes minimal elements in the bottom, and edges are increasing relations. *)
+PosetLinearExtensions::usage = "PosetLinearExtensions[edges, n]
+	returns all order-preserving labelings of the edges.";
+PosetLinearExtensions[Poset[n_Integer,edges_List]] := PosetLinearExtensions[Poset[n,edges]] = 
+	Select[
+		Permutations[Range@n],
+		And @@ Table[#[[e[[1]]]] < #[[e[[2]]]], {e, edges}] &
+];
+
+
+
+PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
+	
+	vrf[coord_, lbl_] := {
+		White,
+		EdgeForm[Black],
+		Disk[coord, .1], 
+		Black, Text[lbl, coord]};
+		
+	erf[coordList_, edg_, lbl_: ""] := {Thick, Black, Arrowheads[0.04], Arrow[coordList, 0.1]};
+	
+	LayeredGraphPlot[Rule @@@ allEdges, Bottom,
+		VertexLabeling -> True,
+		VertexRenderingFunction -> vrf,
+		EdgeRenderingFunction -> erf
+	]
+];
+
+PosetPlotOld::usage = "PosetPlot[StrictEdges->{}, WeakEdges-{},EqualEdges->{}] plots the poset";
+
+Options[PosetPlotOld] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges -> {}};
+PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, strictEdges, equalEdges},
    vrf[coord_, lbl_] := {White, EdgeForm[Black], Disk[coord, .1], 
      Black, Text[lbl, coord]};
    erf[coordList_, edg_, lbl_: ""] := Which[
@@ -79,6 +110,8 @@ PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
 	, {e1, edges}, {e2, edges}];
 	edges2
 ];
+
+
 
 (*
 Todo: Make list of options instead, and return colorings 
@@ -141,51 +174,33 @@ WeightedPosetFunction[weak_List, weights_List, x_] :=
 		Inner[#1^#2&, x/@c, weights, Times]
 	,{c, colorings}]
 ];
-    
-PosetColorings[edges_List, n_Integer, isWeak_: False] := 
-  Module[{isIncreasingQ},
-   isIncreasingQ[edges, col_] := And @@ Table[
-      If[!isWeak,
-       col[[e[[1]]]] < col[[e[[2]]]],
-       col[[e[[1]]]] <= col[[e[[2]]]]
-       ]
-      , {e, edges}];
-   Select[Tuples[Range@n, n], isIncreasingQ[edges, #] &]
-   ];
+
+
+PosetColorings[edges_List, n_Integer, isWeak_: False] := Module[{isIncreasingQ},
+	isIncreasingQ[edges, col_] := And @@ Table[
+		If[!isWeak,
+			col[[e[[1]]]] < col[[e[[2]]]],
+			col[[e[[1]]]] <= col[[e[[2]]]]
+			]
+		, {e, edges}];
+	Select[Tuples[Range@n, n], isIncreasingQ[edges, #] &]
+];
   
-(*
-PosetFunction[edges_List, n_Integer, x_, isWeak_: False] := 
-  PosetFunction[edges, n, x] = Module[{colorings},
-    colorings = PosetColorings[edges, n, isWeak];
-    Sum[Times @@ (x /@ c), {c, colorings}]
-];
-*)
 
 
-(* This assumes minimal elements in the bottom, and edges are increasing relations. *)
-PosetLinearExtensions::usage = "PosetLinearExtensions[edges, n] returns all order-preserving labelings of the edges.";
-PosetLinearExtensions[edges_List, n_Integer] := PosetLinearExtensions[edges, n] = 
-	Select[
-		Permutations[Range@n],
-		And @@ Table[#[[e[[1]]]] < #[[e[[2]]]], {e, edges}] &
-];
 
 
-JordanHolderSet::usage = "JordanHolderSet[edges, n] returns all permutations one can get by extending the edges to a total order.";
-JordanHolderSet[edges_List, n_Integer] := JordanHolderSet[edges,n] = Ordering/@ PosetLinearExtensions[edges,n];
-
+JordanHolderSet::usage = "JordanHolderSet[poset] returns all permutations one can get by extending the edges to a total order.";
+JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@ PosetLinearExtensions[pp];
 
 
 GetPosets::usage = "GetPosets[k] gives all posets with k vertices, 3<=k<=8";
-GetPosets[k_Integer] :=PosetEdges/@posets[k];
+GetPosets[k_Integer]:=toPosetObject/@posets[k];
 
-PosetEdges[poset_List] := Module[{n, mins, maxs, ineqs},
-   n = Length[poset];
-   (*
-   mins = Range[Count[poset, {}]];
-   maxs = Complement[Range[n], Flatten[poset]];
-   *)
-   Join @@ Table[ {i , nn}, {nn, Length@poset}, {i, poset[[nn]]}]
+toPosetObject[poset_List] := Module[{n = Length[poset], nn},
+	Poset[n,
+		Join @@ Table[ {i , nn}, {nn, n}, {i, poset[[nn]]}] 
+	]
 ];
 
 
