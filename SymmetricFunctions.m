@@ -820,17 +820,17 @@ AugmentedMonomialSymmetric[lam_] :=AugmentedMonomialSymmetric[lam,None];
 AugmentedMonomialSymmetric[lam_?VectorQ,x_] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[sortToPartition@lam,x];
 
 CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
-CompleteHSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, None]];
+CompleteHSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, x]];
 CompleteHSymmetric[{}, x_] := 1;
 CompleteHSymmetric[lam_?VectorQ, x_] := basisInMonomial[CompleteHSymmetric, sortToPartition@lam, x];
 
 ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
-ElementaryESymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, None]];
+ElementaryESymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, x]];
 ElementaryESymmetric[{}, x_] := 1;
 ElementaryESymmetric[lam_?VectorQ, x_] := basisInMonomial[ElementaryESymmetric,sortToPartition@lam, x];
 
 PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
-PowerSumSymmetric[d_Integer, None] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, None]];
+PowerSumSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, x]];
 PowerSumSymmetric[{}, x_] := 1;
 PowerSumSymmetric[lam_?VectorQ, x_] := basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x];
 
