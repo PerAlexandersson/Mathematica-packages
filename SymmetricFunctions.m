@@ -844,7 +844,7 @@ SchurSymmetric[lam_?VectorQ]:=SchurSymmetric[lam, None];
 SchurSymmetric[{},x_]:=1;
 
 (* Slinky rule. *)
-SchurSymmetric[lam_List, x_] := With[{slr=CompositionSlinky[lam]},
+SchurSymmetric[lam_?VectorQ, x_] := With[{slr=CompositionSlinky[lam]},
 	If[slr[[2]]==0,
 	0, 
 	slr[[2]]*SchurSymmetric[slr[[1]], x]
