@@ -839,6 +839,7 @@ ForgottenSymmetric[mu_] := ForgottenSymmetric[mu, None];
 ForgottenSymmetric[mu_?VectorQ, x_] := basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x];
 
 
+SchurSymmetric[d_Integer,x_]:=SchurSymmetric[{d},x];
 SchurSymmetric[lam_?VectorQ]:=SchurSymmetric[lam, None];
 SchurSymmetric[{},x_]:=1;
 
@@ -850,7 +851,7 @@ SchurSymmetric[lam_List, x_] := With[{slr=CompositionSlinky[lam]},
 	]
 ] /; Not[OrderedQ[Reverse@lam]];
 
-SchurSymmetric[mu_?VectorQ, x_]:=basisInMonomial[SchurSymmetric, mu,x];
+SchurSymmetric[mu_?VectorQ, x_]:=basisInMonomial[SchurSymmetric,sortToPartition@mu,x];
 
 
 
