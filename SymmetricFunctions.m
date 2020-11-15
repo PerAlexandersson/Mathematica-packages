@@ -589,7 +589,8 @@ mTop[lam_, mu_] := With[{n=Tr@lam},
 		PadRight[PartitionPartCount@mu, n], n]]/(Times @@ (PartitionPartCount[lam]!));
 
 (* This is based on Corollary 3, of  10.1186/s40064-015-1506-5, 
-	Mircea Merca - Augmented monomials in terms of power sums 
+	Mircea Merca - Augmented monomials in terms of power sums.
+	This is not used.
 *)
 augMinPHelper[{}, {}, 0] := 1;
 augMinPHelper[muPC_List, muPC_List, n_Integer] := 1;
