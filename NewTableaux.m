@@ -22,6 +22,9 @@ SYTMax;
 SYTReadingWord;
 SYTMajorIndex;
 SYTCharge;
+SYTCocharge;
+SSYTCharge;
+SSYTCocharge;
 SYTDualMajorIndex;
 SYTDescents;
 SYTDescentSet;
@@ -82,6 +85,10 @@ SYTMajorIndex[syt_YoungTableau] := MajorIndex[Ordering[SYTReadingWord@syt]];
 
 SYTCharge::usage = "SYTCharge[ssyt] returns the charge of a semistandard tableau, with partition weight.";
 SYTCharge[ssyt_YoungTableau] := WordCharge@SYTReadingWord@ssyt;
+SYTCocharge[ssyt_YoungTableau] := WordCocharge@SYTReadingWord@ssyt;
+
+SSYTCharge[ssyt_YoungTableau] := WordCharge@SYTReadingWord@ssyt;
+SSYTCocharge[ssyt_YoungTableau] := WordCocharge@SYTReadingWord@ssyt;
 
 (* Only works on SYTs ! *)
 SYTDualMajorIndex[YoungTableau[syt_]] := With[{m=Max[syt]},

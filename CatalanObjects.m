@@ -98,6 +98,14 @@ RookPlacementPlot;
 
 PermutationMatrixPlot;
 
+
+
+OrderedRootedTrees;
+OrderedRootedTreeSize;
+OrderedRootedTreeToGraph;
+OrderedRootedTreePlot;
+ORTTo231Perm;
+
 Begin["Private`"];
 
 
@@ -910,11 +918,75 @@ PermutationMatrixPlot[p_List] := With[{n = Max@p},
    ArrayPlot[
     Normal@SparseArray[Transpose[{Range[n], p}] -> 1, {n, n}]
     , Mesh -> True, Frame -> False
-    ]
+    ,PixelConstrained -> 6]
    ];
 
-End[(* End private *)];
+   
+   
+   
+(******************************************************************************)   
 
+   
+   
+   
+
+(* A one-vertex tree is a list with 1. *)
+(* Ordered rooted trees is a Catalan family. *)
+
+OrderedRootedTrees[0] := {{}}; (* One root *)
+OrderedRootedTrees[1] := {{{}}}; (* Two vertices. *)
+OrderedRootedTrees[n_Integer] := Reap[Do[Outer[Sow[
+	Which[
+		#1 === {}, {#2},
+		True, Append[#1, #2]]] &,
+		OrderedRootedTrees[k],
+		OrderedRootedTrees[n - 1 - k], 1]
+		,{k, 0, n - 1}]][[-1, 1]];
+	
+OrderedRootedTreeToGraph[{}] := Graph[{1}, {}];
+OrderedRootedTreeToGraph[ot_List] := OrderedRootedTreeToGraph[ot] = Module[
+	{subTrees, sizes, eLists, toAdd, adjustedEdges, newEdges},
+	
+	subTrees = OrderedRootedTreeToGraph /@ ot;
+	eLists = EdgeList /@ subTrees;
+	sizes = Max[VertexList[#]] & /@ subTrees;
+	toAdd = Accumulate[Prepend[sizes, 0]];
+	adjustedEdges = Join @@ Table[
+		eLists[[j]] /. k_Integer :> k + toAdd[[j]]
+		, {j, Length[toAdd] - 1}];
+	
+	newEdges = DirectedEdge[1 + Tr[sizes], #] & /@ (sizes + Most[toAdd]);
+	
+	Graph[Range[1 + Tr@sizes], Join[adjustedEdges, newEdges]]
+];
+
+
+OrderedRootedTreePlot[ot_List] := Module[{gg},
+	gg = OrderedRootedTreeToGraph[ot];
+	LayeredGraphPlot[gg, ImageSize -> 3 {70, 70}, 
+	VertexRenderingFunction -> ({White, EdgeForm[Black], Disk[#, .1], Black, Text[#2, #1]} &)]];
+
+
+(* Maps a tree to a 231-avoiding permutation. *)
+(* The subsequence n,n-1,n-2,... partitions the permutation into sub-trees.
+These permutations are ordered increasinly, so its evident that the \
+result is 231-avoiding.
+*) 
+ORTTo231Perm[{}] := {};
+ORTTo231Perm[ot_List] := ORTTo231Perm[ot] = Module[
+    {pi, adjPi, n},
+    pi = (ORTToPerm /@ ot);
+    adjPi = 
+     Table[pi[[j]] + Length[Join @@ pi[[1 ;; j - 1]]], {j, Length@pi}];
+    n = Max[adjPi, 0] + Length[adjPi];
+    Flatten@Riffle[
+      adjPi,
+      Range[n, n + 1 - Length[adjPi], -1]
+      ]
+    ];
+	
+	
+End[(* End private *)];
 EndPackage[];
 
 

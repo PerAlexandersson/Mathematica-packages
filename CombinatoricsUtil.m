@@ -14,6 +14,9 @@ Unit-testing: https://www.wolfram.com/mathematica/new-in-10/integrated-unit-test
 
 UnimodalQ;
 Nicify;
+ExcedancesSet;
+Excedances;
+FixedPoints;
 DescentSet;
 Descents;
 MajorIndex;
@@ -22,9 +25,23 @@ Inversions;
 CoInversions;
 Runs;
 RightToLeftMinima;
+PermutationPeaks;
+PermutationPeaksSet;
+PermutationValleys;
+RunSort;
+
+ToSubExcedance;
+FromSubExcedance;
+
+LeftToRightMinima;
 WeakStandardize;
 StandardizeList;
+IntervalSplit;
+LexOrder;
+LexSort;
 PackedWords;
+Derangements;
+
 PartitionList;
 ChargeWordDecompose;
 WordCharge;
@@ -90,6 +107,8 @@ qKreweras;
 qAlternatingSignMatrices;
 qIntegerFactorize;
 
+EulerianA;
+
 Is123AvoidingQ;
 Is132AvoidingQ;
 Is213AvoidingQ;
@@ -126,6 +145,19 @@ Nicify[expr_] := Module[{polVars, collected},
 ];
 
 
+(* Private function for memoizing permutations *)
+permutationsMemoized[n_Integer?Positive] := permutationsMemoized[n] = Permutations@Range[n];
+
+(* Make permutations function better, by accepting positive integer arguments *)
+Unprotect[Permutations];
+Permutations[n_Integer?Positive] :=
+  If[n <= 10,
+   permutationsMemoized[n],
+   Permutations@Range@n
+];
+Protect[Permutations];
+
+
 
 SimionSchmidtMap::usage = "SimionSchmidtMap[perm] ,see https://core.ac.uk/download/pdf/82232421.pdf";
 SimionSchmidtMap[pi_List] := 
@@ -151,6 +183,10 @@ SimionSchmidtMap[pi_List] :=
 UnimodalQ[list_List] := With[{dd = Reverse@DeleteCases[Sign@Differences[list], 0]}, dd === Sort[dd]];
 
 
+ExcedancesSet[pi_List] := Select[Range@Length@pi, # < pi[[#]] &];
+Excedances[pi_List] := Length@ExcedancesSet@pi;
+FixedPoints[pi_List] := Length@Select[Range@Length@pi, # == pi[[#]] &];
+
 DescentSet[p_List]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
 
 Descents[p_List] := Length@DescentSet[p];
@@ -166,13 +202,46 @@ Inversions[p_List] := With[{n = Length@p},
 CoInversions[p_List]:=Binomial[Length@p,2]-Inversions[p];
 
 RightToLeftMinima::usage = "RightToLeftMinima returns the elements in p which are right-to-left minima.";
-
 RightToLeftMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
+
+
+LeftToRightMinima::usage = "RightToLeftMinima returns the elements in p which are left-to-right minima.";
+LeftToRightMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[;;i]]], i, Nothing], {i, Length@p}]]];
+
 
 Runs[{}] := {};
 Runs[lst_List] := With[
    {ds = Join[{0}, DescentSet@lst, {Length@lst}]},
    lst[[#1 + 1 ;; #2]] & @@@ Partition[ds, 2, 1]
+];
+
+
+PermutationPeaks[pi_List] := Tr[
+   Boole[#1 < #2 > #3] & @@@ Partition[pi, 3, 1]
+];
+PermutationPeaksSet[pi_List] := Select[Range[2,Length[pi]-1],
+   pi[[#-1]]<pi[[#]]>pi[[#+1]]&
+];
+
+   
+PermutationValleys[pi_List] := Tr[
+   Boole[#1 > #2 < #3] & @@@ Partition[pi, 3, 1]
+   ];
+RunSort[pi_] := Flatten@LexSort@Runs@pi;
+
+
+
+(* ToSubExcedance preserves the RTLMin set. *)
+
+ToSubExcedance[{1}] := {1};
+ToSubExcedance[pi_List] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
+
+FromSubExcedance[f_List]:=Module[{n=Length@f,ff},
+	Do[
+		ff=ToSubExcedance@pi;
+		FromSubExcedance[ff]=pi
+	,{pi,Permutations@n}];
+	FromSubExcedance[f]
 ];
 
 
@@ -185,8 +254,41 @@ UnitTest[StandardizeList]:=And[
 	StandardizeList[{1,1,2,2}]==={1,2,3,4}
 ];
 
+
+
+IntervalSplit[p_List] := Module[{splitAt},
+	splitAt = First /@ SequencePosition[p, {a_, b_} /; a + 1 != b];
+	PartitionList[p, Differences@Join[{0}, splitAt, List@Length[p]]]
+];
+
+LexOrder[a_List, a_List] := 0;
+LexOrder[a_List, {}] := -1;
+LexOrder[{}, b_List] := 1;
+LexOrder[a_List, b_List] := Which[
+   a[[1]] == b[[1]], LexOrder[Rest@a, Rest@b],
+   a[[1]] < b[[1]], 1,
+   True, -1];
+
+LexSort[w_List] := Sort[w, LexOrder];
+
+
+
+
 PackedWords::usage = "PackedWords[n] returns all packed words of length n.";
 PackedWords[n_Integer] := PackedWords[n] = Union[WeakStandardize /@ Tuples[Range[n], n]];
+
+
+Derangements::usage = "Derangements[n] returns a list of all derangements of 1,2,...,n.";
+Derangements[n_Integer] := Derangements[n] = Derangements[Range@n];
+Derangements[{i_Integer}] := If[i == 1, {}, {{i}}];
+Derangements[lst_List] := With[{n = Length@lst},
+   Join @@ Table[
+     If[lst[[m]] == n,
+      {},
+      Append[#, lst[[m]]] & /@ Derangements[Drop[lst, {m}]]]
+     , {m, n}]
+];
+
 
 PartitionList::usage = "PartitionList[list,mu] partitions the list into non-overlapping pieces of sizes given by mu.";
 
@@ -311,8 +413,10 @@ IntegerPartitionQ[lam_List] := And[
 ];
 
 
+
 SetPartitions::usage = "SetPartitions[n] returns all set partitions of {1,2,...,n}. The cardinalities are given by the Bell numbers, A000110.";
 
+SetPartitions[0] := {{}};
 SetPartitions[1] := {{{1}}};
 SetPartitions[n_Integer] := SetPartitions[n] = Module[{sp},
     sp = SetPartitions[n - 1];
@@ -966,6 +1070,10 @@ qIntegerFactorize[expr_, q_] := Module[{pow, quot, rem, val},
      ]
     ]
 ];
+
+
+(* Eulerian numbers. *)
+EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
 
 
 (* TODO: Make into a substitution instead? *)
