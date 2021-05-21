@@ -25,8 +25,10 @@ Inversions;
 CoInversions;
 Runs;
 RightToLeftMinima;
+RightToLeftMaxima;
 PermutationPeaks;
 PermutationPeaksSet;
+PermutationPeakValues;
 PermutationValleys;
 RunSort;
 
@@ -34,6 +36,7 @@ ToSubExcedance;
 FromSubExcedance;
 
 LeftToRightMinima;
+LeftToRightMaxima;
 WeakStandardize;
 StandardizeList;
 IntervalSplit;
@@ -108,6 +111,7 @@ qAlternatingSignMatrices;
 qIntegerFactorize;
 
 EulerianA;
+EulerianAPolynomial;
 
 Is123AvoidingQ;
 Is132AvoidingQ;
@@ -204,9 +208,16 @@ CoInversions[p_List]:=Binomial[Length@p,2]-Inversions[p];
 RightToLeftMinima::usage = "RightToLeftMinima returns the elements in p which are right-to-left minima.";
 RightToLeftMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
 
+RightToLeftMaxima::usage = "RightToLeftMaxima returns the elements in p which are right-to-left maxima.";
+RightToLeftMaxima[p_List] := p[[Table[If[p[[i]] == Max[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
+
 
 LeftToRightMinima::usage = "RightToLeftMinima returns the elements in p which are left-to-right minima.";
 LeftToRightMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[;;i]]], i, Nothing], {i, Length@p}]]];
+
+LeftToRightMaxima::usage = "LeftToRightMaxima returns the elements in p which are left-to-right maxima.";
+LeftToRightMaxima[p_List] := p[[Table[If[p[[i]] == Max[p[[;;i]]], i, Nothing], {i, Length@p}]]];
+
 
 
 Runs[{}] := {};
@@ -222,13 +233,25 @@ PermutationPeaks[pi_List] := Tr[
 PermutationPeaksSet[pi_List] := Select[Range[2,Length[pi]-1],
    pi[[#-1]]<pi[[#]]>pi[[#+1]]&
 ];
+PermutationPeakValues[pi_List]:=Sort[pi[[PermutationPeaksSet[pi]]]];
 
    
 PermutationValleys[pi_List] := Tr[
    Boole[#1 > #2 < #3] & @@@ Partition[pi, 3, 1]
    ];
+
 RunSort[pi_] := Flatten@LexSort@Runs@pi;
 
+
+(*
+PermutationBigDescents[pi_List] := Tr[
+   Boole[#1 - #2 >= 2] & @@@ Partition[pi, 2, 1]
+   ];
+
+PermutationMinorDescents[pi_List] := Tr[
+   Boole[#1 - #2 > -2] & @@@ Partition[pi, 2, 1]
+   ];
+*)
 
 
 (* ToSubExcedance preserves the RTLMin set. *)
@@ -1074,6 +1097,10 @@ qIntegerFactorize[expr_, q_] := Module[{pow, quot, rem, val},
 
 (* Eulerian numbers. *)
 EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
+
+EulerianAPolynomial[0,t_]:=1;
+EulerianAPolynomial[n_Integer,t_]:=EulerianAPolynomial[n,t] = Expand[
+Sum[ Binomial[n , k] EulerianAPolynomial[k,t] (t-1)^(n-1-k), {k, 0, n-1}]];
 
 
 (* TODO: Make into a substitution instead? *)

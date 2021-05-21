@@ -3,15 +3,11 @@
 
 (* TODO 
 
---- Create a test suite?
 
 --- Ask Mike Zabrocki about sage and symfuns
 
 --- Can we make an external C program that compute transition matrices? Is it worth it?
-
---- Use Local objects to store transition matrices: https://reference.wolfram.com/language/ref/LocalObject.html
-
---- Add DeclarePackage instead of loading NewTableaux.
+--- Use Local objects to store transition matrices(?) https://reference.wolfram.com/language/ref/LocalObject.html
 
 --- Update documentation.
 
@@ -19,14 +15,28 @@
 
 --- https://reference.wolfram.com/language/ref/SyntaxInformation.html
 
-Check out https://github.com/jkuczm/MathematicaCellsToTeX for how to write packages.
+--- Check out https://github.com/jkuczm/MathematicaCellsToTeX for how to write packages.
+
+--- Update test suite?
 
 *)
 
-ClearAll["SymmetricFunctions`*"];
 BeginPackage["SymmetricFunctions`"];
+
+Unprotect["`*"]
+ClearAll["`*"]
+
 Needs["CombinatoricsUtil`"];
+
+DeclarePackage["NewTableaux`",{
+	MacdonaldPSymmetricHelper,
+	MacdonaldHSymmetric,
+	SkewMacdonaldESymmetric,
+	LLTSymmetric,
+	CylindricSchurSymmetric}];
+(*
 Needs["NewTableaux`"];
+*)
 
 
 LRCoefficient;
@@ -68,7 +78,6 @@ SchurSymmetric;
 ForgottenSymmetric;
 
 
-
 OmegaInvolution;
 HallInnerProduct;
 
@@ -77,7 +86,6 @@ SymmetricFunctionToPolynomial;
 
 PrincipalSpecialization;
 Plethysm;
-
 
 
 (* This expands into e's *)
@@ -118,7 +126,7 @@ NablaOperator;
 DeltaPrimOperator;
 
 
-Begin["Private`"];
+Begin["`Private`"];
 
 sortToPartition[mu_List]:=Sort[Select[mu,Positive],Greater];
 
@@ -134,6 +142,29 @@ conjugatePermutation[n_Integer]:=conjugatePermutation[n]=With[{ip=IntegerPartiti
 
 
 
+
+
+defineBasisFormatting[bb_,symb_String]:=Module[{},
+	
+	bb /: Format[bb[a_List, x_]] := With[
+	{r = If[Max[a]<10, Row[a],Row[a,","]]}, 
+	
+		If[x === None, Subscript[symb, r], 
+			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]
+	];
+	
+	(* Define traditional formatting. *)
+	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
+		With[{r = 
+			If[Max[a] <= 9, RowBox[ToString /@ a], 
+				RowBox[Riffle[ToString /@ a, ","]]]}, 
+		If[x === None, SubscriptBox[symb, r], 
+			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
+			
+];
+ 
+ 
+
 (* Abstract function for defining a symmetric function basis,
 	with formatting and basic multiplication. *)
 Options[createBasis] = {
@@ -142,11 +173,7 @@ Options[createBasis] = {
 		PowerFunction -> "Mult"
 };
 
-
-(* TODO: Break this into smaller pieces, so that formatting code is separate *)
-
 createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
-	
 	bb[lam_List] := bb[lam, None];
 	bb[i_Integer] := Which[i>0, bb[{i}, None], i==0, 1, True, 0];
 	bb[i_Integer, x_] := Which[i>0, bb[{i}, x], i==0, 1, True, 0];
@@ -194,19 +221,9 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 		True, Null
 	];
 	
-	bb /: Format[bb[a_List, x_]] := 
-		With[{r = 
-			If[Max[a]<10, Row[a],Row[a,","]]
-		}, 
-		If[x === None, Subscript[symb, r], 
-			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]];
+	(* Formatting. *)
+	defineBasisFormatting[bb,symb];
 	
-	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
-		With[{r = 
-			If[Max[a] <= 9, RowBox[ToString /@ a], 
-				RowBox[Riffle[ToString /@ a, ","]]]}, 
-		If[x === None, SubscriptBox[symb, r], 
-			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
 ];
 
 
@@ -226,7 +243,7 @@ monomialProducts[lam_List, mut_List] :=
 				{done, lamp} = new;
 				Join[done, #] & /@ monomialProducts[lamp, Rest@mut]
 				, {new, addToPartition[lam, First@mut]}]
-	];
+];
 
 (* private helper function, use Partition-part-count instead. *)
 monomialProduct[lam_List, mu_List, x_: None] := Module[
@@ -896,7 +913,18 @@ SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] :=
 		,
 		Sum[ Times @@ ((x /@ Range[n])^p)
 	, {p, Permutations[PadRight[mu, n]]}]
-	];
+];
+
+
+SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, 0] := 0;
+
+SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, n_Integer] := Which[
+		Max[mu]>n, 0,
+		True,
+		Product[ 
+			Sum[Times @@ (x /@ ss), {ss, Subsets[Range@n, {m}]}]
+		,{m,mu}]
+];
 
 SymmetricFunctionToPolynomial[expr_, x_] := SymmetricFunctionToPolynomial[expr, x, SymmetricFunctionDegree[expr]];
 
@@ -1414,4 +1442,11 @@ DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, 
 
 
 End[(* End private *)];
+
+
+
+Protect @ Evaluate @ Names[
+	"SymmetricFunctions`" ~~ Except["$"] ~~ Except["`"]...
+]
+
 EndPackage[];

@@ -1,7 +1,13 @@
 
 
-Clear["QuasiSymmetricFunctions`*"];
+
+
 BeginPackage["QuasiSymmetricFunctions`"];
+
+
+Unprotect["`*"]
+ClearAll["`*"]
+
 Needs["CombinatoricsUtil`"];
 
 
@@ -10,12 +16,16 @@ FundamentalQSymmetric;
 PowerSumQSymmetric;
 PowerSumAltQSymmetric;
 
+MonomialQSymbol;
+FundamentalQSymbol;
+PowerSumQSymbol;
+
+
 ToFundamentalBasis;
 ToQSymPowerSumBasis;
 
 
-Begin["Private`"];
-
+Begin["`Private`"];
 
 
 (*This takes a list of lists!*)
@@ -34,8 +44,6 @@ Module[{rest, first},
 
 	 
 (*********************************************************)
-
-
 
 
 
@@ -66,6 +74,109 @@ QMonomialProduct[alpha_List, beta_List, x_: None] := Module[
 		, {p, specPaths[m, n]}]
 ];
 
+
+
+
+defineBasisFormatting[bb_,symb_String]:=Module[{},
+	
+	bb /: Format[bb[a_List, x_]] := With[
+	{r = If[Max[a]<10, Row[a],Row[a,","]]}, 
+	
+		If[x === None, Subscript[symb, r], 
+			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]
+	];
+	
+	(* Define traditional formatting. *)
+	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
+		With[{r = 
+			If[Max[a] <= 9, RowBox[ToString /@ a], 
+				RowBox[Riffle[ToString /@ a, ","]]]}, 
+		If[x === None, SubscriptBox[symb, r], 
+			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
+			
+];
+
+Options[createQSymBasis] = {
+		MultiplicationFunction -> None, 
+		SortFunction -> "Standard",
+		PowerFunction -> "Mult"
+};
+
+createQSymBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[
+	{sort,mult,pow},
+	
+	bb[lam_List] := bb[lam, None];
+	bb[i_Integer] := Which[i>0, bb[{i}, None], i==0, 1, True, 0];
+	bb[i_Integer, x_] := Which[i>0, bb[{i}, x], i==0, 1, True, 0];
+	
+	bb[{}, x_: None] := 1;
+	bb[{0}, x_: None] := 1;
+	bb[{lam__, 0..}, x_: None] := bb[{lam}, x];
+	
+	sort = OptionValue[SortFunction];
+	
+	Which[
+		sort === "Standard",
+				bb[lam_List, x_: None] := bb[DeleteCases[lam,0], x] /; Min[lam]==0;
+		,
+		sort =!= None,
+			bb[lam_List, x_: None] :=  (sort[lam, x]) /; Min[lam]==0;
+		,
+		True, Null
+	];
+	
+	mult = OptionValue[MultiplicationFunction];
+	If[mult =!= None,
+		bb /: Times[bb[a_List, x_], bb[b_List, x_]] := mult[a, b, x];
+	];
+	
+	bb /: Power[bb[a_List, x_], 0] := 1;
+	bb /: Power[bb[a_List, x_], 1] := bb[a, x];
+	
+	pow = OptionValue[PowerFunction];
+	Which[
+		(* Use recursion, via multiplication. *)
+		pow === "Mult",
+			bb /: Power[bb[a_List, x_], 2] := mult[a, a, x];
+			bb /: Power[bb[a_List, x_], n_Integer] := Expand@Which[
+			EvenQ[n],
+				Power[bb[a, x], n/2] * Power[bb[a, x], n/2],
+			True,
+				Power[bb[a, x], (n-1)/2] * Power[bb[a, x], (n-1)/2]*bb[a, x]
+			];
+		,
+		(* Use custom power function *)
+		pow =!= None,
+			bb /: Power[bb[a_List, x_], n_Integer] := pow[a,n,x];
+		,
+		True, Null
+	];
+	
+	(* Formatting. *)
+	defineBasisFormatting[bb,symb];
+];
+
+
+createQSymBasis[MonomialQSymbol, "M", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
+
+
+createQSymBasis[FundamentalQSymbol, "F", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
+
+createQSymBasis[PowerSumQSymbol, "\[Psi]", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
+
+
+
+(*
+
 MonomialQSymmetric[{}, x_: None] := 1;
 
 MonomialQSymmetric[alpha_List] := MonomialQSymmetric[alpha, None];
@@ -91,9 +202,12 @@ MonomialQSymmetric /: Format[MonomialQSymmetric[a_List, x_]] := With[
 	Row[{Subscript["M", r], "(", ToString@x, ")"}]
 ]];
 
+*)
+
+
 FundamentalQSymmetric[alpha_List, x_: None] := 
 FundamentalQSymmetric[alpha, x] = Sum[
-	MonomialQSymmetric[beta, x]
+	MonomialQSymbol[beta, x]
 	, {beta, CompositionRefinements[alpha]}];
 
 	
@@ -116,7 +230,7 @@ PowerSumQSymmetric[alpha_List, x_: None] :=
     Expand[
      ZCoefficient[alpha]
       Sum[
-       1/(Times @@ (pi /@ beta)) MonomialQSymmetric[Total /@ beta, x]
+       1/(Times @@ (pi /@ beta)) MonomialQSymbol[Total /@ beta, x]
        , {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
      ]
     ];
@@ -129,41 +243,47 @@ PowerSumAltQSymmetric[alpha_List, x_: None] :=
     Expand[
      ZCoefficient[alpha]
       Sum[
-       1/(Times @@ (spi /@ beta)) MonomialQSymmetric[Total /@ beta, 
+       1/(Times @@ (spi /@ beta)) MonomialQSymbol[Total /@ beta, 
          x]
        , {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
      ]
     ];
 
 
-CompositionIndexedBasisRule[size_Integer, basisSymb_, toBasis_, 
+Clear[CompositionIndexedBasisRule];
+CompositionIndexedBasisRule[size_Integer, bb_, toBasis_, 
    monom_: MonomialQSymmetric, x_: None] := 
-  CompositionIndexedBasisRule[size, basisSymb, toBasis, monom, x] =
+  CompositionIndexedBasisRule[size, bb, toBasis, monom, x] =
    Module[{parts, mat, imat},
     parts = IntegerCompositions[size];
     
+		
     (* Matrix with the toBasis expanded in monomials. *)
     (* 
     Here we use the "None" alphabet *)
     mat = Table[
-      Table[
-       Coefficient[toBasis[p], monom[q] ], {q, parts}]
-      , {p, parts}];
+			Table[
+				Coefficient[toBasis[p], monom[q] ], {q, parts}]
+		, {p, parts}];
+		
+		
     imat = Inverse[mat];
     Table[
      monom[parts[[p]], x] -> Sum[
-       basisSymb[parts[[q]]]*imat[[p, q]]
+       bb[ parts[[q]], x ]*imat[[p, q]]
        , {q, Length@parts}]
      , {p, Length@parts}]
     ];
 
 
-ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymmetric] := Module[
+ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymbol] := Module[
 	{mmVars, deg, maxDegree, monomList},
+	
 	mmVars = Cases[Variables[pol], mm[__, x], {0, Infinity}];
 	maxDegree = Max[0, mmVars /. mm[lam__, x] :> Tr[lam]];
 	If[maxDegree == 0, pol,
 	monomList = MonomialList[pol, mmVars];
+	
 	
 	Expand@Sum[
 		deg = Max@Cases[mon, mm[lam__, x] :> Tr[lam], {0, Infinity}];
@@ -174,12 +294,11 @@ ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymmetric
 ];
 
 
+ToFundamentalBasis[poly_, x_: None] := 
+	ToOtherQSymmetricBasis[FundamentalQSymmetric, poly, FundamentalQSymbol, x];
 
-ToFundamentalBasis[poly_, ff_, x_: None] := 
-  ToOtherQSymmetricBasis[FundamentalQSymmetric, poly, ff, x];
-
-ToQSymPowerSumBasis[poly_, pp_, x_: None] := 
-  ToOtherQSymmetricBasis[PowerSumQSymmetric, poly, pp, x];
+ToQSymPowerSumBasis[poly_,x_: None] := 
+	ToOtherQSymmetricBasis[PowerSumQSymmetric, poly, PowerSumQSymbol, x];
 
 
 End[(* End private *)];
