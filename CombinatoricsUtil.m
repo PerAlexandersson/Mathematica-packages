@@ -110,8 +110,6 @@ qKreweras;
 qAlternatingSignMatrices;
 qIntegerFactorize;
 
-EulerianA;
-EulerianAPolynomial;
 
 Is123AvoidingQ;
 Is132AvoidingQ;
@@ -133,8 +131,6 @@ WeakBruhatGreaterQ;
 PermutationCharge;
 PermutationCocharge;
 
-HStarPolynomial;
-
 
 SnCharacter;
 KostkaCoefficient;
@@ -154,6 +150,7 @@ permutationsMemoized[n_Integer?Positive] := permutationsMemoized[n] = Permutatio
 
 (* Make permutations function better, by accepting positive integer arguments *)
 Unprotect[Permutations];
+Permutations[0]:={{}};
 Permutations[n_Integer?Positive] :=
   If[n <= 10,
    permutationsMemoized[n],
@@ -939,7 +936,7 @@ UnitTest[PermutationFromWord]:=And@@Table[
  , {pi, Permutations@Range@5}];
 
 
-
+(* Same as Lehmer code .*)
 PermutationCode::usage = "PermutationCode[p] returns the code of the permutation.";
 PermutationCode[p_List] := Table[Count[p[[i + 1 ;;]], a_ /; a < p[[i]]], {i, Length@p}];
 
@@ -1095,26 +1092,6 @@ qIntegerFactorize[expr_, q_] := Module[{pow, quot, rem, val},
 ];
 
 
-(* Eulerian numbers. *)
-EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
-
-EulerianAPolynomial[0,t_]:=1;
-EulerianAPolynomial[n_Integer,t_]:=EulerianAPolynomial[n,t] = Expand[
-Sum[ Binomial[n , k] EulerianAPolynomial[k,t] (t-1)^(n-1-k), {k, 0, n-1}]];
-
-
-(* TODO: Make into a substitution instead? *)
-HStarPolynomial::usage="HStarPolynomial[pol,x,t] returns the h*-polynomial (in t).";
-HStarPolynomial[poly_,x_,t_] := Module[{bb, c, d,y},
-	bb[xx_, i_, s_] := 1/i! Product[(xx - k + s), {k, 0, i - 1}];
-	
-	d = Exponent[poly, x];
-	If[d<0, 0,
-		tbz = CoefficientList[poly - Sum[ c[i] bb[x, d, i], {i, 0, d}], x];
-		vars = Variables[tbz];
-		Reverse[vars] /. Solve[Thread[tbz == 0], vars][[1]]
-	].(t^Range[0,d])
-];
 
 
 

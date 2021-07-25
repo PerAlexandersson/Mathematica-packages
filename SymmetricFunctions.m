@@ -885,8 +885,8 @@ SchurSymmetric[mu_?VectorQ, x_]:=basisInMonomial[SchurSymmetric,sortToPartition@
 (*********************************************************************************************)
 
 
-
-OmegaInvolution::usage = "OmegaInvolution[expr, [x]] applies the omega involution on the expression.";
+OmegaInvolution::usage = "OmegaInvolution[expr, [x]] applies the omega involution on the expression. \
+Caution: It only acts on the common symmetric functions.";
 OmegaInvolution[poly_, x_: None] := (
 	poly /. {
 		MonomialSymbol[mu_, x] :> ForgottenSymbol[mu, x],
@@ -924,7 +924,6 @@ SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] :=
 
 
 SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, 0] := 0;
-
 SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, n_Integer] := Which[
 		Max[mu]>n, 0,
 		True,
@@ -935,13 +934,14 @@ SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, n_Integer] :
 
 SymmetricFunctionToPolynomial[expr_, x_] := SymmetricFunctionToPolynomial[expr, x, SymmetricFunctionDegree[expr]];
 
-(* TODO - This can be made more efficient if we replace expressions directly for some bases. *)
+(* TODO - This can be made more efficient if we replace expressions directly for some bases,
+ as we did above. *)
 SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] := 
 	ReplaceAll[
-		ToMonomialBasis[expr,yy]
+		ToElementaryEBasis[expr,yy]
 		,
-		MonomialSymbol[mu_List, yy] :> 
-		SymmetricFunctionToPolynomial[MonomialSymbol[mu, None], x, n]
+		ElementaryESymbol[mu_List, yy] :> 
+		SymmetricFunctionToPolynomial[ElementaryESymbol[mu, None], x, n]
 ];
 
 
@@ -1205,15 +1205,16 @@ Together@Sum[
 MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam,q,t] is the modified Macdonald polynomial.";
 MacdonaldHSymmetric[lam_List, q_, t_,x_: None] := MacdonaldHSymmetric[{lam, {}}, q, t,x];
 
-MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] := MacdonaldHSymmetric[{lam,mu},q,t,x]=
+MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] := MacdonaldHSymmetric[{lam,mu},q,t,x] =
 ChangeFunctionAlphabet[MacdonaldHSymmetric[{lam, mu}, SPECIALQ, SPECIALT], x] /. {SPECIALQ -> q, SPECIALT -> t};
 
 (* This is computed via the F-expansion, using the slinky rule *)
-MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := MacdonaldHSymmetric[{lam,mu}, SPECIALQ, SPECIALT] = Module[
+MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := Module[
 	{template, n = Tr[lam] - Tr[mu], tab, p, inv, maj, rw, desSet, alpha},
 	
 	template = SuperStandardTableau[{lam, mu}];
 	
+	MacdonaldHSymmetric[{lam,mu}, SPECIALQ, SPECIALT] = 
 	Expand@Sum[
 		tab = template /. Thread[Range[n] -> p];
 		{inv, maj} = InvMajStatistic[tab];
@@ -1223,7 +1224,9 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := MacdonaldHSymmet
 		
 		SchurSymbol[alpha]
 		SPECIALQ^inv SPECIALT^maj
-	, {p, Permutations[Range[n]]}]
+	, {p, Permutations[Range[n]]}];
+	
+	MacdonaldHSymmetric[{lam,mu}, SPECIALQ, SPECIALT]
 ];
 
 
@@ -1276,75 +1279,84 @@ SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := SkewMacdonaldESymmetri
 LLTSymmetric::usage = "LLTSymmetric[nu,q] returns the LLT polynomial associated with the tuple of skew shapes.";
 
 LLTSymmetric[nu_List, q_,x_:None]:=ChangeFunctionAlphabet[LLTSymmetric[nu,q,None],x];
-LLTSymmetric[nu_List, q_,None] := LLTSymmetric[nu,q,None] = Module[
+LLTSymmetric[nu_List, q_,None] := Module[
 {rwWithContent, ttInv, sizes, lam, mu, templateList, tableauList,
 	tabValues, perms, p, contentRW, rwPerm, n,
 	tabTuples, desSet, alpha, inv
 	},
-
-(* Returns a list (entry, c-r,r,i) *)
-(* Used to construct the reading word. *)
-
-rwWithContent[YoungTableau[tab_], i_: 1] :=
 	
-	Join @@ MapIndexed[
-	If[IntegerQ[#1], {#1, #2.{-1, 1}, #2[[1]], i}, Nothing] &,
-	tab, {2}];
-
-(* 
-Computes inversions between two tableaux.
-	*)
-ttInv[tab1_YoungTableau, tab2_YoungTableau] := With[
-	{rw1 = rwWithContent[tab1],
-	rw2 = rwWithContent[tab2]},
-	Sum[
-	Boole[Or[
-		a[[2]] == b[[2]] && a[[1]] > b[[1]],
-		a[[2]] - 1 == b[[2]] && a[[1]] < b[[1]]
-		]
-	], {a, rw1}, {b, rw2}]
-];
-
-(* Number of boxes in each (skew) shape. *)
-sizes = Table[
-		If[ IntegerQ[nui[[1]]], 
-			Tr[nui],
-			Tr[nui[[1]]] - Tr[nui[[2]]]
-		]
-	, {nui, nu}];
-
-n = Tr[sizes];
-
-(* All combinations of SYT on the shapes. *)
-
-templateList = Flatten[
-	Outer[List, Sequence @@ (StandardYoungTableaux /@ nu), 1],
-	Length[nu] - 1];
-
-(* All ways to distribute entries amongst the shapes. *)
-
-perms = Permutations@(Join @@ 
-	MapIndexed[ConstantArray[#2[[1]], #1] &, sizes]);
-tabValues = PartitionList[Ordering[#], sizes] & /@ perms;
-
-(* Combine all SYT with distributing entries. *)
-
-tabTuples = Join @@ Table[
-	MapThread[#2 /. (Thread[Range[#3] -> #1]) &
-	, {tv, template, sizes}, 1]
-	, {tv, tabValues},
-	{template, templateList}];
-
-Expand@Sum[
-	contentRW = Join @@ MapIndexed[rwWithContent[#1, #2[[1]]] &, tt];
-	rwPerm = 
-	First /@ SortBy[contentRW, {#[[2]] &, #[[4]] &, #[[3]] &}];
-	desSet = DescentSet@Ordering[rwPerm];
-	alpha = DescentSetToComposition[desSet, n];
+	(* Returns a list (entry, c-r,r,i) *)
+	(* Used to construct the reading word. *)
 	
-	inv = Total[ttInv @@@ Subsets[tt, {2}]];
-	q^inv SchurSymbol[alpha]
-	, {tt, tabTuples}]
+	rwWithContent[YoungTableau[tab_], i_: 1] :=
+		
+		Join @@ MapIndexed[
+		If[IntegerQ[#1], {#1, #2.{-1, 1}, #2[[1]], i}, Nothing] &,
+		tab, {2}];
+
+	(* 
+	Computes inversions between two tableaux.
+		*)
+	ttInv[tab1_YoungTableau, tab2_YoungTableau] := With[
+		{rw1 = rwWithContent[tab1],
+		rw2 = rwWithContent[tab2]},
+		Sum[
+		Boole[Or[
+			a[[2]] == b[[2]] && a[[1]] > b[[1]],
+			a[[2]] - 1 == b[[2]] && a[[1]] < b[[1]]
+			]
+		], {a, rw1}, {b, rw2}]
+	];
+
+	(* Number of boxes in each (skew) shape. *)
+	sizes = Table[
+			Which[ 
+				nui =={}, 0, (* Empty partition *)
+				
+				IntegerQ[nui[[1]]], Tr[nui],
+				True, Tr[nui[[1]]] - Tr[nui[[2]]]
+			]
+		, {nui, nu}];
+	
+	n = Tr[sizes];
+	
+	(* All combinations of SYT on the shapes. *)
+	
+	templateList = Flatten[
+		Outer[List, Sequence @@ (StandardYoungTableaux /@ nu), 1],
+		Length[nu] - 1];
+
+	(* All ways to distribute entries amongst the shapes. *)
+
+	perms = Permutations@(Join @@ 
+		MapIndexed[ConstantArray[#2[[1]], #1] &, sizes]);
+	tabValues = PartitionList[Ordering[#], sizes] & /@ perms;
+
+	(* Combine all SYT with distributing entries. *)
+
+	tabTuples = Join @@ Table[
+		MapThread[#2 /. (Thread[Range[#3] -> #1]) &
+		, {tv, template, sizes}, 1]
+		, {tv, tabValues},
+		{template, templateList}];
+
+	(* We do the memoization here. *)
+	Unprotect[LLTSymmetric];
+	
+	LLTSymmetric[nu,q,None] = Expand@Sum[
+		contentRW = Join @@ MapIndexed[rwWithContent[#1, #2[[1]]] &, tt];
+		rwPerm = 
+		First /@ SortBy[contentRW, {#[[2]] &, #[[4]] &, #[[3]] &}];
+		desSet = DescentSet@Ordering[rwPerm];
+		alpha = DescentSetToComposition[desSet, n];
+		
+		inv = Total[ttInv @@@ Subsets[tt, {2}]];
+		q^inv SchurSymbol[alpha]
+		, {tt, tabTuples}];
+	
+	Protect[LLTSymmetric];
+		
+	LLTSymmetric[nu,q,None]
 ];
 
 
@@ -1449,10 +1461,10 @@ DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, 
 
 End[(* End private *)];
 
-
+(*
 Protect @ Evaluate @ Names[
 	"SymmetricFunctions`" ~~ Except["$"] ~~ Except["`"]...
 ]
-
+*)
 
 EndPackage[];

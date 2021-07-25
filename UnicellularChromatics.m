@@ -3,12 +3,11 @@
 
 (* MathKernel -script file.m *)
 
-Clear["UnicellularChromatics`*"];
-BeginPackage["UnicellularChromatics`"];
 
-Needs["SymmetricFunctions`"];
-Needs["CombinatoricsUtil`"];
-Needs["CatalanObjects`"]; (* For area plot *)
+BeginPackage["UnicellularChromatics`",{"SymmetricFunctions`","CombinatoricsUtil`","CatalanObjects`"}];
+
+Unprotect["`*"]
+ClearAll["`*"]
 
 
 AreaLists;
@@ -46,7 +45,10 @@ BounceList;
 BounceEndpoint;
 EdgesHRVRule;
 
-Begin["Private`"];
+
+GraphColoringMonochromaticEdges;
+
+Begin["`Private`"];
 
 
 AreaLists::usage = "AreaLists[size, All->False, Circular->True, Width->-1] returns all area lists of size n.";
@@ -209,6 +211,7 @@ GraphOrientations[edges_List, opts:OptionsPattern[]] := Module[
 ];
 
 
+GraphAcyclicOrientations::usage = "GraphAcyclicOrientations[edges] returns the set of acyclic orientations.";
 Options[GraphAcyclicOrientations] = {StrictEdges -> {}};
 GraphAcyclicOrientations[edges_List, opts:OptionsPattern[]] := GraphAcyclicOrientations[edges,opts] = Module[{n = Max[edges, 0], orients, strict, strictIndices},
 	

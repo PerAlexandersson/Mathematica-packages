@@ -154,6 +154,7 @@ StandardYoungTableaux[{{sh__Integer}, {sh__Integer}}] := {
 };
 
 
+StandardYoungTableaux[{}]:={YoungTableau@{{}}};
 StandardYoungTableaux[{{}, {}}]:={YoungTableau@{{}}};
 
 StandardYoungTableaux[{sh_List, sh2_List}] := StandardYoungTableaux[{sh, sh2}] = Module[
