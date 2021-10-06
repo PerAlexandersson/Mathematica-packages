@@ -19,6 +19,9 @@
 
 --- Update test suite?
 
+--- Use protect/unprotect with memoization: 
+	https://mathematica.stackexchange.com/questions/39014/is-it-possible-to-protect-a-dynamic-programming-process
+
 *)
 
 

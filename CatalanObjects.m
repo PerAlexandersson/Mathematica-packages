@@ -106,6 +106,8 @@ OrderedRootedTreeToGraph;
 OrderedRootedTreePlot;
 ORTTo231Perm;
 
+Av231;
+
 Begin["Private`"];
 
 
@@ -737,7 +739,7 @@ DyckPlot[DyckPath[path_List]] := Module[
      {Thick, Line[coords]},
      {PointSize[0.03], Point[coords]}
      }, ImageSize -> 50]
-   ];
+];
    
 DyckPathHeight[p_DyckPath] := Max[#2 - #1 & @@@ DyckCoordinates[p]];
 
@@ -983,6 +985,21 @@ ORTTo231Perm[ot_List] := ORTTo231Perm[ot] = Module[
       adjPi,
       Range[n, n + 1 - Length[adjPi], -1]
       ]
+    ];
+		
+Av231::usage = "Av231[n] gives the list of 231-avoiding permutations of size n.";
+Av231[0] := {{}};
+Av231[1] := {{1}};
+Av231[n_Integer] := Av231[n] = Module[{j, left, right},
+    Reap[
+      Do[
+       (* The catalan recursion. n is at position j *)
+       
+       Sow[Join[left, {n}, j - 1 + right]]
+       , {left, Av231[j - 1]}
+       , {right, Av231[n - j]}
+       , {j, n}]
+      ][[2]]
     ];
 	
 	
