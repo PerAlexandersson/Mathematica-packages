@@ -92,7 +92,7 @@ GraphOrientationIntersection::usage="GraphOrientationIntersection[edges1, edges2
 GraphOrientationAscents::usage="GraphOrientationAscents[edges, orient] returns number of ascents, that is, correctly oriented edges.";
 GraphOrientationInversions::usage="GraphOrientationInversions[edges, orient] returns number of inversions, that is, opposite oriented edges.";
 
-AreaListToEdges::usage="AreaListToEdges[list] returns edges associated with an area list.";
+AreaToEdges::usage="AreaToEdges[list] returns edges associated with an area list.";
 
 AreaConjugate::usage="AreaConjugate[area] returns the conjugate area list. Only works for non-circular shapes.";
 AreaRowPermutation::usage="AreaRowPermutation[area] returns the permutation that maps rows to columns, such that a row of length k is mapped to a column of length k.  Furthermore, the permutaton is 132-avoiding."
@@ -381,13 +381,12 @@ AreaListPlot[areaList_List, opts:OptionsPattern[]] := Module[{edgeToGridCoord,
 
 OrientationPlot[area_List,ao_List]:=Module[{labels,e,edges,ascEdges},
 	
-	edges = AreaListToEdges@area;
+	edges = AreaToEdges@area;
 	ascEdges = GraphOrientationIntersection[edges, ao];
 	
 	labels = Table[e -> If[MemberQ[ascEdges,e],"\[DownArrow]","\[RightArrow]"],{e,edges}];
 	
-	If[Last@area == 0,
-		
+	If[First@area == 0,
 		AreaListPlot[area,Labels->labels,Circular->False]
 	,
 		AreaListPlot[area,Labels->labels,Circular->True]
@@ -554,7 +553,7 @@ GraphOrientationAscents[edges_List, orient_List] := Length[GraphOrientationInter
 GraphOrientationInversions[edges_List, orient_List] := GraphOrientationAscents[edges,Reverse/@orient];
 
 
-AreaListToEdges[lst_List] := With[{n = Length@lst},
+AreaToEdges[lst_List] := With[{n = Length@lst},
 	Join @@ Table[
 		Table[ {k, Mod[k + i - 1, n] + 1}, {i, lst[[k]]}]
 		, {k, n}]
@@ -801,7 +800,7 @@ LLTOrientationLowestReachableVertex[area_List, or_List,opts:OptionsPattern[]] :=
 	lrvSteps, stepLength, n = Length@area, ascEdges, strict},
 	
 	strict = OptionValue[StrictEdges];
-	ascEdges = GraphOrientationIntersection[AreaListToEdges@area, or];
+	ascEdges = GraphOrientationIntersection[AreaToEdges@area, or];
 	
 	ascEdges = Join[ ascEdges , strict ];
 	
@@ -834,7 +833,7 @@ LLTOrientationShape[area_List, or_List,opts:OptionsPattern[]] := Sort[Length/@LL
 LLTOrientationForest[area_List, or_List] := Module[
 	{lrvSteps, stepLength, n = Length@area, ascEdges},
 	
-	ascEdges = GraphOrientationIntersection[AreaListToEdges@area, or];
+	ascEdges = GraphOrientationIntersection[AreaToEdges@area, or];
 	
 	(* How long an edge is. *)
 	stepLength[{a_Integer, b_Integer}] := If[a < b, b - a, n - a + b];
@@ -870,7 +869,7 @@ ValleyEdges[edgeList_List, n_Integer] := Select[
 
 (* Corners that are part of the area. *)
 InnerCorners[area_List] := Module[{n = Length@area, edgeList},
-	edgeList = AreaListToEdges@area;
+	edgeList = AreaToEdges@area;
 	Select[edgeList,
 		!MemberQ[edgeList, {#[[1]], Mod[#[[2]], n] + 1}] &&
 		!MemberQ[edgeList, {Mod[#[[1]] - 2, n] + 1, #[[2]]}] &]
@@ -878,8 +877,8 @@ InnerCorners[area_List] := Module[{n = Length@area, edgeList},
 
 (* Corners that are not part of the area. *)
 OuterCorners[area_List] := Module[{n = Length@area,edgeList, nonEdges},
-	edgeList = Join[AreaListToEdges@area, Table[{k, k}, {k, n}]];
-	nonEdges = Complement[AreaListToEdges[ConstantArray[n - 1, n]], edgeList];
+	edgeList = Join[AreaToEdges@area, Table[{k, k}, {k, n}]];
+	nonEdges = Complement[AreaToEdges[ConstantArray[n - 1, n]], edgeList];
 	Select[nonEdges,
 		MemberQ[edgeList, {#[[1]], Mod[#[[2]] - 2, n] + 1}] &&
 		MemberQ[edgeList, {Mod[#[[1]], n] + 1, #[[2]]}] &]
@@ -911,7 +910,7 @@ AreaDinv[areaList_List] :=
 
 Options[GraphChromaticSymmetricPolynomial] = {Weights->{}};
 GraphChromaticSymmetricPolynomial[area:{_Integer ..}, x_, q_: 1, opts:OptionsPattern[]] :=
-GraphChromaticSymmetricPolynomial[AreaListToEdges@area, Length@area,x,q,opts];
+GraphChromaticSymmetricPolynomial[AreaToEdges@area, Length@area,x,q,opts];
 
 GraphChromaticSymmetricPolynomial[edges_List, n_Integer, x_, q_: 1,opts:OptionsPattern[]] :=
 	GraphChromaticSymmetricPolynomial[edges, n, x, q] = Module[{w,nn},
@@ -958,7 +957,7 @@ GraphChromaticLLTPolynomial[attacking_List, n_Integer, x_, q_: 1, opts:OptionsPa
 ];
 
 GraphChromaticLLTPolynomial[area:{_Integer ..}, x_, q_: 1, opts:OptionsPattern[]] :=
-GraphChromaticLLTPolynomial[AreaListToEdges@area, Length@area,x,q,opts];
+GraphChromaticLLTPolynomial[AreaToEdges@area, Length@area,x,q,opts];
 
 
 Options[HomogeneousGraphLLTPolynomial] = {StrictEdges -> {}, WeakEdges->{}};
@@ -985,7 +984,7 @@ HomogeneousGraphLLTPolynomial[edges_List, n_Integer, x_, q_: 1, t_:1, opts:Optio
 ];
 
 HomogeneousGraphLLTPolynomial[area:{_Integer ..}, x_, q_: 1, t_:1, opts:OptionsPattern[]] :=
-HomogeneousGraphLLTPolynomial[AreaListToEdges@area, Length@area,x,q,t,opts];
+HomogeneousGraphLLTPolynomial[AreaToEdges@area, Length@area,x,q,t,opts];
 
 
 

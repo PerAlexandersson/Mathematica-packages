@@ -1,4 +1,3 @@
-
 (* ::Package:: *)
 
 (* TODO 
@@ -23,7 +22,6 @@
 	https://mathematica.stackexchange.com/questions/39014/is-it-possible-to-protect-a-dynamic-programming-process
 
 *)
-
 
 (*
 DeclarePackage["NewTableaux`",{
@@ -102,7 +100,7 @@ HallLittlewoodTSymmetric;
 
 SchursQSymmetric;
 SchursPSymmetric;
-
+BigSchurSymmetric;
 
 MacdonaldPSymmetric;
 MacdonaldHSymmetric;
@@ -776,7 +774,6 @@ basisInMonomial[bb_,lam_,x_]:=ChangeFunctionAlphabet[basisInMonomial[bb,lam],x];
 
 
 
-
 (* Support for several alphabets at once *)
 toOtherSymmetricBasis[{basisFunc_,basisSymbol_}, poly_, alphabet_List] :=Fold[
 	toOtherSymmetricBasis[{basisFunc,basisSymbol}, #1, #2]&,
@@ -913,7 +910,7 @@ OmegaInvolution@ElementaryESymmetric[{4, 2, 1}] ===
 (***********************************************************************************)
 
 
-	
+
 SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr,x,[n]] expresses the function as a polynomial in n variables.";
 
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, 0] := 0;
@@ -1389,6 +1386,18 @@ OrthogonalSchurSymmetric[lam_List] := Det@Table[
 	{i, Length@lam}, 
 	{j, Length@lam}];
 
+	
+bsHelper[n_] := bsHelper[n]=Sum[2^Length[lam] MonomialSymbol[lam, None], {lam,IntegerPartitions[n]}];
+
+BigSchurSymmetric::usage = "The big Schur function. https://arxiv.org/pdf/1705.06437.pdf."
+BigSchurSymmetric[lam_,x_]:=ChangeFunctionAlphabet[BigSchurSymmetric[lam],x];
+BigSchurSymmetric[{}]:=1;
+BigSchurSymmetric[lam_List] := MExpand[
+Det@Table[
+	bsHelper[ lam[[i]] - i + j ], 
+	{i, Length@lam}, 
+	{j, Length@lam}]];
+	
 
 PetrieSymmetric::usage = "PetrieSymmetric[k,m] gives the degree-m part of the kth Petrie symmetric function.";
 PetrieSymmetric[k_Integer,0,x_:None]:= 1;
@@ -1421,6 +1430,17 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := LahSymmetricFuncti
 			, {alpha, IntegerPartitions[n - k]}]
 ];
 
+
+
+
+CompleteHSuperSymmetric[n_Integer, x_, y_] := 
+  Sum[CompleteHSymbol[j, x] ElementaryESymbol[n - j, y], {j, 0, n}];
+ElementaryESuperSymmetric[n_Integer, x_, y_] := 
+  Sum[ElementaryESymbol[j, x] CompleteHSymbol[n - j, y], {j, 0, n}];
+SchurSuperSymmetric[lam_List, x_, y_] := Det@Table[
+	CompleteHSuperSymmetric[lam[[i]] - i + j, x, y], 
+	{i, Length@lam},
+	{j, Length@lam}];
 
 
 (****************************************************************************************************)

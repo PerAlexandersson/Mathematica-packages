@@ -3,7 +3,7 @@
 Clear["CatalanObjects`*"];
 
 
-BeginPackage["CatalanObjects`"];
+BeginPackage["CatalanObjects`",{"CombinatoricsUtil`"}];
 
 (* Generic circular combinatorial object. *)
 CircularGraph;
@@ -71,6 +71,7 @@ DyckPath;
 DyckPaths;
 DyckCoordinates;
 DyckPlot;
+DyckPathToTikz;
 DyckPathHeight;
 DyckMajorIndex;
 DyckPeaks;
@@ -106,7 +107,12 @@ OrderedRootedTreeToGraph;
 OrderedRootedTreePlot;
 ORTTo231Perm;
 
+Av123;
+Av132;
+Av213;
 Av231;
+Av312;
+Av321;
 
 Begin["Private`"];
 
@@ -740,6 +746,56 @@ DyckPlot[DyckPath[path_List]] := Module[
      {PointSize[0.03], Point[coords]}
      }, ImageSize -> 50]
 ];
+
+
+DyckPathToTikz[p_DyckPath] := Module[{
+    pairsToPath, coords, lightGrayPath, n, grayStr, pathStr, gridStr, 
+    nodeStr},
+   coords = DyckCoordinates[p];
+   pairsToPath[pp_List] :=
+    StringJoin @@ Riffle[
+      StringJoin /@ ({"(", ToString@#1, ",", ToString@#2, ")"} & @@@ 
+         pp)
+      , "--"];
+   
+   n = Max[coords];
+   lightGrayPath = Join[
+     Most@coords
+     , Join @@ Table[{{k, k}, {k - 1, k}}, {k, n, 1, -1}]
+     ];
+   
+   grayStr = StringJoin[
+     "\\fill[lightgray]",
+     pairsToPath@lightGrayPath,
+     ";"];
+   pathStr = StringJoin[
+     "\\draw[thickLine]",
+     pairsToPath@coords,
+     ";"];
+   gridStr = StringJoin[
+     "\\draw[step=1em,gray](0,0) grid (", ToString@n, ",", ToString@n,
+      ");"];
+   
+   nodeStr = StringJoin[
+     "\\draw (0,0)node[mydot]{} \n",
+     "(", ToString@n, ",", ToString@n, ")node[mydot]{};\n",
+     "\\draw\n",
+     Sequence @@ Table[
+       StringJoin @@ (ToString /@ {"(", k, ",", k, 
+           ") node[entries]{$", k, "$}\n"})
+       , {k, n}]
+     , ";\n"
+     ];
+   
+   StringJoin[
+    "\\begin{tikzpicture}\n",
+    grayStr, "\n",
+    gridStr, "\n",
+    pathStr, "\n",
+    nodeStr,
+    "\\end{tikzpicture}\n"]
+];
+
    
 DyckPathHeight[p_DyckPath] := Max[#2 - #1 & @@@ DyckCoordinates[p]];
 
@@ -1000,13 +1056,49 @@ Av231[n_Integer] := Av231[n] = Module[{j, left, right},
        , {right, Av231[n - j]}
        , {j, n}]
       ][[2]]
-    ];
-	
+];
+
+
+Av132[0] := {{}};
+Av132[1] := {{1}};
+Av132[n_Integer] := Av132[n] = (
+    Join @@ Table[
+      Join @@ Outer[
+        Join[n - k - 1 + #1, {n}, #2] &
+        , Av132[k], Av132[n - 1 - k], 1]
+      , {k, 0, n - 1}]);
+
+(* This is broken - fix! *)
+(*
+Av132[0] := {{}};
+Av132[1] := {{1}};
+Av132[n_Integer] := Av132[n] = Module[{j, left, right},
+    Reap[
+      Do[
+       (* The catalan recursion. n is at position j *)
+       Sow[j  + left, {n}, right ]
+       , {right, Av132[j - 1]}
+       , {left,  Av132[n - j]}
+       , {j, n}]
+      ][[2]]
+];
+*)
+
+From132To123Avoiding[pi_List] := Module[{ltrMin, rem},
+	ltrMin = LeftToRightMinima[pi];
+	rem = Complement[pi, ltrMin];
+	ReplacePart[pi,
+		Thread[Sort[Ordering[pi][[rem]]] -> Sort[rem, Greater]]
+	]
+];
+
+Av231[n_Integer] := Reverse /@ Av132[n];
+Av213[n_Integer] := Reverse[n + 1 - #] & /@ Av132[n];
+Av312[n_Integer] := n + 1 - # & /@ Av132[n];
+Av123[n_Integer] := From132To123Avoiding /@ Av132[n];
+Av321[n_Integer] := Reverse[From132To123Avoiding[#]] & /@ Av132[n];		
+		
+		
 	
 End[(* End private *)];
 EndPackage[];
-
-
-
-
-

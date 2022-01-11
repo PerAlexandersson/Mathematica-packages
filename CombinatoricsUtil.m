@@ -56,6 +56,7 @@ PathExceedanceDecreaseMap;
 
 IntegerPartitionQ;
 SetPartitions;
+OrderedSetPartitions;
 IntegerCompositions;
 WeakIntegerCompositions;
 CompositionRefinements;
@@ -117,6 +118,8 @@ Is213AvoidingQ;
 Is231AvoidingQ;
 Is312AvoidingQ;
 Is321AvoidingQ;
+IsPermutationAvoidingQ;
+
 
 PermutationAllCycles;
 PermutationType;
@@ -126,6 +129,7 @@ PermutationFromWord;
 PermutationCode;
 FoataMap;
 CarlitzMap;
+SimionSchmidtMap;
 StrongBruhatGreaterQ;
 WeakBruhatGreaterQ;
 PermutationCharge;
@@ -159,7 +163,8 @@ Permutations[n_Integer?Positive] :=
 Protect[Permutations];
 
 
-
+(* Prop 19 in https://core.ac.uk/download/pdf/82232421.pdf *)
+(* Sends 123-avoiding to 132-avoiding *)
 SimionSchmidtMap::usage = "SimionSchmidtMap[perm] ,see https://core.ac.uk/download/pdf/82232421.pdf";
 SimionSchmidtMap[pi_List] := 
   Module[{x = pi[[1]], n = Length@pi, out},
@@ -175,8 +180,6 @@ SimionSchmidtMap[pi_List] :=
     , {i, 2, n}];
    out
 ];
-
-
 
 
 (**Lists and words **)
@@ -256,12 +259,15 @@ PermutationMinorDescents[pi_List] := Tr[
 ToSubExcedance[{1}] := {1};
 ToSubExcedance[pi_List] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
 
-FromSubExcedance[f_List]:=Module[{n=Length@f,ff},
-	Do[
-		ff=ToSubExcedance@pi;
-		FromSubExcedance[ff]=pi
-	,{pi,Permutations@n}];
-	FromSubExcedance[f]
+
+(* With this definition, we can use FromSubexcedance on any word 
+where entries <= length.*)
+
+FromSubExcedance[f_List] := FromSubExcedance[f, Range[Length@f]];
+FromSubExcedance[{}, pi_List] := pi;
+FromSubExcedance[f_List, pi_List] := With[{n = Length@f, fn = Last@f},
+   (* Apply transposition *)
+   ReplaceAll[FromSubExcedance[Most@f, pi], {fn -> n, n -> fn}]
 ];
 
 
@@ -448,6 +454,21 @@ SetPartitions[n_Integer] := SetPartitions[n] = Module[{sp},
        ]
       , {p, sp}]
 ];
+
+OrderedSetPartitions::usage = "OrderedSetPartitions[n] returns all ordered set partitions of {1,2,...,n}. See A000670.";
+OrderedSetPartitions[0] := {{}};
+OrderedSetPartitions[1] := {{{1}}};
+OrderedSetPartitions[n_Integer] := Module[{k, ss, sp},
+   Reap[
+     Do[
+      Sow[
+       Append[sp /. Thread[Range[n - k] -> Complement[Range@n, ss]], 
+        ss]]
+      , {k, n}
+      , {ss, Subsets[Range[n], {k}]}
+      , {sp, OrderedSetPartitions[n - k]}]][[2, 1]]
+   ];
+
 
 
 IntegerCompositions::usage = "IntegerCompositions[n] returns all interger compositions of n. IntegerCompositions[n,k] gives all compositions with length k.";
@@ -862,6 +883,17 @@ Is123AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; c > b >
 Is132AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; b > c > a];
 Is312AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > c > b];
 Is321AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > b > c];
+
+
+IsPermutationAvoidingQ::usage = "IsPermutationAvoidingQ[sigma,pi] returns true if pi avoids the pattern sigma.";
+IsPermutationAvoidingQ[pi_?PermutationListQ, p_List]:= !MemberQ[Ordering /@ Subsets[Ordering@p, {Length@pi}], pi];
+
+(*
+Map from section 4,
+ http://repository.gunadarma.ac.id/1424/1/Three%20Length%20Pattern%20Avoiding%20Permutation%20and%20the%20Catalan%20Numbers_UG.pdf
+*)
+
+
 
 PermutationCharge[p_List] := PermutationCharge[p] = MajorIndex[Reverse@Ordering@p];
 

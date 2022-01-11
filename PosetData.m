@@ -6,8 +6,11 @@ BeginPackage["PosetData`"];
 
 Needs["CombinatoricsUtil`"];
 
+(* Need to do much more, say, complete edges to transitive closure *)
+
 Poset;
 PosetPlot;
+PosetPlotOld;
 GetPosets;
 PosetToHasseDiagram;
 PosetLinearExtensions;
@@ -19,6 +22,7 @@ WeakEdges;
 StrictEdges;
 EqualEdges;
 
+PosetMinimalElements;
 
 
 WSEPosetFunction::"WSEPosetFunction[weak,strict,equal,n,x] returns the generating 
@@ -31,6 +35,9 @@ weight gives the multiplicity of the variables.";
 (***************** Switch to private context *********************************)
 Begin["Private`"];
 
+
+PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";
+PosetMinimalElements[Poset[n_, edg_]] := Complement[Range[n], Last /@ edg];
 
 
 (* This assumes minimal elements in the bottom, and edges are increasing relations. *)
@@ -70,14 +77,12 @@ PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, 
    erf[coordList_, edg_, lbl_: ""] := Which[
      MemberQ[strictEdges, edg],
      {
-      {Black, Thickness[0.02], Arrowheads[{{0.1, 0.5}}], 
-       Arrow[coordList, 0.1]},
-      {Orange, Thickness[0.01], Arrowheads[0.0], Arrow[coordList, 0.1]}
+      {Black, Thickness[0.02], Arrowheads[{{0.1, 0.5}}],Arrow[coordList, 0.1]},
+      {Thick, Orange, Arrow[coordList, 0.1]}
       },
      MemberQ[equalEdges, edg], {
       {Black, Thickness[0.02], Arrowheads[0.0], Arrow[coordList, 0.1]},
-      {White, Thickness[0.01], Arrowheads[0.0], 
-       Arrow[coordList, 0.1]}
+      {White, Thickness[0.01], Arrowheads[0.0], Arrow[coordList, 0.1]}
       },
      
      True, {Thick, Black, Arrowheads[0.04], Arrow[coordList, 0.1]}
@@ -122,8 +127,8 @@ Default n should be maximal vertex appearing.
 	Todo: Improve this by computing Descent set instead, and use F-expansion.
 *)
 Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}};
-
-PosetColorings[n_Integer,opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{isOkQ,e,weak,strict,equal,comps},
+PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,Join[{WeakEdges->edges},{opts}]];
+PosetColorings[n_Integer, opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{isOkQ,e,weak,strict,equal,comps},
 	
 	weak = OptionValue[WeakEdges];
 	strict = OptionValue[StrictEdges];
@@ -139,8 +144,6 @@ PosetColorings[n_Integer,opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{
 		colorings = Permutations[
 			Join@@MapIndexed[ConstantArray[#2[[1]],#1]&, comp]];
 		
-		Print[ comp, " ", PartitionPartCount /@ Select[colorings, isOkQ ]];
-			
 		PartitionPartCount /@ Select[colorings, isOkQ ]
 		
 	,{comp,IntegerCompositions[n]}]

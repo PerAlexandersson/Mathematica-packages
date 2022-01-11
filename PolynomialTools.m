@@ -6,6 +6,8 @@ ClearAll["PolynomialTools`*"];
 BeginPackage["PolynomialTools`"];
 
 
+
+
 RootInterleavingQ;
 HStarPolynomial;
 
@@ -31,7 +33,10 @@ RealRootedQ[poly_] := Which[
    True, Message[RealRootedQ::poly, poly]
 ];
 
-
+(*
+Use this technique instead.
+https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-roots
+*)
 
 RootInterleavingQ::usage = "RootInterleavingQ[P,Q,t] returns true 
 if the roots interleave (weakly). In particular, largest root of Q is greater than largest root of P.";

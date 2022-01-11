@@ -21,6 +21,8 @@ FundamentalQSymbol;
 PowerSumQSymbol;
 
 
+ToOtherQSymmetricBasis; (* Use sparingly *)
+
 ToFundamentalBasis;
 ToQSymPowerSumBasis;
 
@@ -42,7 +44,7 @@ Module[{rest, first},
 			{Join[first, #1], ##2} & @@@ PartitionedCompositionCoarsenings[rest]]
 ];
 
-	 
+
 (*********************************************************)
 
 
@@ -66,15 +68,13 @@ QMonomialProduct[alpha_List, beta_List, x_: None] := Module[
 	
 	Sum[
 		ap = Prepend[Accumulate[p], {0, 0}];
-		MonomialQSymmetric[
+		MonomialQSymbol[
 		Table[
 			p[[i]].{ alphaPad[[ 1 + ap[[i, 1]]]], betaPad[[ 1 + ap[[i, 2]]]]}
 			, {i, Length@p}]
 		, x]
-		, {p, specPaths[m, n]}]
+	, {p, specPaths[m, n]}]
 ];
-
-
 
 
 defineBasisFormatting[bb_,symb_String]:=Module[{},
@@ -175,36 +175,6 @@ createQSymBasis[PowerSumQSymbol, "\[Psi]",
 
 
 
-(*
-
-MonomialQSymmetric[{}, x_: None] := 1;
-
-MonomialQSymmetric[alpha_List] := MonomialQSymmetric[alpha, None];
-
-MonomialQSymmetric /: Times[MonomialQSymmetric[a_List, x_], MonomialQSymmetric[b_List, x_]] := 
-	QMonomialProduct[a, b, x];
-	
-MonomialQSymmetric /: Power[MonomialQSymmetric[a_List, x_], 0] := 1;
-
-MonomialQSymmetric /: Power[MonomialQSymmetric[a_List, x_], 1] := 
-  MonomialQSymmetric[a, x];
-	
-MonomialQSymmetric /: Power[MonomialQSymmetric[a_List, x_], n_Integer] := 
-	Expand[Power[MonomialQSymmetric[a, x], n - 2] QMonomialProduct[a, a, x]];
-
-(* TODO Make formatting compatible with TEX *)
-
-MonomialQSymmetric /: Format[MonomialQSymmetric[a_List, x_]] := With[
-	{r = Row[a /. i_Integer :> If[i > 9, OverBar@i, i]]},
-	If[
-	x === None,
-	Subscript["M", r],
-	Row[{Subscript["M", r], "(", ToString@x, ")"}]
-]];
-
-*)
-
-
 FundamentalQSymmetric[alpha_List, x_: None] := 
 FundamentalQSymmetric[alpha, x] = Sum[
 	MonomialQSymbol[beta, x]
@@ -222,9 +192,7 @@ UnitTest[FundamentalQSymmetric] := And[
 
 
 
-
 PowerSumQSymmetric[alpha_List, x_: None] :=
-  
   PowerSumQSymmetric[alpha, x] = Module[{pi},
     pi[comp_List] := Times @@ Accumulate[comp];
     Expand[
@@ -233,7 +201,7 @@ PowerSumQSymmetric[alpha_List, x_: None] :=
        1/(Times @@ (pi /@ beta)) MonomialQSymbol[Total /@ beta, x]
        , {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
      ]
-    ];
+];
 
 
 PowerSumAltQSymmetric[alpha_List, x_: None] :=
@@ -252,7 +220,7 @@ PowerSumAltQSymmetric[alpha_List, x_: None] :=
 
 Clear[CompositionIndexedBasisRule];
 CompositionIndexedBasisRule[size_Integer, bb_, toBasis_, 
-   monom_: MonomialQSymmetric, x_: None] := 
+   monom_: MonomialQSymbol, x_: None] := 
   CompositionIndexedBasisRule[size, bb, toBasis, monom, x] =
    Module[{parts, mat, imat},
     parts = IntegerCompositions[size];

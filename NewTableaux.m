@@ -176,7 +176,7 @@ StandardYoungTableaux[{sh_List, sh2_List}] := StandardYoungTableaux[{sh, sh2}] =
 			Append[#, {n}],
 			Insert[#, n, {{r, -1}}]
 		] &, 
-			StandardYoungTableaux[{ReplacePart[sh, r -> sh[[r]] - 1], sh2}]
+			StandardYoungTableaux[{ReplacePart[sh, r -> sh[[r]] - 1], sh2}] (* TODO: USE MapAt instead *)
 		,{2}]
 	, {r, addIdx}]
 ];
