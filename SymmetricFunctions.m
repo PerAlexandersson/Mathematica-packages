@@ -120,6 +120,7 @@ CylindricSchurSymmetric;
 LahSymmetricFunction;
 LahSymmetricFunctionNegative;
 
+LyndonSymmetric;
 
 DeltaOperator;
 NablaOperator;
@@ -387,7 +388,7 @@ shiftedSchurDet[lambda_List, mu_List] := Module[
 ];
 
 
-LRCoefficient[lambda_List, mu_List, mu_List]:=lrCoefficientInternal[lambda,mu,nu];
+LRCoefficient[lambda_List, mu_List, nu_List]:=lrCoefficientInternal[lambda,mu,nu];
 
 (* Base cases are values of shifted Schur functions. *)
 lrCoefficientInternal[lambda_List, mu_List, mu_List] := lrCoefficientInternal[lambda, mu, mu] = shiftedSchurDet[lambda, mu];
@@ -449,7 +450,7 @@ ChangeFunctionAlphabet[expr_, to_, from_: None] := If[
 	expr,
 	(expr /. (bb:coreBasesList)[mu__, from] :> bb[mu, to])];
 	
-SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__, x_]]},
+SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__, x_],{0,Infinity}]},
 		MonomialList[expr,mm]
 ];
 
@@ -464,7 +465,7 @@ SymmetricFunctionDegree[expr_, All] := Max[
 SymmetricFunctionDegree[expr_, yy_:None] := Max[
 	Table[
 			Cases[mm, (bb:coreBasesList)[mu_List, yy] :> Tr[mu],{0,Infinity}]
-		,{mm,SymmetricMonomialList[expr]}]
+		,{mm, SymmetricMonomialList[expr]}]
 ];
 
 PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
@@ -987,8 +988,10 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 
 
 (* Use power-sum, as this is compatible with q,t-extension. *)
+HallInnerProduct::usage="HallInnerProduct[f,g] returns the Hall inner productof the two symmetric functions.
+HallInnerProduct[f,g,{q,t},x] computes the inner product with general q and t, and alphabet x.";
 
-HallInnerProduct[f_, g_] := HallInnerProduct[f, g, {1, 1}, None];
+HallInnerProduct[f_, g_] := HallInnerProduct[f, g, {0, 0}, None];
 HallInnerProduct[f_, g_, {q_, t_}, x_: None] := Module[{
 	ff, gg, lam,
 	vars, rulesF, rulesG, vF, vG, rF, rG
@@ -1173,8 +1176,9 @@ MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := ChangeFunctionAlphabet[
 	MacdonaldPSymmetricHelper[lam, SPECIALQ, SPECIALT]
 	, x] /. {SPECIALQ -> q, SPECIALT -> t};
 
-(* 7.13' p. 346 in Macdonald's book. *)
 
+
+(* 7.13' p. 346 in Macdonald's book. *)
 MacdonaldPSymmetricHelper[mu_List, q_, t_]:=MacdonaldPSymmetricHelper[mu,q,t]=
 Together@Sum[
    MonomialSymbol[YoungTableauWeight[ssyt]]
@@ -1188,8 +1192,7 @@ Together@Sum[
       MacdonaldPsi[rib, q, t]
       , {rib, Partition[ Reverse@ribbons , 2, 1]}]
      ]
-   , {ssyt,
-    SemiStandardYoungTableaux[{mu, {}}, Tr@mu]
+   , {ssyt, SemiStandardYoungTableaux[{mu, {}}, Tr@mu]
  }];
 
 
@@ -1429,6 +1432,25 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := LahSymmetricFuncti
 				]
 			, {alpha, IntegerPartitions[n - k]}]
 ];
+
+
+
+LyndonSymmetric::usage="LyndonSymmetric[lam, [x]]. See https://doi.org/10.1016/0097-3165(93)90095-P for definition";
+LyndonSymmetric[0, x_: None] := 1;
+LyndonSymmetric[n_Integer, x_: None] := 
+  1/n Sum[MoebiusMu[d] PowerSumSymbol[d, x]^(n/d), {d, Divisors@n}];
+LyndonSymmetric[lam_List, x_: None] := Module[{n = Tr@lam, nn},
+   Which[
+    lam == {}, 1,
+    Length[lam] == 1, LyndonSymmetric[lam[[1]],x],
+    True,
+    Product[
+      With[{k = Count[lam, nn]},
+       Plethysm[CompleteHSymbol[k], LyndonSymmetric[nn, x]]
+       ]
+      , {nn, Union[lam]}] // Expand
+    ]
+   ];
 
 
 

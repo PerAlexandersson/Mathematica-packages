@@ -128,7 +128,7 @@ Default n should be maximal vertex appearing.
 *)
 Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}};
 PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,Join[{WeakEdges->edges},{opts}]];
-PosetColorings[n_Integer, opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{isOkQ,e,weak,strict,equal,comps},
+PosetColorings[n_Integer, opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{isOkQ,e,weak,strict,equal,comps,colorings},
 	
 	weak = OptionValue[WeakEdges];
 	strict = OptionValue[StrictEdges];

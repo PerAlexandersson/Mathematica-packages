@@ -131,7 +131,7 @@ FoataMap;
 CarlitzMap;
 SimionSchmidtMap;
 StrongBruhatGreaterQ;
-WeakBruhatGreaterQ;
+WeakOrderGreaterQ;
 PermutationCharge;
 PermutationCocharge;
 
@@ -718,6 +718,7 @@ MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Modu
 MacdonaldPsiPrime[{lam_,mu_},q_,t_]:=MacdonaldPsi[{ConjugatePartition@lam,ConjugatePartition@mu},t,q];
 
 
+
     
 (* This follows Macdonald's book. *)
 PartitionQuotient::usage = "PartitionQuotient[lam,d] returns the partition quotient by d. Also works on skew shapes.";
@@ -1010,18 +1011,19 @@ UnitTest[FoataMap]:=(FoataMap[{4,1,3,7,5,6,2}]=={7,1,4,3,5,6,2});
 
 
 (* Weak Bruhat order. TODO -- Check that this is ok *)
-(* This corresponds to using ADJACENT transpositions. *)
-(* This should really be called STRONG Bruhat order. *)
-
-WeakBruhatGreaterQ::usage = "WeakBruhatGreaterQ[p1,p2] returns true iff p1 is greater 
-than p2 in weak Bruhat order. The identity is smaller than all other, and w0 is largest.";
-WeakBruhatGreaterQ[p1_List, p2_List] := WeakBruhatGreaterQ[p1, p2] = Module[{diff},
-	Message["WeakBruhatGreaterQ is experimental!"];
+(* This corresponds to using ADJACENT/simple transpositions. *)
+WeakOrderGreaterQ::usage = "WeakOrderGreaterQ[p1,p2] returns true iff p1 is greater 
+than p2 in weak order. The identity is smaller than all other, and w0 is largest.";
+WeakOrderGreaterQ[p1_List, p2_List] := WeakOrderGreaterQ[p1, p2] = Module[{diff},
+	(*
+		Message["WeakOrderGreaterQ is experimental!"];
+	*)
 	diff = Ordering[p1][[p2]];
 	Inversions[p1] == Inversions[diff] + Inversions[p2]
 ];
 
 
+(* This uses all transpositions *)
 StrongBruhatGreaterQ::usage="StrongBruhatGreaterQ[p1,p2] returns true iff p1 
 is greater-equal than p2 in strong Bruhat order. The identity is smaller than all other, and w0 is largest.";
 
@@ -1045,7 +1047,7 @@ StrongBruhatDownSet[p_List] := StrongBruhatDownSet[p] = Module[{ss, n = Max@p},
 			, {ss, Subsets[Range[n], {2}]}]
 		,
 		p
-		]]
+	]]
 ];
 
 

@@ -55,6 +55,8 @@ ColumnLatticePaths;
 
 InvMajStatistic;
 
+ArrayToBiword;
+
 BiwordRSK;
 BiwordRSKDual;
 
@@ -775,9 +777,16 @@ InvMajStatistic[YoungTableau[tab_]] := Module[{isInvQ, fil, mu, muc, inv, maj},
 
 (***************************** RSK ***********************)
 
+
+ArrayToBiword[a_] := 
+  Transpose@Flatten[MapIndexed[ConstantArray[#2, #1] &, a, {2}], 2];
+
+
+
+
 (* This one inserts the pair {a,b} into the tableaux *)
 
-BiwordRSK::usage = "BiwordRSK[{w1,w2} inserts the two words and produces a pair of Young Tableaux."
+BiwordRSK::usage = "BiwordRSK[{w1,w2}] inserts the two words and produces a pair of Young Tableaux."
 
 BiwordRSK[{a_Integer, b_Integer}, {YoungTableau[pTab_], YoungTableau[qTab_]}] := Module[
 	{insertInRow, pTabOut = pTab, qTabOut = qTab, swapIndex, newi},
