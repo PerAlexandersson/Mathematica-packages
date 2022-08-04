@@ -1,5 +1,4 @@
 (* ::Package:: *)
-
 Clear["CombinatoricsUtil`*"];
 
 BeginPackage["CombinatoricsUtil`"];
@@ -85,6 +84,7 @@ PartitionArm;
 PartitionLeg;
 ShapeBoxes;
 MacdonaldPsi;
+JackPsi;
 
 PartitionCore;
 PartitionQuotient;
@@ -671,14 +671,37 @@ ShapeBoxes::usage = "ShapeBoxes[{lam,mu}] returns a list of (r,c)-coords of boxe
 ShapeBoxes[lam_List] := ShapeBoxes[{lam, {}}];
 ShapeBoxes[{lam_List, mu_List}] :=
    Join @@ Table[
-     Which[
-      Length[mu] < r,
+     If[Length[mu] < r,
       Table[{r, j}, {j, lam[[r]]}],
-      True,
       Table[{r, j}, {j, mu[[r]] + 1, lam[[r]]}]
       ]
      , {r, Length@lam}];
 
+
+
+JackPsi[{lam_List, mu_List}, a_] := JackPsi[{lam, mu}, a] = Module[
+	{s,stripBoxes,muBoxes,rowOk,colOk},
+ 
+	stripBoxes = ShapeBoxes[{lam,mu}];
+	muBoxes    = ShapeBoxes[{mu,{}}];
+	
+	(* Product over all skew boxes in lam/mu, but only some of them count;
+	namely those boxes that DO have a proper box (somewhere) to the right, 
+	but no proper box somewhere below. *)
+	
+	rowOk[r_Integer]:=rowOk[r] = Count[stripBoxes, {r,_Integer}] > 0;
+	colOk[c_Integer]:=colOk[r] = Count[stripBoxes, {_Integer, c}] == 0;
+	
+	
+	Product[
+		Divide[
+				(a*PartitionArm[mu,s]+PartitionLeg[mu,s]+1)/(a*PartitionArm[mu,s]+PartitionLeg[mu,s]+a)
+				,
+				(a*PartitionArm[lam,s]+PartitionLeg[lam,s]+1)/(a*PartitionArm[lam,s]+PartitionLeg[lam,s]+a)
+				]
+	, {s, Select[muBoxes, rowOk[First@#] && colOk[Last@#]&]}]
+	
+];
 
 (*p. 340, Macdonald *)
 MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Module[{s,stripBoxes,muBoxes,rowOk,colOk,bb},
@@ -686,7 +709,7 @@ MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Modu
 	stripBoxes = ShapeBoxes[{lam,mu}];
 	muBoxes    = ShapeBoxes[{mu,{}}];
 	
-	(* Product over all skew boxes in lam/mu, but only some of them count;
+	(* Product over all boxes mu, but only some of them count;
 	namely those boxes that DO have a proper box (somewhere) to the right, 
 	but no proper box somewhere below. *)
 	
@@ -705,13 +728,8 @@ MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Modu
 		1];
 	
 	Product[
-		If[rowOk[First@s] && colOk[Last@s]
-			,
 			bb[mu,s]/bb[lam,s]
-			,
-			1
-		]
-	, {s, muBoxes}]
+	, {s, Select[muBoxes,rowOk[First@#] && colOk[Last@#]&]}]
 ];
 
 (* p.341, Macdonald. *)

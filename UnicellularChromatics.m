@@ -40,7 +40,10 @@ SchroederAcyclicOrientations
 SchroederColorings;
 SchroederColoringAscents;
 
+(*
 RecursionVertices; (* This is temporary - should not be in the library after paper is done. *)
+*)
+
 BounceList;
 BounceEndpoint;
 EdgesHRVRule;
@@ -398,6 +401,7 @@ BounceList[word_, y_Integer] := Module[{aa, strict, strictRows, x},
     ]
 ];
 
+(*
 RecursionVertices[word_, z_Integer, type_: 2] := Module[
 	{aa, strict, strictQ, n, x, y, w, validQ, bounceList},
 	
@@ -453,7 +457,7 @@ RecursionVertices[word_, z_Integer, type_: 2] := Module[
 	{validQ, {z, Sequence@@bounceList, w}}
 	
 ];
-
+*)
 
 EdgesHRVRule[edges_List] := EdgesHRVRule[edges] = Module[
     {lrvSteps, stepLength, verts, ascEdges},

@@ -163,17 +163,16 @@ IsInversionTripletTypeBQ[aa_Integer, bb_Integer, cc_Integer] := ClockwiseQ[aa + 
 
 (*************************** OPERATOR STUFF FOR KEYS AND ATOMS *************************)
 
-
+(* THIS IS INEFFICIENT--OPTIMIZE as for atom*)
 KeyCompositionToPermutation[alpha_List] := Module[{n = Length@alpha, lam = Sort[alpha, Greater], pp},
 	pp = Select[Permutations[Range@n], Reverse[alpha][[#]] == lam &];
 	{First[SortBy[pp, Length[ReducedWord[#]] &]], lam}
 ];
 
-AtomCompositionToPermutation[alpha_List] := 
-  Module[{n = Length@alpha, lam = Sort[alpha, Greater], pp},
-   pp = Select[Permutations[Range@n], alpha[[#]] == lam &];
-   {First[SortBy[pp, Length[ReducedWord[#]] &]], lam}
+AtomCompositionToPermutation[alpha_List] := Module[{m = Length@alpha},
+   Transpose@SortBy[Transpose[{Range@m, alpha}], -#[[2]] &]
 ];
+
 
 (* Perform the DividedDifference operator on a polynomial in x[1]...x[n] *)
 (*
@@ -239,11 +238,13 @@ PiOperator[poly_, x_, redWord_List] := PiOperator[poly, x, redWord] =
    PiOperator[PiOperator[poly, x, redWord[[1]] ], x, Rest@redWord];
 
 (* This applies the transpositions from LEFT to RIGHT in the list *)
+ThetaOperator[poly_, x_, rw_List] := Fold[ThetaOperator[#1, x, #2] &, poly, rw];
+(*
 ThetaOperator[poly_, x_, {}] := poly;
 ThetaOperator[poly_, x_, redWord_List] := ThetaOperator[poly, x, redWord] =
    ThetaOperator[ThetaOperator[poly, x, redWord[[1]] ], x, Rest@redWord
 ];
-
+*)
 
 
 TThetaOperator[poly_, x_, t_, j_Integer] := (1 - t) (ThetaOperator[poly, x, j]) + (t*poly /. {x[j] -> x[j + 1], x[j + 1] -> x[j]});

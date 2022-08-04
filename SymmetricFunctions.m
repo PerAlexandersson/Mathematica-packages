@@ -3,6 +3,11 @@
 (* TODO 
 
 
+=== MAKE A MORE CONSISTENT SYSTEM FOR CREATING NEW BASES! 
+	One needs to map BasisSymmetric to BasisSymbol and vice versa 
+	Make a general function that takes the arguments {BasisSymmetric, BasisSymbol} and 
+	possibly additional parameters ({q,t}) and sets up everything. 
+
 --- Ask Mike Zabrocki about sage and symfuns
 
 --- Can we make an external C program that compute transition matrices? Is it worth it?
@@ -78,6 +83,7 @@ PowerSumSymmetric;
 SchurSymmetric;
 ForgottenSymmetric;
 
+toOtherSymmetricBasis;
 
 OmegaInvolution;
 HallInnerProduct;
@@ -94,9 +100,15 @@ SkewSchurSymmetric;
 
 JackPSymmetric;
 JackJSymmetric;
+ShiftedJackPSymmetric;
 
 HallLittlewoodMSymmetric;
 HallLittlewoodTSymmetric;
+HallLittlewoodPSymmetric;
+
+ToHallLittlewoodPBasis
+HallLittlewoodPSymbol;
+
 
 SchursQSymmetric;
 SchursPSymmetric;
@@ -163,8 +175,7 @@ defineBasisFormatting[bb_,symb_String]:=Module[{},
 			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
 			
 ];
- 
- 
+
 
 (* Abstract function for defining a symmetric function basis,
 	with formatting and basic multiplication. *)
@@ -705,7 +716,6 @@ fromMonomialToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}]:
 			symFuncTransMatInternal[MonomialSymmetric,toBasisFunc,deg].Table[
 				toBasisSymb[lam,y]
 			,{lam,IntegerPartitions[deg]}]
-
 		}
 	,
 	1
@@ -1156,6 +1166,49 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 ];
 
 
+(* Compute Hall-Littlewood P via inverse Kostka-Foulkes matrix.*)
+(* This matrix is computed via HallLittlewoodTSymmetric *)
+
+
+kostkaFoulkesMat[n_Integer]:=kostkaFoulkesMat[n] = Module[{lam,mu},
+	Table[
+		With[{
+			poly = ToSchurBasis[HallLittlewoodTSymmetric[lam, SPECIALT ]]
+			},
+				Table[Coefficient[poly, SchurSymbol[mu]], {mu, IntegerPartitions@n}]
+		]
+	, {lam, IntegerPartitions@n}]
+];
+
+
+
+HallLittlewoodPSymmetricHelper[lam_List] := HallLittlewoodPSymmetricHelper[lam] = Module[{hlPolys,ip,j,n=Tr@lam},
+
+	hlPolys = (SchurSymbol/@IntegerPartitions[n]).(Inverse@kostkaFoulkesMat[n]);
+	
+	ip = IntegerPartitions[n];
+	(* Memoize expansion for all partitions of same size. *)
+	Do[
+		HallLittlewoodPSymmetricHelper[ip[[j]]] = hlPolys[[j]];
+	,{j, Length@ip}];
+	
+	HallLittlewoodPSymmetricHelper[lam]
+];
+
+HallLittlewoodPSymmetric::usage = "HallLittlewoodPSymmetric[lam] is the usual Hall-Littlewood P function";
+HallLittlewoodPSymmetric[lam_List, t_, x_: None] := ChangeFunctionAlphabet[
+	HallLittlewoodPSymmetricHelper[lam], x] /. {SPECIALT -> t};
+
+
+ToHallLittlewoodPBasis[poly_, t_, x_: None, mh_:HallLittlewoodPSymbol] := 
+Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[HallLittlewoodPSymmetric[#,t]]&, mh}, poly, x];
+
+
+createBasis[HallLittlewoodPSymbol, "P", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
+
 
 SchursQSymmetric::usage = "SchursQSymmetric[lam]";
 SchursQSymmetric[lam_List, x_: None]:=SchursQSymmetric[lam,x] = ToMonomialBasis@Module[{q},
@@ -1177,7 +1230,6 @@ MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := ChangeFunctionAlphabet[
 	, x] /. {SPECIALQ -> q, SPECIALT -> t};
 
 
-
 (* 7.13' p. 346 in Macdonald's book. *)
 MacdonaldPSymmetricHelper[mu_List, q_, t_]:=MacdonaldPSymmetricHelper[mu,q,t]=
 Together@Sum[
@@ -1196,6 +1248,39 @@ Together@Sum[
  }];
 
 
+ShiftedJackPSymmetric[lam_List, a_, x_: None] := ChangeFunctionAlphabet[
+	ShiftedJackPSymmetricHelper[lam, SPECIALA], x] /. {SPECIALA -> a};
+
+ShiftedJackPSymmetricHelper[mu_List, a_]:=ShiftedJackPSymmetricHelper[mu,a]=Module[{asPoly,n=Tr@mu,z,r},
+
+(* This is now non-homogeneous in z. *)
+	asPoly = Sum[
+			(* Product over all boxes in the ssyt *)
+			Product[
+				( z[ n+1-Extract[ssyt[[1]],s] ] - (s[[2]]-1) + (s[[1]]-1)/a )
+			, {s, ShapeBoxes[mu]}]
+			*
+			With[{ribbons = Table[YoungTableauShape[ssyt, i], {i, Max[ssyt]}]},
+				Product[
+					JackPsi[rib, a]
+					, {rib, Partition[ Reverse@ribbons , 2, 1]}]
+			]
+		, {w, WeakIntegerCompositions[n,n]}
+		, {ssyt, SemiStandardYoungTableaux[{mu, {}}, w]}
+	];
+	
+	(* We do the following shift, and the result should be a symmetric function. *)
+	asPoly = asPoly/. z[i_]:>(z[i] + i)/a;
+	
+(* Extract the coefficients. This is symmetric so only take the partitions *)
+Sum[
+	With[{nu=r[[1]],c=r[[2]]},
+		Boole[OrderedQ[nu]] MonomialSymmetric[nu] c
+	]
+	,{r,CoefficientRules[asPoly, z/@Range[n]]}]
+ 
+];
+ 
 
 (****************************************************************************************************)
 (****************************************************************************************************)
@@ -1235,6 +1320,12 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := Module[
 
 ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] := 
 Expand@Together@toOtherSymmetricBasis[ {ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
+
+createBasis[MacdonaldHSymbol, "H", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
+
 
 
 (* Used in SkewMacdonaldESymmetric *)
@@ -1408,8 +1499,9 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 		MonomialSymbol[lam,x]
 ,{lam, Select[IntegerPartitions[m], #[[1]]<k &] }];
 
+
 CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
-CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=Sum[
+CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=CylindricSchurSymmetric[{lam, mu}, d,x] = Sum[
 	MonomialSymbol[YoungTableauWeight@ssyt,x]
 ,{ssyt, CylindricTableaux[{lam, mu}, d]}];
 
