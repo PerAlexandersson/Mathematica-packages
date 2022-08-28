@@ -85,6 +85,7 @@ PartitionLeg;
 ShapeBoxes;
 MacdonaldPsi;
 JackPsi;
+JackPsiPrime;
 
 PartitionCore;
 PartitionQuotient;
@@ -692,7 +693,6 @@ JackPsi[{lam_List, mu_List}, a_] := JackPsi[{lam, mu}, a] = Module[
 	rowOk[r_Integer]:=rowOk[r] = Count[stripBoxes, {r,_Integer}] > 0;
 	colOk[c_Integer]:=colOk[r] = Count[stripBoxes, {_Integer, c}] == 0;
 	
-	
 	Product[
 		Divide[
 				(a*PartitionArm[mu,s]+PartitionLeg[mu,s]+1)/(a*PartitionArm[mu,s]+PartitionLeg[mu,s]+a)
@@ -702,6 +702,7 @@ JackPsi[{lam_List, mu_List}, a_] := JackPsi[{lam, mu}, a] = Module[
 	, {s, Select[muBoxes, rowOk[First@#] && colOk[Last@#]&]}]
 	
 ];
+JackPsiPrime[{lam_List, mu_List}, a_]:=JackPsi[{ConjugatePartition@lam,ConjugatePartition@mu},1/a];
 
 (*p. 340, Macdonald *)
 MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Module[{s,stripBoxes,muBoxes,rowOk,colOk,bb},

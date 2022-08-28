@@ -411,7 +411,7 @@ lrCoefficientInternal[lambda_List, mu_List, nu_List] := lrCoefficientInternal[la
 	! PartitionLessEqualQ[mu, nu] || ! 
 		PartitionLessEqualQ[lambda, nu], 0
 	,
-	(* Interchange accoring to size. *)
+	(* Interchange according to size. *)
 	Tr[lambda] > Tr[mu], 
 	lrCoefficientInternal[mu, lambda, nu]
 	,
@@ -1115,7 +1115,7 @@ SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeFunctionAlphabet[ SkewSchur
 
 
 
-
+(* This uses https://doi.org/10.37236/1539  *)
 JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
 JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
 	KostkaCoefficient[lam,mu,a] MonomialSymbol[mu,x]
