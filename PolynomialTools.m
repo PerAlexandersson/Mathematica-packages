@@ -40,6 +40,9 @@ https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-r
 
 RootInterleavingQ::usage = "RootInterleavingQ[P,Q,t] returns true 
 if the roots interleave (weakly). In particular, largest root of Q is greater than largest root of P.";
+(*
+RootInterleavingQ[pp_, qq_]:=RootInterleavingQ[pp,qq,First@Variables[{pp,qq}]];
+*)
 RootInterleavingQ[pp_, qq_, t_Symbol] := 
   Module[{rootsPP, rootsQQ, interleavesQ},
    rootsPP = If[NumberQ[pp], {},
@@ -57,7 +60,7 @@ RootInterleavingQ[pp_, qq_, t_Symbol] :=
 	(0<=Exponent[qq,t]-Exponent[pp,t]<=1) && interleavesQ[rootsPP, rootsQQ]
 ];
 
-RootInterleavingQ[polys_List,t_]:=Module[{pp},
+RootInterleavingQ[polys_List,t_Symbol]:=Module[{pp},
 	And@@Table[
 		RootInterleavingQ[ pp[[1]], pp[[2]] ,t]
 		,{pp,Subsets[polys,{2}]}]

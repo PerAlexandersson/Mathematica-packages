@@ -29,6 +29,8 @@ MemoizedImport;
 (***************** Switch to private context *********************************)
 Begin["Private`"];
 
+(* Add more from https://en.wikipedia.org/wiki/Diacritic and capital letters. *)
+
 TeXToUTF8Rule[] := List[
 	"{\\'{}}" -> "\[CloseCurlyQuote]",
 	"{\\`{a}}" -> "à",
@@ -36,16 +38,18 @@ TeXToUTF8Rule[] := List[
 	"{\\\"{a}}" -> "ä",
 	"{\\'{c}}" -> "ć",
 	"{\\c{c}}" -> "ç",
-	"{\\'{e}}" -> "é",
 	"{\\`{e}}" -> "è",
+	"{\\'{e}}" -> "é",
 	"{\\^{e}}" -> "ê",
 	"{\\k{e}}" -> "ę",
 	"{\\'{E}}" -> "É",
 	"{\\u{g}}" -> "ğ",
+	"{\\'{i}}" -> "í",
 	"{\\`{i}}" -> "ì",
 	"{\\i}" -> "ı",
 	"{\\\"{i}}" -> "ï",
 	"{\\l}" -> "ł",
+	"{\\`{o}}" -> "ò",
 	"{\\'{o}}" -> "ó",
 	"{\\^{o}}" -> "ô",
 	"{\\\"{o}}" -> "ö",
@@ -58,7 +62,8 @@ TeXToUTF8Rule[] := List[
 	"{\\'{u}}" -> "ú",
 	"{\\\"{u}}" -> "ü",
 	"{\\\"{U}}" -> "Ü",
-	"\\textasciitilde "->"~"
+	"\\textasciitilde "->"~",
+	"{\\&}" -> "&"
 ];
 
 UTF8ToTeXRule[] := Reverse /@ TeXToUTF8Rule[];

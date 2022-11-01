@@ -45,6 +45,7 @@ PackedWords;
 Derangements;
 
 PartitionList;
+Shuffles;
 ChargeWordDecompose;
 WordCharge;
 WordCocharge;
@@ -334,6 +335,18 @@ UnitTest[PartitionList]:=And[
   PartitionList[Range[5],{1,1,1,1,1}]==={{1},{2},{3},{4},{5}}
 ];
 
+
+Shuffles::usage = "Shuffles[listA,listB,listC,...] returns all shuffles of A, B, C, and so on.";
+Shuffles[listA_List] := {listA};
+Shuffles[{}, listB_List] := {listB};
+Shuffles[listA_List, {}] := {listA};
+Shuffles[listA_List, listB_List] := Join[
+   Prepend[#, First@listA] & /@ Shuffles[Rest@listA, listB]
+   ,
+   Prepend[#, First@listB] & /@ Shuffles[listA, Rest@listB]
+   ];
+Shuffles[listA_, lists___] := Join @@ (Shuffles[listA, #] & /@ Shuffles[lists]);
+   
 
 
 ChargeWordDecompose::usage = "ChargeWordDecompose[word] decomposes a word with partition type into a list of standard subwords.";
