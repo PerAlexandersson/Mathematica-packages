@@ -5,10 +5,8 @@
 
 Clear["MacdonaldPolynomials`*"];
 
-BeginPackage["MacdonaldPolynomials`"];
+BeginPackage["MacdonaldPolynomials`",{"OldYoungTableaux`","CombinatoricTools`"}];
 
-Needs["OldYoungTableaux`"];
-Needs["CombinatoricsUtil`"]; (*For reduced words *)
 
 
 KnuthRepresentative::usage="KnuthRepresentative[w] returns a permutation w which is Knuth-equivalent to w, and is the reading word of an SYT.";

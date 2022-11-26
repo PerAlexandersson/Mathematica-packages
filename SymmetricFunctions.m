@@ -39,7 +39,7 @@ DeclarePackage["NewTableaux`",{
 *)
 
 	
-BeginPackage["SymmetricFunctions`",{"CombinatoricsUtil`","NewTableaux`"}];
+BeginPackage["SymmetricFunctions`",{"CombinatoricTools`","NewTableaux`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]

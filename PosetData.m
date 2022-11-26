@@ -4,7 +4,7 @@
 Clear["PosetData`*"];
 BeginPackage["PosetData`"];
 
-Needs["CombinatoricsUtil`"];
+Needs["CombinatoricTools`"];
 
 (* Need to do much more, say, complete edges to transitive closure *)
 

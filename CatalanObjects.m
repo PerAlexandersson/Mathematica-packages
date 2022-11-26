@@ -3,7 +3,7 @@
 Clear["CatalanObjects`*"];
 
 
-BeginPackage["CatalanObjects`",{"CombinatoricsUtil`"}];
+BeginPackage["CatalanObjects`",{"CombinatoricTools`"}];
 
 (* Generic circular combinatorial object. *)
 CircularGraph;
@@ -96,9 +96,6 @@ RookInversions;
 RookInversionList;
 AreaToFerrersBoard;
 RookPlacementPlot;
-
-PermutationMatrixPlot;
-
 
 
 OrderedRootedTrees;
@@ -970,16 +967,7 @@ RookPlacementPlot[board_List, rp_List] := Module[{flip, data, n = Max@board},
    Frame -> {None, None, flip[#] -> True & /@ board}]
 ];
 
-
-
-PermutationMatrixPlot[p_List] := With[{n = Max@p},
-   ArrayPlot[
-    Normal@SparseArray[Transpose[{Range[n], p}] -> 1, {n, n}]
-    , Mesh -> True, Frame -> False
-    ,PixelConstrained -> 6]
-   ];
-
-   
+  
    
    
 (******************************************************************************)   

@@ -7,15 +7,13 @@
 (* ::TODO:: *)
 (*
 	--- Add some flag $French to display tableaux in French.
-	
 *)
 
 
 
 Clear["NewTableaux`*"];
-BeginPackage["NewTableaux`"];
 
-Needs["CombinatoricsUtil`"];
+BeginPackage["NewTableaux`",{"CombinatoricTools`"}];
 
 SYTSize;
 SYTMax;
@@ -59,6 +57,7 @@ ArrayToBiword;
 
 BiwordRSK;
 BiwordRSKDual;
+KnuthRepresentative;
 
 BinaryMatrixToBiword;
 
@@ -863,6 +862,9 @@ BiwordRSKDual[w1_List,w2_List]:=Fold[BiwordRSKDual[#2,#1]&,YoungTableau/@{{},{}}
 
 (* Add increasing recording word. *)
 BiwordRSKDual[w1_List]:=BiwordRSKDual[Range[Length@w1],w1];
+
+KnuthRepresentative::usage = "KnuthRepresentative[pi] returns the unique permutation which is Knuth equivalent to pi, and is the reading word of some SYT.";
+KnuthRepresentative[w_List] := KnuthRepresentative[w] = Join @@ Reverse[BiwordRSK[Transpose@{Range[Length@w], w}][[1]]];
 
 
 

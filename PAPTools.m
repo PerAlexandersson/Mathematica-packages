@@ -1,7 +1,7 @@
 
 
 (* ::Package:: *)
-BeginPackage["PAPtools`",{"CombinatoricsUtil`","CatalanObjects`"}];
+BeginPackage["PAPtools`",{"CombinatoricTools`","CatalanObjects`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]

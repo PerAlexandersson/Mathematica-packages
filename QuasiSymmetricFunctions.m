@@ -1,14 +1,10 @@
+(* ::Package:: *)
 
-
-
-
-BeginPackage["QuasiSymmetricFunctions`"];
+BeginPackage["QuasiSymmetricFunctions`",{"CombinatoricTools`"}];
 
 
 Unprotect["`*"]
 ClearAll["`*"]
-
-Needs["CombinatoricsUtil`"];
 
 
 MonomialQSymmetric;

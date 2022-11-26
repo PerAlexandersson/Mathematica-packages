@@ -4,7 +4,7 @@
 (* MathKernel -script file.m *)
 
 
-BeginPackage["UnicellularChromatics`",{"SymmetricFunctions`","CombinatoricsUtil`","CatalanObjects`"}];
+BeginPackage["UnicellularChromatics`",{"SymmetricFunctions`","CombinatoricTools`","CatalanObjects`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
@@ -49,6 +49,7 @@ BounceEndpoint;
 EdgesHRVRule;
 
 
+GraphColoringAscents;
 GraphColoringMonochromaticEdges;
 
 Begin["`Private`"];
