@@ -1,4 +1,3 @@
-
 (* ::Package:: *)
 
 ClearAll["PolynomialTools`*"];
@@ -14,6 +13,7 @@ HStarPolynomial;
 
 EulerianA;
 EulerianAPolynomial;
+BinomialEulerianPolynomial;
 
 RealRootedQ;
 
@@ -75,7 +75,11 @@ EulerianAPolynomial[0, t_]:=1;
 EulerianAPolynomial[n_Integer, t_]:=EulerianAPolynomial[n,t] = Expand[
 Sum[ Binomial[n , k] EulerianAPolynomial[k,t] (t-1)^(n-1-k), {k, 0, n-1}]];
 
-	 
+
+BinomialEulerianPolynomial::usage = "BinomialEulerianPolynomial[n,t] returns the Binomial Eulerian polynomial, introduced by Athanasiadis.";
+BinomialEulerianPolynomial[n_Integer, t_] := BinomialEulerianPolynomial[n,t] = Expand[
+1 + t Sum[Binomial[n, m] EulerianAPolynomial[m, t], {m, n}]];
+
 
 HStarPolynomial::usage="HStarPolynomial[pol,x] returns the h*-polynomial.";
 
@@ -83,24 +87,6 @@ HStarPolynomial[poly_, k_] := Expand@Module[
 	{cl = CoefficientList[poly, k],j},
 		cl.Table[ (1 - k)^(Length[cl] - 1 - j) If[j == 0, 1, k] EulerianAPolynomial[j, k]
 	,{j, 0, Length[cl] - 1}]];
-
-(*
-HStarPolynomial[poly_, k_] := With[{cl = CoefficientList[poly, k]},
-	Together[(1 - k)^(Length[cl]) (cl.Table[HurwitzLerchPhi[k, 1 - j, 0], {j, Length[cl]}])]
-];
-*)
-(*
-HStarPolynomial[poly_,x_] := Module[{bb, c, d,y},
-	bb[xx_, i_, s_] := 1/i! Product[(xx - k + s), {k, 0, i - 1}];
-	
-	d = Exponent[poly, x];
-	If[d<0, 0,
-		tbz = CoefficientList[poly - Sum[ c[i] bb[x, d, i], {i, 0, d}], x];
-		vars = Variables[tbz];
-		Reverse[vars] /. Solve[Thread[tbz == 0], vars][[1]]
-	].(x^Range[0,d])
-];
-*)
 
 
 End[(* End private *)];
