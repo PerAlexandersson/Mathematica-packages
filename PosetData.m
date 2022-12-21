@@ -16,6 +16,9 @@ PosetLinearExtensions;
 JordanHolderSet;
 PosetColorings;
 
+OrderPolynomial;
+PEulerianPolynomial;
+
 WeakEdges;
 StrictEdges;
 EqualEdges;
@@ -105,8 +108,6 @@ PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
 	, {e1, edges}, {e2, edges}];
 	edges2
 ];
-
-
 
 
 (* 
@@ -220,10 +221,7 @@ WeightedPosetFunction[weak_List, weights_List, x_] :=
 
 
 (* This assumes minimal elements in the bottom, and edges are increasing relations. *)
-(* Todo: Make more efficient. *)
-PosetLinearExtensions::usage = "PosetLinearExtensions[edges, n]
-	returns all order-preserving labelings of the edges.";
-
+PosetLinearExtensions::usage = "PosetLinearExtensions[poset] returns all order-preserving labelings of the edges.";
 PosetLinearExtensions[Poset[n_,edges_]] := PosetColorings[Poset[n,edges],ColorWeight->ConstantArray[1,n]];
 
 
@@ -231,8 +229,27 @@ JordanHolderSet::usage = "JordanHolderSet[poset] returns all permutations one ca
 JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@ PosetLinearExtensions[pp];
 
 
+OrderPolynomial::usage = "OrderPolynomial[poset,t] returns the order polynomial in t.";
+
+OrderPolynomial[pp_Poset,t_]:=Expand@FunctionExpand[
+	With[{n=First@pp}, 
+		Sum[
+			(* The inner sum counts number of descents. *)
+			Binomial[t+n- Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}] -1,n]
+		,{pi, PosetLinearExtensions[pp]}]
+	]
+];
 
 
+PEulerianPolynomial::usage = "PEulerianPolynomial[poset,t] returns the P-Eulerian polynomial in t.";
+
+PEulerianPolynomial[pp_Poset,t_]:=
+	With[{n=First@pp}, 
+		Sum[
+			(* The inner sum counts number of descents. *)
+			t^(1 + Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}])
+		,{pi, PosetLinearExtensions[pp]}]
+];
 
 
 GetPosets::usage = "GetPosets[k] gives all posets with k vertices, 3<=k<=8";

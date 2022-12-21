@@ -212,7 +212,7 @@ SyntaxInformation[DescentSet] = {"ArgumentsPattern" -> {{_...}}};
 DescentSet[p_List]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
 
 SyntaxInformation[Descents] = {"ArgumentsPattern" -> {{_...}}};
-Descents[p_List] := Length@DescentSet[p];
+Descents[pi_List] := Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}];
 
 SyntaxInformation[MajorIndex] = {"ArgumentsPattern" -> {{_...}}};
 MajorIndex[p_List] := Tr@DescentSet[p];

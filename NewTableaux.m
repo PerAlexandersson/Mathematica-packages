@@ -188,7 +188,7 @@ SuperStandardTableau[{lam_List, mu_List}] := Module[
     PartitionList[Range[n], PadRight[lam, l] - PadRight[mu, l]];
    YoungTableau@MapThread[Join,
      {(ConstantArray[None, #] & /@ PadRight[mu, l]), rows}, 1]
-   ];
+];
 
 
 
