@@ -23,7 +23,7 @@ See the SymmetricFunctions-Introduction.nb for a brief introduction.
   Many functions are now more intuitive, and basis conversion is quicker.
 
 
-## CombinatoricsUtil.m
+## CombinatoricTools.m
 
 Functions for permutation statistics (major index, inversions, Bruhat order, etc.), 
 compositions, partitions, q-analogs, the Foata map,

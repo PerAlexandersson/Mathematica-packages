@@ -5,8 +5,6 @@ ClearAll["PolynomialTools`*"];
 BeginPackage["PolynomialTools`"];
 
 
-
-
 RootInterleavingQ;
 HStarPolynomial;
 
