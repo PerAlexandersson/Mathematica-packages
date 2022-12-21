@@ -1,10 +1,9 @@
 (* ::Package:: *)
 
 
-Clear["PosetData`*"];
-BeginPackage["PosetData`"];
+ClearAll["PosetData`*"];
+BeginPackage["PosetData`",{"CombinatoricTools`"}];
 
-Needs["CombinatoricTools`"];
 
 (* Need to do much more, say, complete edges to transitive closure *)
 
@@ -15,21 +14,24 @@ GetPosets;
 PosetToHasseDiagram;
 PosetLinearExtensions;
 JordanHolderSet;
-PosetColorings:
-WSEPosetColorings;
+PosetColorings;
 
 WeakEdges;
 StrictEdges;
 EqualEdges;
+ColorWeight;
 
 PosetMinimalElements;
 
+
+(*
 
 WSEPosetFunction::"WSEPosetFunction[weak,strict,equal,n,x] returns the generating 
 function of colorings that are weak(<=), strict(<) and equal(=) on the specified edge lists.";
 
 WeightedPosetFunction::usage = "WeightedPosetFunction[weak,weights,x] is gen func for weakly preserving maps and the 
 weight gives the multiplicity of the variables.";
+*)
 
 
 (***************** Switch to private context *********************************)
@@ -37,19 +39,7 @@ Begin["Private`"];
 
 
 PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";
-PosetMinimalElements[Poset[n_, edg_]] := Complement[Range[n], Last /@ edg];
-
-
-(* This assumes minimal elements in the bottom, and edges are increasing relations. *)
-PosetLinearExtensions::usage = "PosetLinearExtensions[edges, n]
-	returns all order-preserving labelings of the edges.";
-PosetLinearExtensions[Poset[n_Integer,edges_List]] := PosetLinearExtensions[Poset[n,edges]] = 
-	Select[
-		Permutations[Range@n],
-		And @@ Table[#[[e[[1]]]] < #[[e[[2]]]], {e, edges}] &
-];
-
-
+PosetMinimalElements[Poset[n_, edg_]] := Complement[Range@n, Last /@ edg];
 
 PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
 	
@@ -101,7 +91,7 @@ PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, 
 (* Given all order relations, remove the implicit ones. *)
 (* Make better, to work with general edges. *)
 
-PosetToHasseDiagram::usage = "Given list of edges, remove the implicit ones.";
+PosetToHasseDiagram::usage = "PosetToHasseDiagram[edges], given list of edges, remove the implicit ones.";
 PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
 	edges = DeleteCases[edgesIn, HoldPattern[Rule[a_,a_]]];
 	verts = Union@Flatten[edges /. {Rule -> List}];
@@ -118,57 +108,105 @@ PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
 
 
 
-(*
-Todo: Make list of options instead, and return colorings 
-corresponding to monomial quasisymmetric expansion.
-Default n should be maximal vertex appearing.
-*)
+
 (* 
-	Todo: Improve this by computing Descent set instead, and use F-expansion.
+Returns a list of all colorings, each list is of the form {c1,...,cn},
+where ci is the color of vertex i. 
+Weight indicate how many vertices have color i.
+Warning: this function assumes that every given edge {i,j} satisfies i<j. 
 *)
-Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}};
-PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,Join[{WeakEdges->edges},{opts}]];
-PosetColorings[n_Integer, opts:OptionsPattern[]]:=PosetColorings[n,opts]=Module[{isOkQ,e,weak,strict,equal,comps,colorings},
+
+fastPosetColorings[n_Integer, weak_List:{}, strict_List: {}, 
+	equal_List: {}, weight_List] := Module[{rec, isOkQ},
+	
+	(* 
+	Returns true if it is consistent to color vertex v, with color c
+	*)
+	isOkQ[partialCol_List, v_Integer, c_Integer] := 
+	With[{k = Length@partialCol},
+		Catch[
+		(* Everything weak connected to v must have color \[LessEqual] 
+		c *)
+		If[
+			Length[
+				Select[weak, 
+				First@# <= k && Last@# == v && partialCol[[#[[1]]]] > c &, 
+				1]] > 0,
+			Throw@False];
+		(* Everything strict connected to v must have color < c *)
+		
+			If[
+			Length[
+				Select[strict, 
+				First@# <= k && Last@# == v && partialCol[[#[[1]]]] >= c &, 
+				1]] > 0,
+			Throw@False];
+		(* Everything equal connected to v must have color == c *)
+		
+			If[
+			Length[
+				Select[equal, 
+				First@# <= k && Last@# == v && partialCol[[#[[1]]]] != c &, 
+				1]] > 0,
+			Throw@False];
+		True
+		]
+	];
+		
+	(* We color the vertices one by one. *)
+	(* Partial color, and remaining weight colors. *)
+	(* Colorings are tracked by Sow[], and collected by Reap[] later. *)
+	rec[col_List, w_List] := With[
+		{cv = Length[col] + 1},(* Current vertex to pick a color for *)
+		
+			If[cv > n, (* We have reached a proper coloring.*)
+				Sow[col]
+				,(* Otherwise, loop over all available colors. *)
+				Do[
+					If[w[[c]] > 0 && isOkQ[col, cv, c],
+					rec[Append[col, c], MapAt[# - 1 &, w, c]]
+					]
+					(* Here, select available colors not contradicting current partial coloring.*)
+					, {c, Length@w}];
+			];
+		];
+	
+	If[Tr[weight] != n, (* Number of available colors must match poset size. *)
+		{}
+		, 
+		With[ {rr=Reap[rec[{}, weight]]},
+			If[ Last@rr == {}, {},
+				rr[[2,1]]
+			]
+		]
+	]
+];
+
+Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}, ColorWeight->{}};
+PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,
+Join[{WeakEdges->edges},{opts}]];
+
+PosetColorings[n_Integer, opts:OptionsPattern[]]:=Module[
+	{weak,strict,equal,weight},
 	
 	weak = OptionValue[WeakEdges];
 	strict = OptionValue[StrictEdges];
 	equal = OptionValue[EqualEdges];
+	weight = OptionValue[ColorWeight];
 	
-	isOkQ[col_List] := And[
-		And @@ Table[col[[e[[1]]]] <= col[[e[[2]]]], {e, weak}],
-		And @@ Table[col[[e[[1]]]] < col[[e[[2]]]], {e, strict}],
-		And @@ Table[col[[e[[1]]]] == col[[e[[2]]]], {e, equal}]
-	];
-	
-	Join@@Table[
-		colorings = Permutations[
-			Join@@MapIndexed[ConstantArray[#2[[1]],#1]&, comp]];
-		
-		PartitionPartCount /@ Select[colorings, isOkQ ]
-		
-	,{comp,IntegerCompositions[n]}]
+	If[weight==={},
+		(* All possible weights *)
+		Join@@Table[
+			fastPosetColorings[n, weak, strict, equal, w ]
+			,
+			{w, IntegerCompositions[n]}]
+		,
+		(* A specific weight *)
+			fastPosetColorings[n, weak, strict, equal, weight ]
+		]
 ];
 
-(* This is old *)
-WSEPosetColorings::usage = "WSEPosetColorings[weak,strict, equal,n]";
-WSEPosetColorings[weak_List, strict_List, equal_List, n_Integer] := WSEPosetColorings[weak, strict, equal, n,n];
-WSEPosetColorings[weak_List, strict_List, equal_List, n_Integer, ncols_Integer] := 
-  Module[{isOkQ},
-   isOkQ[col_] := And[
-     And @@ Table[col[[e[[1]]]] <= col[[e[[2]]]], {e, weak}],
-     And @@ Table[col[[e[[1]]]] < col[[e[[2]]]], {e, strict}],
-     And @@ Table[col[[e[[1]]]] == col[[e[[2]]]], {e, equal}]
-     ];
-   Select[Tuples[Range@ncols, n], isOkQ[#] &]
-];
-
-
-WSEPosetFunction[weak_List, strict_List, equal_List, n_Integer, x_] :=
-   WSEPosetFunction[weak, strict, equal, n, x] = Module[{colorings},
-    colorings = WSEPosetColorings[weak, strict, equal, n];
-    Sum[Times @@ (x /@ c), {c, colorings}]
-];
-
+(* 
 WeightedPosetFunction[weak_List, weights_List, x_] :=
 	WeightedPosetFunction[weak, weights, x] = Module[{colorings},
 	colorings = WSEPosetColorings[weak, {}, {}, Length@weights,Tr@weights];
@@ -177,24 +215,24 @@ WeightedPosetFunction[weak_List, weights_List, x_] :=
 		Inner[#1^#2&, x/@c, weights, Times]
 	,{c, colorings}]
 ];
+*)
 
 
-PosetColorings[edges_List, n_Integer, isWeak_: False] := Module[{isIncreasingQ},
-	isIncreasingQ[edges, col_] := And @@ Table[
-		If[!isWeak,
-			col[[e[[1]]]] < col[[e[[2]]]],
-			col[[e[[1]]]] <= col[[e[[2]]]]
-			]
-		, {e, edges}];
-	Select[Tuples[Range@n, n], isIncreasingQ[edges, #] &]
-];
-  
 
+(* This assumes minimal elements in the bottom, and edges are increasing relations. *)
+(* Todo: Make more efficient. *)
+PosetLinearExtensions::usage = "PosetLinearExtensions[edges, n]
+	returns all order-preserving labelings of the edges.";
 
+PosetLinearExtensions[Poset[n_,edges_]] := PosetColorings[Poset[n,edges],ColorWeight->ConstantArray[1,n]];
 
 
 JordanHolderSet::usage = "JordanHolderSet[poset] returns all permutations one can get by extending the edges to a total order.";
 JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@ PosetLinearExtensions[pp];
+
+
+
+
 
 
 GetPosets::usage = "GetPosets[k] gives all posets with k vertices, 3<=k<=8";

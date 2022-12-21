@@ -301,8 +301,6 @@ OperatorKeyTPolynomial[alpha_List, x_,t_] := Module[{pi, lam},
 
 
 
-
-
 (*************************** FILLINGS AND GENERAL ATOMS        *************************)
 
 

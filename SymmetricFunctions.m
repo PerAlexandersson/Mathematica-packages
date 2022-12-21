@@ -28,17 +28,6 @@
 
 *)
 
-(*
-DeclarePackage["NewTableaux`",{
-	"SemiStandardYoungTableaux",
-	"YoungTableauWeight",
-	"InvMajStatistic",
-	"SYTReadingWord",
-	"StandardYoungTableaux",
-	"SuperStandardTableau"}];
-*)
-
-	
 BeginPackage["SymmetricFunctions`",{"CombinatoricTools`","NewTableaux`"}];
 
 Unprotect["`*"]
@@ -1500,10 +1489,12 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 ,{lam, Select[IntegerPartitions[m], #[[1]]<k &] }];
 
 
+(* Use F-expansion formula instead, if possible. *)
 CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
 CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=CylindricSchurSymmetric[{lam, mu}, d,x] = Sum[
 	MonomialSymbol[YoungTableauWeight@ssyt,x]
-,{ssyt, CylindricTableaux[{lam, mu}, d]}];
+,
+{ssyt, CylindricTableaux[{lam, mu}, d]}];
 
 
 (* Based on 7.10c in https://arxiv.org/pdf/1907.02645.pdf *)

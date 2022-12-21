@@ -2,13 +2,10 @@
 
 (* MathKernel -script file.m *)
 
-
-
 (* ::TODO:: *)
 (*
 	--- Add some flag $French to display tableaux in French.
 *)
-
 
 
 Clear["NewTableaux`*"];
@@ -40,6 +37,7 @@ StandardYoungTableaux;
 SemiStandardYoungTableaux;
 YoungTableauForm;
 CylindricTableaux;
+CylindricSYT;
 PlanePartitions;
 
 BorderStrips;
@@ -432,10 +430,7 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 	];
 	
 	gridItems = Table[
-		
 		n = diagram[[r,c]];
-		
-		
 		Which[
 			n===None,
 				 Item["", Frame -> {{LightGray, Black}, {Black, LightGray}}],
@@ -529,37 +524,34 @@ ColumnLatticePaths::usage = "ColumnLatticePaths[ssyt] returns a graphical repres
 as a set of non-intersecting lattice paths, each path corresponding to a column in the ssyt";
 
 ColumnLatticePaths[YoungTableau[ssytIn_]] := Module[
-   {m = Max@YoungTableau@ssytIn, cols = Length@ssytIn[[1]], path, 
-    paths, ssyt, labelx},
-   ssyt = Transpose[YoungTableau[ssytIn]][[1]];
-   
-   paths = Table[
-     Accumulate@
-      Prepend[
-       Table[
-        If[MemberQ[ssyt[[c]], i], {-1, 1}, {1, 1}]
-        , {i, m}]
-       , {2 c - 2 Count[ssyt[[c]], None], 1}]
-     , {c, cols}];
-   labelx = Min[First /@ paths[[1]]];
-   Graphics[
-    {
-     {Thickness[0.010], Line[#] & /@ paths},
-     Table[
-      Text[Style[i, FontSize -> Scaled[0.03], 
-        Background -> White], {labelx - 1, i + 0.5}], {i, m}]
-     },
-    GridLines -> {Range[-3 (cols + m), 3 (cols + m)], Range[m + 1]},
-    PlotRange -> All
-    ]
-   ];
+	{m = Max@YoungTableau@ssytIn, cols = Length@ssytIn[[1]], path, 
+	paths, ssyt, labelx},
+	ssyt = Transpose[YoungTableau[ssytIn]][[1]];
+	
+	paths = Table[
+		Accumulate@
+		Prepend[
+			Table[
+			If[MemberQ[ssyt[[c]], i], {-1, 1}, {1, 1}]
+			, {i, m}]
+			, {2 c - 2 Count[ssyt[[c]], None], 1}]
+		, {c, cols}];
+	labelx = Min[First /@ paths[[1]]];
+	Graphics[
+	{
+		{Thickness[0.010], Line[#] & /@ paths},
+		Table[
+		Text[Style[i, FontSize -> Scaled[0.03], 
+			Background -> White], {labelx - 1, i + 0.5}], {i, m}]
+		},
+	GridLines -> {Range[-3 (cols + m), 3 (cols + m)], Range[m + 1]},
+	PlotRange -> All
+	]
+];
 
 
-
-
-
-CylindricTableaux::usage = "CylindricTableaux[{lam,mu},k] produces all cylindric tableaux with partition weight
-and shifted up k steps from minimal possible shift.";
+CylindricTableaux::usage = "CylindricTableaux[{lam,mu},k] 
+produces all cylindric tableaux with partition weight and shifted up k steps from minimal possible shift.";
 
 
 CylindricTableaux[lam_List,k_Integer:0]:=CylindricTableaux[{lam,{}},k];
@@ -590,6 +582,28 @@ CylindricTableaux[{lam_List, mu_List}, k_Integer: 0] := Module[{
        , {j, lastBoxes}]
      ];
    Select[SemiStandardYoungTableaux[{lam, mu}], isValidQ]
+];
+
+CylindricSYT[lam_List, k_Integer: 0] := CylindricSYT[{lam, {}}, k];
+CylindricSYT[{lam_List, mu_List}, k_Integer: 0] :=  Module[{isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes, 
+    minShift},
+   firstSkew = Length[DeleteCases[mu, 0]];
+   firstTot = Length[DeleteCases[lam, 0]];
+   lastBoxes = Last[ConjugatePartition@lam];
+   firstBoxes = firstTot - firstSkew;
+   minShift = Max[firstTot - lastBoxes, firstSkew];
+
+		isValidQ[t_] := Module[{tt, firstCol, lastCol, j},
+     tt = First@Transpose[t];
+     firstCol = First[tt];
+     lastCol = Last[tt];
+     And @@ 
+      Table[Or[! (minShift + k + j <= Length[firstCol]), 
+        firstCol[[minShift + k + j]] == None, lastCol[[j]] == None, 
+        firstCol[[minShift + k + j]] >= lastCol[[j]]], {j, 
+        lastBoxes}]];
+   
+   Select[StandardYoungTableaux[{lam, mu}], isValidQ]
 ];
 
 

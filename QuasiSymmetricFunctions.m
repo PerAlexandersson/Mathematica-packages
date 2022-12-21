@@ -11,16 +11,19 @@ MonomialQSymmetric;
 FundamentalQSymmetric;
 PowerSumQSymmetric;
 PowerSumAltQSymmetric;
+ZPowerSumQSymmetric;
 
 MonomialQSymbol;
 FundamentalQSymbol;
 PowerSumQSymbol;
+ZPowerSumQSymbol;
 
 
 ToOtherQSymmetricBasis; (* Use sparingly *)
 
 ToFundamentalBasis;
-ToQSymPowerSumBasis;
+ToPowerSumQSymBasis;
+ToZPowerSumQSymBasis;
 
 
 Begin["`Private`"];
@@ -169,6 +172,10 @@ createQSymBasis[PowerSumQSymbol, "\[Psi]",
 	PowerFunction->None
 ];
 
+createQSymBasis[ZPowerSumQSymbol, "z\[Psi]", 
+	MultiplicationFunction -> None,
+	PowerFunction->None
+];
 
 
 FundamentalQSymmetric[alpha_List, x_: None] := 
@@ -188,56 +195,63 @@ UnitTest[FundamentalQSymmetric] := And[
 
 
 
-PowerSumQSymmetric[alpha_List, x_: None] :=
-  PowerSumQSymmetric[alpha, x] = Module[{pi},
-    pi[comp_List] := Times @@ Accumulate[comp];
-    Expand[
-     ZCoefficient[alpha]
-      Sum[
-       1/(Times @@ (pi /@ beta)) MonomialQSymbol[Total /@ beta, x]
-       , {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
-     ]
+PowerSumQSymmetric[alpha_List, x_: None] := PowerSumQSymmetric[alpha, x] = Module[{pi},
+	pi[comp_List] := Times @@ Accumulate[comp];
+	Expand[
+		ZCoefficient[alpha]
+		Sum[
+			1/(Times @@ (pi /@ beta)) MonomialQSymbol[Total /@ beta, x]
+			, {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
+		]
+];
+
+(* With a constant *)
+ZPowerSumQSymmetric[alpha_List, x_: None] := ZPowerSumQSymmetric[alpha, x] = 
+		Expand[PowerSumQSymmetric[alpha,x]/ZCoefficient[alpha]];
+
+
+PowerSumAltQSymmetric[alpha_List, x_: None] := PowerSumAltQSymmetric[alpha, x] = Module[{spi},
+	spi[comp_List] := Length[comp!] (Times @@ comp);
+	Expand[
+		ZCoefficient[alpha]
+		Sum[
+			1/(Times @@ (spi /@ beta)) MonomialQSymbol[Total /@ beta, x]
+			, {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
+		]
 ];
 
 
-PowerSumAltQSymmetric[alpha_List, x_: None] :=
-  
-  PowerSumAltQSymmetric[alpha, x] = Module[{spi},
-    spi[comp_List] := Length[comp!] (Times @@ comp);
-    Expand[
-     ZCoefficient[alpha]
-      Sum[
-       1/(Times @@ (spi /@ beta)) MonomialQSymbol[Total /@ beta, 
-         x]
-       , {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
-     ]
-    ];
-
-
 Clear[CompositionIndexedBasisRule];
-CompositionIndexedBasisRule[size_Integer, bb_, toBasis_, 
-   monom_: MonomialQSymbol, x_: None] := 
-  CompositionIndexedBasisRule[size, bb, toBasis, monom, x] =
-   Module[{parts, mat, imat},
-    parts = IntegerCompositions[size];
-    
-		
-    (* Matrix with the toBasis expanded in monomials. *)
-    (* 
-    Here we use the "None" alphabet *)
-    mat = Table[
-			Table[
-				Coefficient[toBasis[p], monom[q] ], {q, parts}]
-		, {p, parts}];
-		
-		
-    imat = Inverse[mat];
-    Table[
-     monom[parts[[p]], x] -> Sum[
-       bb[ parts[[q]], x ]*imat[[p, q]]
-       , {q, Length@parts}]
-     , {p, Length@parts}]
-    ];
+CompositionIndexedBasisRule[size_Integer, bb_, toBasis_, monom_: MonomialQSymbol, x_: None] := 
+	CompositionIndexedBasisRule[size, bb, toBasis, monom, x] =
+	Module[{parts, mat, imat},
+	parts = IntegerCompositions[size];
+	
+	
+	(* Matrix with the toBasis expanded in monomials. *)
+	(* 
+	Here we use the "None" alphabet *)
+	mat = Table[
+		Table[
+			Coefficient[toBasis[p], monom[q] ], {q, parts}]
+	, {p, parts}];
+	
+	(* 
+		TODO:
+		Can be made much faster if we use floats instead.
+		Works well if we know entries are integers in the output.
+	*)
+	(*
+	imat = Inverse[0.0 + mat];
+	*)
+	imat = Inverse[mat];
+	
+	Table[
+		monom[parts[[p]], x] -> Sum[
+			bb[ parts[[q]], x ]*imat[[p, q]]
+			, {q, Length@parts}]
+		, {p, Length@parts}]
+];
 
 
 ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymbol] := Module[
@@ -261,8 +275,11 @@ ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymbol] :
 ToFundamentalBasis[poly_, x_: None] := 
 	ToOtherQSymmetricBasis[FundamentalQSymmetric, poly, FundamentalQSymbol, x];
 
-ToQSymPowerSumBasis[poly_,x_: None] := 
+ToPowerSumQSymBasis[poly_,x_: None] := 
 	ToOtherQSymmetricBasis[PowerSumQSymmetric, poly, PowerSumQSymbol, x];
+	
+ToZPowerSumQSymBasis[poly_,x_: None] := 
+	ToOtherQSymmetricBasis[ZPowerSumQSymmetric, poly, ZPowerSumQSymbol, x];
 
 
 End[(* End private *)];

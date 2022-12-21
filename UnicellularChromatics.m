@@ -24,10 +24,12 @@ ChromaticSymmetric;
 
 (*****************************)
 
+(*
 GraphOrientations;
 GraphAcyclicOrientations;
-
 OrientationSinks;
+*)
+
 
 (*****************************)
 
@@ -183,6 +185,8 @@ ChromaticSymmetric[UnitIntervalEdges@area, Length@area,q,opts];
 
 (***************************************************)
 
+(*
+
 Options[GraphOrientations] = {StrictEdges -> {}, WeakEdges -> {}};
 GraphOrientations[edges_List, opts:OptionsPattern[]] := Module[
 	{isConnectedQ, multiEdgedQ, n = Max@edges, orients, nEdges = Length@edges, 
@@ -236,7 +240,6 @@ GraphAcyclicOrientations[edges_List, opts:OptionsPattern[]] := GraphAcyclicOrien
 	If[Length@strict>0,
 		orients = Select[ orients, And@@Table[ edges[[i]]==#[[i]], {i,strictIndices }] & ];
 	];
-	
 	orients
 ];
 
@@ -246,6 +249,8 @@ OrientationSinks[edges_List, n_: 0] := Module[
    (* Sinks are vertices with no outgoing edges. *)
    Complement[Join[verts, Range[1, n]], First /@ edges]
 ];
+
+*)
 
 (***************************************************)
 

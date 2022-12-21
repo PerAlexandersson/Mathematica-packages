@@ -1,16 +1,25 @@
 
 
 (* ::Package:: *)
-BeginPackage["PAPtools`",{"CombinatoricTools`","CatalanObjects`"}];
+BeginPackage["PermutationTools`",{"CombinatoricTools`","CatalanObjects`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
 
 
+
+(* Subsets of permutations *)
+GrassmannPermutations;
+SimsunPermutations;
+
+WachsPermutations;
+AlternatingPermutations;
+
+
+(* Parity-alternating permutations *)
 PairToPAP;
 PAPToPair;
 IsPAPQ;
-
 GeneratePAPS;
 
 PAPS123;
@@ -25,6 +34,64 @@ GenerateRAPS;
 
 
 Begin["`Private`"];
+
+
+GrassmannPermutations::usage = "GrassmannPermutations[n] returns all permutations with at most one descent. See A000325.";
+GrassmannPermutations[n_Integer] := GrassmannPermutations[n] =
+Union@Table[
+	Join[ss, Complement[Range@n, ss]]
+, {ss, Subsets[Range@n]}];
+
+
+SimsunPermutations::usage = "SimsunPermutations[n] returns all Simsun permutations.";
+SimsunPermutations[n_Integer] := SimsunPermutations[n] = Select[
+    Permutations@n,
+    And @@ Table[
+       ! (SequenceCount[
+           Sign[Differences[DeleteCases[#, i_Integer /; i > k]]]
+           , {-1, -1}] > 0)
+       , {k, 3, n}]
+     &];
+
+
+WachsPermutations::usage = "WachsPermutations[n] returns a list of all Wachs permutations in S_n. See arxiv:2212.04932.";
+WachsPermutations[n_Integer] := 
+  WachsPermutations[n] = Module[{iStar},
+    iStar[i_] := Which[EvenQ@i, i - 1, i + 1 <= n, i + 1, True, n];
+    (* https://arxiv.org/pdf/2212.04932.pdf *)
+    Select[
+     Permutations@n,
+     (And @@ 
+        Table[Abs[Ordering[#][[i]] - Ordering[#][[iStar@i]]] <= 1, {i,
+           n - 1}]) &]
+];
+
+AlternatingPermutations::usage = "AlternatingPermutations[n] returns a list of alternating permutations (up-down permutations), see A000111.";
+
+AlternatingPermutations[0] := {{}};
+AlternatingPermutations[1] := {{1}};
+AlternatingPermutations[n_Integer] := 
+AlternatingPermutations[n] = Module[{altLeft, altRight, cc, ss},
+	Reap[
+		Do[
+			altLeft = AlternatingPermutations[k];
+			altRight = AlternatingPermutations[n - 1 - k];
+			Do[
+			cc = Complement[Range[n - 1], ss];
+			
+			Sow[Join[ss[[al]], {n}, cc[[ar]]]];
+			
+			, {ss, Subsets[Range[n - 1], {k}]}
+			, {al, altLeft}
+			, {ar, altRight}]
+			
+			, {k, 1, n - 1, 2}]
+		][[2, 1]]
+	];
+
+	
+	
+(************************************************)
 
 
 PairToPAP[{p1_List, p2_List}] := Riffle[2 p1 - 1, 2 p2];
@@ -198,7 +265,9 @@ GenerateRAPS[n_Integer, k_Integer] :=
     ];
 	
 *)
-		
+
+
+
 End[(* End private *)];
 EndPackage[];
 
