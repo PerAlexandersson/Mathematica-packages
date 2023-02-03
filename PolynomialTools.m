@@ -5,7 +5,7 @@ ClearAll["PolynomialTools`*"];
 BeginPackage["PolynomialTools`"];
 
 
-RootInterleavingQ;
+InterleavingRootsQ;
 HStarPolynomial;
 
 
@@ -75,13 +75,13 @@ Use this technique instead.
 https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-roots
 *)
 
-RootInterleavingQ::usage = "RootInterleavingQ[P,Q,t] returns true 
+InterleavingRootsQ::usage = "InterleavingRootsQ[P,Q,t] returns true 
 if the roots interleave (weakly). In particular, largest root of Q is greater than largest root of P.";
 (*
-RootInterleavingQ[pp_, qq_]:=RootInterleavingQ[pp,qq, First@Variables[{pp,qq}]];
+InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[pp,qq, First@Variables[{pp,qq}]];
 *)
 
-RootInterleavingQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ},
+InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ},
 	
 	(* Factor out common roots. *)
 	gcd = PolynomialGCD[pp1, qq1];
@@ -103,7 +103,7 @@ RootInterleavingQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ
 	(0<=Exponent[qq,t]-Exponent[pp,t]<=1) && interleavesQ[rootsPP, rootsQQ]
 ];
 
-RootInterleavingQ[polys_List,t_Symbol]:=Module[{pp},
+InterleavingRootsQ[polys_List,t_Symbol]:=Module[{pp},
 	And@@Table[
 		RootInterleavingQ[ pp[[1]], pp[[2]] ,t]
 		,{pp, Subsets[polys,{2}]}]
@@ -160,22 +160,28 @@ FindSecondOrderRecurrence[polys_List, t_Symbol] := Module[
 		, {n, 3, mm}];
 	vars = Join @@ Table[v[i], {v, {a, b, c, d, e}}, {i, 4}];
 	sol = Solve[Thread[CoefficientList[eqns, t] == 0], vars];
-	Row[{
-		Subscript["P", "n"], "=",
-		Plus[
-			((#[1] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
-					1} ) Subscript["P", "n-1"]
-			,
-			((#[2] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
-					1} ) Subscript["P'", "n-1"]
-			
-			,
-			((#[3]&/@{a,b,c,d,e}).{t "n",t,t^2,"n",1} )Subscript["P","n-2"]
-			,
-			((#[4]&/@{a,b,c,d,e}).{t "n",t,t^2,"n",1} )Subscript["P'","n-2"]
 
-			] /. sol[[1]]
-		}]
+	If[Length@sol==0,
+		None
+		,
+	
+		Row[{
+			Subscript["P", "n"], "=",
+			Plus[
+				((#[1] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
+						1} ) Subscript["P", "n-1"]
+				,
+				((#[2] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
+						1} ) Subscript["P'", "n-1"]
+				
+				,
+				((#[3]&/@{a,b,c,d,e}).{t "n",t,t^2,"n",1} )Subscript["P","n-2"]
+				,
+				((#[4]&/@{a,b,c,d,e}).{t "n",t,t^2,"n",1} )Subscript["P'","n-2"]
+
+				] /. sol[[1]]
+			}]
+	]
 ];
 
 
@@ -197,16 +203,21 @@ FindFirstOrderRecurrence[polys_List, t_Symbol] := Module[
 		, {n, 3, mm}];
 	vars = Join @@ Table[v[i], {v, {a, b, c, d, e}}, {i, 2}];
 	sol = Solve[Thread[CoefficientList[eqns, t] == 0], vars];
-	Row[{
-		Subscript["P", "n"], "=",
-		Plus[
-			((#[1] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
-					1} ) Subscript["P", "n-1"]
-			,
-			((#[2] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
-					1} ) Subscript["P'", "n-1"]			
-			] /. sol[[1]]
-		}]
+	
+	If[Length@sol==0,
+		None
+		,
+		Row[{
+			Subscript["P", "n"], "=",
+			Plus[
+				((#[1] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
+						1} ) Subscript["P", "n-1"]
+				,
+				((#[2] & /@ {a, b, c, d, e}).{t "n", t, t^2, "n", 
+						1} ) Subscript["P'", "n-1"]			
+				] /. sol[[1]]
+			}]
+	]
 ];
 
 End[(* End private *)];

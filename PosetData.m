@@ -7,6 +7,8 @@ BeginPackage["PosetData`",{"CombinatoricTools`"}];
 
 (* Need to do much more, say, complete edges to transitive closure *)
 
+SkewShapePoset;
+
 Poset;
 PosetPlot;
 PosetPlotOld;
@@ -39,6 +41,28 @@ weight gives the multiplicity of the variables.";
 
 (***************** Switch to private context *********************************)
 Begin["Private`"];
+
+
+SkewShapePoset::usage = "SkewShapePoset[{lam,mu}] returns the poset corresponding to the skew shape.";
+
+SkewShapePoset[{lam_List, mu_List}] := Module[
+	{n = Tr[lam] - Tr[mu], l = Max[Length@lam, Length@mu], rows, tab, 
+		cols},
+	rows = 
+		PartitionList[Range[n], PadRight[lam, l] - PadRight[mu, l]];
+	tab = 
+		MapThread[
+		Join, {(ConstantArray[None, #] & /@ PadRight[mu, l]), rows}, 1];
+	tab = PadRight[#, lam[[1]], None] & /@ tab;
+	cols = DeleteCases[Transpose[tab], None, 2];
+	
+	Poset[Tr[lam]-Tr[mu],
+		Join @@ Table[
+			Rule @@@ Partition[line, 2, 1]
+			, {line, Select[Join[rows, cols], Length[#] > 1 &]}]
+		]
+];
+
 
 
 PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";

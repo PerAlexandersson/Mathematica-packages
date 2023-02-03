@@ -184,8 +184,7 @@ StandardYoungTableaux[{sh_List, sh2_List}] := StandardYoungTableaux[{sh, sh2}] =
 SuperStandardTableau::usage = "SuperStandardTableau[{lam,mu}] returns the SYT with 1,2,.. in first row and so on.";
 SuperStandardTableau[{lam_List, mu_List}] := Module[
    {n = Tr[lam] - Tr[mu], l = Max[Length@lam, Length@mu], rows},
-   rows = 
-    PartitionList[Range[n], PadRight[lam, l] - PadRight[mu, l]];
+   rows = PartitionList[Range[n], PadRight[lam, l] - PadRight[mu, l]];
    YoungTableau@MapThread[Join,
      {(ConstantArray[None, #] & /@ PadRight[mu, l]), rows}, 1]
 ];
