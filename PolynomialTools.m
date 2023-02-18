@@ -18,8 +18,14 @@ RealRootedQ;
 SamePhaseStableQ;
 StablePolynomialQ;
 
-FindFirstOrderRecurrence;
-FindSecondOrderRecurrence;
+
+FindPolynomialRecurrence;
+VariableDegree;
+IndexDegree;
+DifferentialDegree;
+RecurrenceLength;
+Homogeneous;
+
 
 Begin["`Private`"];
 
@@ -132,19 +138,23 @@ HStarPolynomial[poly_, k_] := Expand@Module[
 	,{j, 0, Length[cl] - 1}]];
 
 
+VariableDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+DifferentialDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+RecurrenceLength::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+Homogeneous::usage = "Option for FindPolynomialRecurrence. True or False.";
+
 Options[FindPolynomialRecurrence] = {
 	VariableDegree -> 2,
 	IndexDegree -> 1,
 	DifferentialDegree -> 1,
 	RecurrenceLength -> 1,
 	Homogeneous -> True
-	};
-FindPolynomialRecurrence::usage = 
-"FindPolynomialRecurrence[{p1,p2,...,pk},{t,n}] returns 
-a linear recursion involving the polynomials (in t) and their \
-derivatives, and coefficients in 
-t and n. Options are used to specify maximal length of recursion, \
-maximal degree of differentiation,
+};
+
+FindPolynomialRecurrence::usage = "FindPolynomialRecurrence[{p1,p2,...,pk},{t,n}] returns 
+a linear recursion involving the polynomials (in t) and their derivatives, and coefficients in 
+t and n. Options are used to specify maximal length of recursion, maximal degree of differentiation,
 and maximal degree in t and degree in n.";
 FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol}, 
 	opts : OptionsPattern[]] := Module[{c, coeffSum, vDeg, iDeg, rDeg,
@@ -220,7 +230,7 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	None,
 	Row[{Subscript["P", ns], "=", solFormat[sol[[1]]]}]
 	]
-	];
+];
 
 
 End[(* End private *)];
