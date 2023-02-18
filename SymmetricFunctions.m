@@ -182,6 +182,7 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 	bb[{}, x_: None] := 1;
 	bb[{0}, x_: None] := 1;
 	bb[{lam__, 0..}, x_: None] := bb[{lam}, x];
+	bb[lam_List, x_: None] := 0 /; Min[lam]<0;
 	
 	sort = OptionValue[SortFunction];
 	
@@ -224,7 +225,6 @@ createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
 	
 	(* Formatting. *)
 	defineBasisFormatting[bb,symb];
-	
 ];
 
 
@@ -388,7 +388,12 @@ shiftedSchurDet[lambda_List, mu_List] := Module[
 ];
 
 
-LRCoefficient[lambda_List, mu_List, nu_List]:=lrCoefficientInternal[lambda,mu,nu];
+LRCoefficient::usage="LRCoefficient[lam,mu,nu] gives the coefficient of S_nu in S_lam*S_mu.";
+LRCoefficient[lambda_List, mu_List, nu_List]:=lrCoefficientInternal[
+	DeleteCases[lambda,0],
+	DeleteCases[mu,0],
+	DeleteCases[nu,0]
+];
 
 (* Base cases are values of shifted Schur functions. *)
 lrCoefficientInternal[lambda_List, mu_List, mu_List] := lrCoefficientInternal[lambda, mu, mu] = shiftedSchurDet[lambda, mu];
@@ -847,21 +852,25 @@ AugmentedMonomialSymmetric[lam_?VectorQ,x_] := Times @@ (PartitionPartCount[lam]
 CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
 CompleteHSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, x]];
 CompleteHSymmetric[{}, x_] := 1;
-CompleteHSymmetric[lam_?VectorQ, x_] := basisInMonomial[CompleteHSymmetric, sortToPartition@lam, x];
+CompleteHSymmetric[lam_?VectorQ, x_] := 
+	If[Min[lam]>=0, basisInMonomial[CompleteHSymmetric, sortToPartition@lam, x],0];
 
 ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
 ElementaryESymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, x]];
 ElementaryESymmetric[{}, x_] := 1;
-ElementaryESymmetric[lam_?VectorQ, x_] := basisInMonomial[ElementaryESymmetric,sortToPartition@lam, x];
+ElementaryESymmetric[lam_?VectorQ, x_] := 
+	If[Min[lam]>=0, basisInMonomial[ElementaryESymmetric,sortToPartition@lam, x],0];
 
 PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
 PowerSumSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, x]];
 PowerSumSymmetric[{}, x_] := 1;
-PowerSumSymmetric[lam_?VectorQ, x_] := basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x];
+PowerSumSymmetric[lam_?VectorQ, x_] := 
+	If[Min[lam]>=0, basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x],0];
 
 
 ForgottenSymmetric[mu_] := ForgottenSymmetric[mu, None];
-ForgottenSymmetric[mu_?VectorQ, x_] := basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x];
+ForgottenSymmetric[mu_?VectorQ, x_] := 
+	If[Min[lam]>=0, basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x],0];
 
 
 SchurSymmetric[d_Integer,x_]:=SchurSymmetric[{d},x];
@@ -870,8 +879,8 @@ SchurSymmetric[{},x_]:=1;
 
 (* Slinky rule. *)
 SchurSymmetric[lam_?VectorQ, x_] := With[{slr=CompositionSlinky[lam]},
-	If[slr[[2]]==0,
-	0, 
+	If[slr[[2]]==0 || Min[lam]<0,
+	0,
 	slr[[2]]*SchurSymmetric[slr[[1]], x]
 	]
 ] /; Not[OrderedQ[Reverse@lam]];
@@ -1212,7 +1221,7 @@ SchursPSymmetric[lam_List, x_: None]:=Together[SchursQSymmetric[lam,x]/2^Length[
 (* This is the modified Hall-Littlewood polynomial. *)
 
 HallLittlewoodMSymmetric[lam_List, q_, x_: None] := 
-Together[q^PartitionN[lam] HallLittlewoodTSymmetric[lam, 1/q, x]];
+	Together[q^PartitionN[lam] HallLittlewoodTSymmetric[lam, 1/q, x]];
 
 MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := ChangeFunctionAlphabet[
 	MacdonaldPSymmetricHelper[lam, SPECIALQ, SPECIALT]

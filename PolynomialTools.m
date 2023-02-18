@@ -78,7 +78,7 @@ https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-r
 InterleavingRootsQ::usage = "InterleavingRootsQ[P,Q,t] returns true 
 if the roots interleave (weakly). In particular, largest root of Q is greater than largest root of P.";
 (*
-InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[pp,qq, First@Variables[{pp,qq}]];
+InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[ pp, qq, First@Variables[{pp,qq}]];
 *)
 
 InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ},
@@ -103,9 +103,9 @@ InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQ
 	(0<=Exponent[qq,t]-Exponent[pp,t]<=1) && interleavesQ[rootsPP, rootsQQ]
 ];
 
-InterleavingRootsQ[polys_List,t_Symbol]:=Module[{pp},
+InterleavingRootsQ[polys_List, t_Symbol]:=Module[{pp},
 	And@@Table[
-		RootInterleavingQ[ pp[[1]], pp[[2]] ,t]
+		InterleavingRootsQ[ pp[[1]], pp[[2]] , t]
 		,{pp, Subsets[polys,{2}]}]
 ];
 
@@ -219,6 +219,99 @@ FindFirstOrderRecurrence[polys_List, t_Symbol] := Module[
 			}]
 	]
 ];
+
+
+
+Options[FindPolynomialRecurrence] = {
+	VariableDegree -> 2,
+	IndexDegree -> 1,
+	DifferentialDegree -> 1,
+	RecurrenceLength -> 1,
+	Homogeneous -> True
+	};
+FindPolynomialRecurrence::usage = 
+"FindPolynomialRecurrence[{p1,p2,...,pk},{t,n}] returns 
+a linear recursion involving the polynomials (in t) and their \
+derivatives, and coefficients in 
+t and n. Options are used to specify maximal length of recursion, \
+maximal degree of differentiation,
+and maximal degree in t and degree in n.";
+FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol}, 
+	opts : OptionsPattern[]] := Module[{c, coeffSum, vDeg, iDeg, rDeg,
+	dDeg, eqns, vars,
+	sol, solFormat, formatSingleCoeff, mm = Length@polys,
+	ts = ToString@t,
+	ns = ToString@n,
+	homo
+	},
+	vDeg = OptionValue[VariableDegree];
+	iDeg = OptionValue[IndexDegree];
+	dDeg = OptionValue[DifferentialDegree];
+	rDeg = OptionValue[RecurrenceLength];
+	homo = OptionValue[Homogeneous];
+	
+	(*General coefficient.*)
+	coeffSum[r_Integer, d_Integer] := Sum[
+		c[r, d, i, j] n^i t^j,
+		{i, 0, iDeg}, {j, 0, vDeg}];
+	(* Make nicer, see if some deriv. coeffs are identically 0,
+	and skip. *)
+	
+	formatSingleCoeff[r_, d_, s_] := Module[
+		{coeff, polyPart},
+		
+		coeff = Sum[
+			(c[r, d, i, j] /. s) n^i t^j
+			, {j, 0, vDeg}, {i, 0, iDeg}];
+		
+		polyPart = Which[
+			d == 0,
+			Subscript["P", ns <> "-" <> ToString@r]
+			,
+			r == -1 && d == -1, (* Non-homogeneous part *)
+			1
+			,
+			True,
+			Subsuperscript["P", ns <> "-" <> ToString@r, 
+			"(" <> ToString[d] <> ")"]
+			];
+		Which[
+		coeff === 0, 0,
+		coeff === 1, polyPart,
+		True, Factor[coeff]*polyPart
+		]
+		];
+	
+	(* Just add all coeffs. *)
+	solFormat[s_] := Total[
+		Join[
+		Join @@ 
+			Table[formatSingleCoeff[r, d, s], {d, 0, dDeg}, {r, rDeg}]
+		,
+		If[! homo, {formatSingleCoeff[-1, -1, s]}, {}]
+		]
+		];
+	
+	eqns = Table[
+		(*To be zero*)
+		polys[[nn]] -
+		Sum[
+			(coeffSum[r, d] /. n -> nn)*D[polys[[nn - r]], {t, d}]
+			, {d, 0, dDeg}, {r, rDeg}]
+		-
+		If[! homo, (coeffSum[-1, -1] /. n -> nn), 0]
+		, {nn, rDeg + 1, mm}];
+	
+	(* All unknowns *)
+	vars = Cases[eqns, c[_, _, _, _], Infinity];
+	sol = Solve[Thread[CoefficientList[eqns, t] == 0], vars];
+	
+	If[Length@sol == 0,
+	None,
+	Row[{Subscript["P", ns], "=", solFormat[sol[[1]]]}]
+	]
+	];
+
 
 End[(* End private *)];
 EndPackage[];

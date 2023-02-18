@@ -37,10 +37,15 @@ Begin["`Private`"];
 
 
 GrassmannPermutations::usage = "GrassmannPermutations[n] returns all permutations with at most one descent. See A000325.";
+(* Created by selecting subset to the left of the descent.
+   A decent is always created unless it is the first choice, 
+   which produces the identity permutation.
+   Hence, ignore this choice, and add the identity separately instead.
+*)
 GrassmannPermutations[n_Integer] := GrassmannPermutations[n] =
-Union@Table[
-	Join[ss, Complement[Range@n, ss]]
-, {ss, Subsets[Range@n]}];
+Prepend[Join @@ Table[
+		Table[Join[ss, Complement[Range@n, ss]],{ss, Rest@Subsets[Range@n, {k}]}]
+,{k, n}], Range@n]
 
 
 SimsunPermutations::usage = "SimsunPermutations[n] returns all Simsun permutations.";
