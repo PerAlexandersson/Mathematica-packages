@@ -56,6 +56,7 @@ PathExceedanceDecreaseMap;
 
 IntegerPartitionQ;
 SetPartitions;
+SetPartitionBlockIndex;
 RandomSetPartition;
 SetPartitionToRunSortedPermutation;
 OrderedSetPartitions;
@@ -496,7 +497,10 @@ SetPartitions[n_Integer] := SetPartitions[n] = Module[{sp},
       , {p, sp}]
 ];
 
-
+SetPartitionBlockIndex::usage = "SetPartitionBlockIndex[sp] a list with where entry i is 
+the block index where i is located.";
+SetPartitionBlockIndex[sp_List] := Normal[SparseArray[
+	Join @@ Table[{#} -> k & /@ sp[[k]], {k, Length[sp]}], Max@sp]]
 
 
 RandomSetPartition::usage = "RandomSetPartition[n,k] returns a uniform choice of a set partition of n into exactly k blocks.

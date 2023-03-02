@@ -4,7 +4,6 @@ ClearAll["PolynomialTools`*"];
 
 BeginPackage["PolynomialTools`"];
 
-
 InterleavingRootsQ;
 HStarPolynomial;
 
@@ -54,7 +53,8 @@ SamePhaseStableQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 			With[{vals = RandomReal[{0,1},Length@vars]},
 				If[ !RealRootedQ[ poly/.  MapThread[#1 -> t*#2 &, {vars, vals},1], t], 
 				(* Todo, send error here, if we want to get counter-example. *)
-				Throw[False]
+					Print["Not same phase stabe. Counterexamle: ", {vars, vals}];
+					Throw[False]
 				]
 			]
 		,{k,samples}];
@@ -68,6 +68,7 @@ StablePolynomialQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 			With[{lam = RandomReal[{0,1},Length@vars], mu = RandomReal[{0,1},Length@vars]},
 				If[ !RealRootedQ[ poly/.  MapThread[#1 -> t*#2 + #3 &, {vars, lam, mu},1], t], 
 				(* Todo, send error here, if we want to get counter-example. *)
+				Print["Not stabe. Counterexamle: ", {vars, lam, mu}];
 				Throw[False]
 				]
 			]
