@@ -32,6 +32,7 @@ PAPS321;
 TupleToRAP;
 GenerateRAPS;
 
+TypeBPermutations;
 
 Begin["`Private`"];
 
@@ -271,7 +272,9 @@ GenerateRAPS[n_Integer, k_Integer] :=
 	
 *)
 
-
+TypeBPermutations::usage = "TypeBPermutations[n] returns all permutations of type B.";
+TypeBPermutations[n_Integer] := TypeBPermutations[n] =
+  Join @@ Outer[#1*#2 &, Permutations@n, Tuples[{-1, 1}, n], 1];
 
 End[(* End private *)];
 EndPackage[];

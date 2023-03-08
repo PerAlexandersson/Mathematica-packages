@@ -29,6 +29,7 @@ PermutationPeaks;
 PermutationPeaksSet;
 PermutationPeakValues;
 PermutationValleys;
+PermutationValleysSet;
 RunSort;
 
 ToSubExcedance;
@@ -272,6 +273,11 @@ PermutationPeakValues[pi_List]:=Sort[pi[[PermutationPeaksSet[pi]]]];
 SyntaxInformation[PermutationValleys] = {"ArgumentsPattern" -> {{_...}}};
 PermutationValleys[pi_List] := Tr[
    Boole[#1 > #2 < #3] & @@@ Partition[pi, 3, 1]
+];
+
+SyntaxInformation[PermutationValleysSet] = {"ArgumentsPattern" -> {{_...}}};
+PermutationValleysSet[pi_List] := Select[
+   Range[2,Length[pi]-1], pi[[#-1]]>pi[[#]]<pi[[#+1]]&
 ];
 
 

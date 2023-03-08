@@ -171,13 +171,9 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	rDeg = OptionValue[RecurrenceLength];
 	homo = OptionValue[Homogeneous];
 	
-	(*General coefficient.*)
-	coeffSum[r_Integer, d_Integer] := Sum[
-		c[r, d, i, j] n^i t^j,
-		{i, 0, iDeg}, {j, 0, vDeg}];
-	(* Make nicer, see if some deriv. coeffs are identically 0,
-	and skip. *)
-	
+	(* General coefficient. *)
+	coeffSum[r_Integer, d_Integer] := Sum[ c[r, d, i, j] n^i t^j, {i, 0, iDeg}, {j, 0, vDeg}];
+
 	formatSingleCoeff[r_, d_, s_] := Module[
 		{coeff, polyPart},
 		
@@ -206,10 +202,10 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	(* Just add all coeffs. *)
 	solFormat[s_] := Total[
 		Join[
-		Join @@ 
-			Table[formatSingleCoeff[r, d, s], {d, 0, dDeg}, {r, rDeg}]
-		,
-		If[! homo, {formatSingleCoeff[-1, -1, s]}, {}]
+			Join @@
+				Table[formatSingleCoeff[r, d, s], {d, 0, dDeg}, {r, rDeg}]
+			,
+			If[! homo, {formatSingleCoeff[-1, -1, s]}, {}]
 		]
 		];
 	
@@ -220,7 +216,7 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 			(coeffSum[r, d] /. n -> nn)*D[polys[[nn - r]], {t, d}]
 			, {d, 0, dDeg}, {r, rDeg}]
 		-
-		If[! homo, (coeffSum[-1, -1] /. n -> nn), 0]
+		If[!homo, (coeffSum[-1, -1] /. n -> nn), 0]
 		, {nn, rDeg + 1, mm}];
 	
 	(* All unknowns *)
@@ -228,8 +224,8 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	sol = Solve[Thread[CoefficientList[eqns, t] == 0], vars];
 	
 	If[Length@sol == 0,
-	None,
-	Row[{Subscript["P", ns], "=", solFormat[sol[[1]]]}]
+		None,
+		Row[{Subscript["P", ns], "=", solFormat[sol[[1]]]}]
 	]
 ];
 
