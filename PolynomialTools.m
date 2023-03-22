@@ -16,7 +16,7 @@ RealRootedQ;
 
 SamePhaseStableQ;
 StablePolynomialQ;
-
+FindStablePolynomialCounterexample;
 
 FindPolynomialRecurrence;
 VariableDegree;
@@ -74,6 +74,13 @@ StablePolynomialQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 			]
 		,{k,samples}];
 	True]
+];
+
+FindStablePolynomialCounterexample::usage = "FindStablePolynomialCounterexample[poly] uses
+Mathematicas FindInstance method to look for counterexample.";
+FindStablePolynomialCounterExample[poly_]:=With[{vv=Variables@poly},
+	FindInstance[ 
+		And @@ Thread[(Im /@vv) > 0] && poly == 0, vv]
 ];
 
 

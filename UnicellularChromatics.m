@@ -152,6 +152,11 @@ UnicellularLLTSymmetricSchur[area_List, q_: 1, ss_] := Module[{c,colorings,lam,n
 ];
 
 
+
+ChromaticSymmetric::usage = "ChromaticSymmetric[area,q] returns the chromatic symmetric polynomial associated with given area sequence. One can also pass a graph object as argument.";
+ChromaticSymmetric[area:{_Integer ..}, q_: 1, opts:OptionsPattern[]] :=
+ChromaticSymmetric[UnitIntervalEdges@area, Length@area,q,opts];
+
 (* Convention *)
 ChromaticSymmetric[{},q_:1] := 1;
 
@@ -175,10 +180,26 @@ ChromaticSymmetric[attacking_List, n_Integer, q_, opts:OptionsPattern[]] :=
 	,{lam, IntegerPartitions[n] }]
 ];
 
-ChromaticSymmetric::usage = "ChromaticSymmetric[area,q] returns the chromatic symmetric polynomial associated with given area sequence.";
-ChromaticSymmetric[area:{_Integer ..}, q_: 1, opts:OptionsPattern[]] :=
-ChromaticSymmetric[UnitIntervalEdges@area, Length@area,q,opts];
 
+ChromaticSymmetric[gg_Graph, opts : OptionsPattern[]] := 
+  ChromaticSymmetric[gg, opts] = Module[{
+     vv = VertexList@gg,
+     ee = EdgeList@gg,
+     properQ,
+     colorings},
+    properQ[col_List] := With[
+      {sub = Association[Thread[vv -> col]]},
+      And @@ Table[sub[[First[e]]] != sub[[Last[e]]], {e, ee}]
+      ];
+    Sum[
+     (*All colorings with lam as weight, and proper *)
+     colorings = 
+      Permutations@(Join @@ 
+         MapIndexed[ConstantArray[#2[[1]], #1] &, lam]);
+     colorings = Select[colorings, properQ[#] &];
+     Length[colorings]*MonomialSymmetric[lam]
+     , {lam, IntegerPartitions[Length@vv]}]
+    ];
 
 
 

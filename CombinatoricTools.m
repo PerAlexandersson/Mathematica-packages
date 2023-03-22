@@ -584,6 +584,37 @@ OrderedSetPartitions[n_Integer] := Module[{k, ss, sp},
 
 
 
+SetPartitionsNoZeroBlock::usage = "SetPartitionsNoZeroBlock[n] returns all set partitions of type B without zero blocks.
+A zero block is a block B such that B=-B.";
+
+SetPartitionsNoZeroBlock[{}] := {{}};
+SetPartitionsNoZeroBlock[elems_List] := Module[{block1},
+	Join @@ Table[
+		(* Create the block containing the first element of elems *)
+		block1 = Prepend[ss, First[elems]];
+		(* Choose sign of first block, and partition remaining elements.*)
+		Join @@ Table[
+		Prepend[sp, block1*Prepend[signs, 1]]
+		, {sp, SetPartitionsNoZeroBlock[Complement[elems, block1]]}
+		, {signs, Tuples[{-1, 1}, Length[block1] - 1]}
+		]
+		, {ss, Subsets[Rest@elems]}]
+];
+
+
+SetPartitionsTypeB::usage = "SetPartitionsTypeB[n] returns a list of all set partitions of type B.";
+
+SetPartitionsTypeB[n_Integer] := SetPartitionsTypeB[n] = (
+	Join @@ Table[
+		Table[
+		If[zb == {}, Join[-sp, sp],
+		Join[{Join[-zb, zb]}, -sp, sp]
+		]
+		, {sp, SetPartitionsNoZeroBlock[Complement[Range[n], zb]]}]
+		(* Choice of zero block elems*)
+		, {zb, Subsets[Range@n]}]);
+   
+
 IntegerCompositions::usage = "IntegerCompositions[n] returns all interger compositions of n. IntegerCompositions[n,k] gives all compositions with length k.";
 IntegerCompositions[n_Integer] := Differences[Join[{0}, #, {n}]] & /@ Subsets[Range[n - 1]];
 IntegerCompositions[n_Integer,k_Integer]:=Select[IntegerCompositions[n], Length[#]==k&];
