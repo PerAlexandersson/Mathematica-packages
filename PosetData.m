@@ -140,8 +140,7 @@ where ci is the color of vertex i.
 Weight indicate how many vertices have color i.
 Warning: this function assumes that every given edge {i,j} satisfies i<j. 
 *)
-
-fastPosetColorings[n_Integer, weak_List:{}, strict_List: {}, 
+fastPosetColoringsNatural[n_Integer, weak_List:{}, strict_List: {},
 	equal_List: {}, weight_List] := Module[{rec, isOkQ},
 	
 	(* 
@@ -206,6 +205,72 @@ fastPosetColorings[n_Integer, weak_List:{}, strict_List: {},
 		]
 	]
 ];
+
+fastPosetColorings[n_Integer, weak_List : {}, strict_List : {}, equal_List : {}, weight_List] :=
+		Module[{rec, isOkQ},
+
+	(* Returns true if it is consistent to color vertex v, with color c *)
+	isOkQ[partialCol_List, v_Integer, c_Integer] := With[
+			{k = Length@partialCol},
+
+		Catch[
+		(* Everything weak connected to v must have color<=c*)
+		(* We have two checks in each, natural, and not naturally labeled edges. *)
+		If[Length[
+			Select[weak,
+			Or[
+				Last@# == v && First@# <= k && partialCol[[#[[1]]]] > c,
+				First@# == v && Last@# <= k && partialCol[[#[[2]]]] < c
+				]
+			&, 1]] > 0, Throw@False];
+		(*Everything strict connected to v must have color<c*)
+
+		If[Length[Select[strict,
+			Or[
+				Last@# == v && First@# <= k && partialCol[[#[[1]]]] >= c
+				,
+				First@# == v && Last@# <= k && partialCol[[#[[2]]]] <= c
+				]
+			&, 1]] > 0, Throw@False];
+		(*Everything equal connected to v must have color==c*)
+
+		If[
+		Length[Select[equal,
+			Or[
+				Last@# == v && First@# <= k && partialCol[[#[[1]]]] != c,
+				First@# == v && Last@# <= k && partialCol[[#[[2]]]] != c
+				]
+			&, 1]] > 0, Throw@False];
+		True]
+		];
+
+	(* We color the vertices one by one. *)
+	(* Partial color, and remaining weight colors. *)
+	(* Colorings are tracked by Sow[] and collected by Reap[] later. *)
+
+		rec[col_List, w_List] := With[
+		{cv = Length[col] + 1},(*Current vertex to pick a color for*)
+
+		If[cv > n,(* We have reached a proper coloring. *)
+
+		Sow[col],
+		(* Otherwise, loop over all available colors. *)
+		Do[
+			If[w[[c]] > 0 && isOkQ[col, cv, c],
+			rec[Append[col, c], MapAt[# - 1 &, w, c]]]
+			(*Here, select available colors not contradicting current partial coloring. *)
+			, {c, Length@w}];
+		];
+	];
+
+	If[Tr[weight] != n, (*Number of available colors must match poset size.*)
+		{},
+		With[{rr = Reap[rec[{}, weight]]},
+			If[Last@rr == {}, {}, rr[[2, 1]]]
+		]
+	]
+];
+
 
 Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}, ColorWeight->{}};
 PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,

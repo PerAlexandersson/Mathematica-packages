@@ -32,13 +32,13 @@ Clear[RealRootedQ];
 RealRootedQ::usage = "RealRootedQ[poly] returns true if the poly is a real-rooted univariate polynomial, or a constant.";
 RealRootedQ::poly = "Argument `1` should be a polynomial,";
 RealRootedQ[0,t_]:=True;
-RealRootedQ[poly_/;NumberQ,t_] := True; 
+RealRootedQ[poly_,t_] := True/;NumberQ[poly]; 
 RealRootedQ[poly_, t_] := Module[{d},
    d = Exponent[poly, t];
    d == CountRoots[poly, t]
 ];
 RealRootedQ[0] := True;
-RealRootedQ[poly_/;NumberQ] := True; (* Constants are considered real-rooted. *)
+RealRootedQ[poly_] := True/;NumberQ[poly]; (* Constants are considered real-rooted. *)
 RealRootedQ[poly_] := If[
    PolynomialQ[poly, Variables[poly][[1]]],
    RealRootedQ[poly, Variables[poly][[1]]]
