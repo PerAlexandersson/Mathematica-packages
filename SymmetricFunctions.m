@@ -76,6 +76,9 @@ toOtherSymmetricBasis;
 
 OmegaInvolution;
 HallInnerProduct;
+JackInnerProduct;
+JackLowerHook;
+JackUpperHook;
 
 SymmetricFunctionDegree;
 SymmetricFunctionToPolynomial;
@@ -246,7 +249,7 @@ monomialProducts[lam_List, mut_List] :=
 				, {new, addToPartition[lam, First@mut]}]
 ];
 
-(* private helper function, use Partition-part-count instead. *)
+(* private helper function, use Partition-part-count instead *)
 monomialProduct[lam_List, mu_List, x_: None] := Module[
 	{n = Length[lam] + Length[mu], dim, lamp, mup, products, nu, mult, dimCoeff},
 	
@@ -288,7 +291,6 @@ MExpand[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
 		True, 
 			monomPower[lam, (d - 1)/2,x]*monomPower[lam, 1 + (d - 1)/2,x]
 		];
-	
 	FixedPoint[
 				Expand[#] /. {
 					Times[bb[a_List, x_], bb[b_List, x_]] :> monomialProduct[a, b, x]
@@ -1034,6 +1036,59 @@ Expand@Sum[
 	, {rF, rulesF}, {rG, rulesG}]
 ];
 
+
+JackInnerProduct::usage="JackInnerProduct[f,g,a] returns the Jack inner productof the two symmetric functions.
+JackInnerProduct[f,g,a,x] computes the inner product with general q and t, and alphabet x.";
+
+JackInnerProduct[f_, g_,a_:1] := JackInnerProduct[f, g, a, None];
+JackInnerProduct[f_, g_, a_, x_: None] := Module[{
+	ff, gg, lam,
+	vars, rulesF, rulesG, vF, vG, rF, rG
+	},
+
+	(* Convert to powersum *)
+	ff = ToPowerSumBasis[f, x];
+	gg = ToPowerSumBasis[g, x];
+
+	vars = Cases[Variables[{ff, gg}], PowerSumSymbol[__,x], {0, Infinity}];
+
+	rulesF = CoefficientRules[ff, vars];
+	rulesG = CoefficientRules[gg, vars];
+
+(* Combine all power-sum terms *)
+Expand@Sum[
+	vF = First@rF;
+	vG = First@rG;
+
+	(* Special cases depending on constant term. *)
+	If[ vF === {},
+		lam = {1}
+		,
+		lam = Pick[vars, vF, 1][[1, 1]]
+	];
+
+	If[vF != vG,
+		0,
+		Last[rF] * Last[rG] * ZCoefficient[lam] * a^Length[lam]
+	]
+	, {rF, rulesF}, {rG, rulesG}]
+];
+
+JackLowerHook[mu_List,
+   a_ : 1, {r_Integer, c_Integer}] :=
+  (a PartitionArm[mu, {r, c}] +
+    PartitionLeg[mu, {r, c}] + 1);
+JackLowerHook[mu_List, a_ : 1] := Product[
+   JackLowerHook[mu, a, box], {box, DiagramBoxes[mu]}];
+
+JackUpperHook[mu_List,
+   a_ : 1, {r_Integer, c_Integer}] :=
+  (a PartitionArm[mu, {r, c}] +
+    PartitionLeg[mu, {r, c}] + a);
+JackUpperHook[mu_List, a_ : 1] := Product[
+   JackUpperHook[mu, a, box], {box, DiagramBoxes[mu]}];
+
+
 (* Computes f(-x1,-x2,...) *)
 (* TODO-UPDATE with rules for all bases *)
 NegateAlphabet[f_, x_: None] := ToMonomialBasis[f] /. MonomialSymbol[mu__, x] :> (-1)^(Tr@mu) MonomialSymbol[mu, x];
@@ -1122,7 +1177,7 @@ JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
 JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization of Jack functions.";
 JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Product[
 	a*PartitionArm[lam,s] + PartitionLeg[lam,s]+1
-,{s,ShapeBoxes[lam]}]];
+,{s,DiagramBoxes[lam]}]];
 
 
 
@@ -1153,9 +1208,8 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	
 	(* Operators must appear in this order, in order to optimize *)
 	
-	operators = 
-	Reverse[Join @@ 
-	Table[applyIJ[i, j], {j, n, 1, -1}, {i, j - 1, 1, -1}]];
+	operators = Reverse[Join @@
+		Table[applyIJ[i, j], {j, n, 1, -1}, {i, j - 1, 1, -1}]];
 	
 	res = Composition[Sequence @@ operators][ hh[PadRight[lam, n]] ];
 	(* Replace with complete homogeneous sym funcs.*)
@@ -1163,6 +1217,35 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	Expand[res /. {hh[a_] :> CompleteHSymbol[a, x], qq -> q}]
 ];
 
+
+kSchurSymmetric::usage = "kSchurSymmetric[mu,k returns the k-Schur function. Note that one must have mu1<=k.";
+kSchurSymmetric[mu_List, kk_Integer, t_ : 1, x_ : None] := kSchurSymmetric[mu, kk, t, x] = Module[
+    {Rij, res, operators, ll = Length@mu, n = Tr@mu, applyIJ, ss, qq},
+     Rij[vec_List, i_Integer, j_Integer, k_Integer] :=
+     If[i != j,
+      ReplacePart[vec, {i -> vec[[i]] + k, j -> vec[[j]] - k}], vec];
+
+    (*Applies 1/(1-qR_ij) to the polynomial*)
+
+    applyIJ[i_, j_][poly_] := Module[{max, out},
+      max = (n - j) + Max@Cases[poly, ss[a_] :> a[[j]], {0, Infinity}];
+      out =
+       poly + Sum[
+         poly /. ss[a_List] :> qq^k ss[Rij[a, i, j, k]], {k, max}];
+      Expand[out /. {ss[a_] /; Min[a] < 0 :> 0}]
+      ];
+    (*Operators must appear in this order,in order to optimize*)
+    operators =
+     Reverse[Join @@
+       Table[applyIJ[i, j], {i, ll, 1, -1}, {j,
+         kk - PadRight[mu, n][[i]] + i + 1, ll}]];
+    operators = SortBy[operators, {Last[#] &, First[#] &}];
+
+    res = Composition[Sequence @@ operators][ss[PadRight[mu, n]]];
+    (*Replace symbols with actual Schurs*)
+
+    Expand[res /. {ss[a_] :> SchurSymbol[a, x], qq -> t}]
+    ];
 
 (* Compute Hall-Littlewood P via inverse Kostka-Foulkes matrix.*)
 (* This matrix is computed via HallLittlewoodTSymmetric *)
@@ -1256,7 +1339,7 @@ ShiftedJackPSymmetricHelper[mu_List, a_]:=ShiftedJackPSymmetricHelper[mu,a]=Modu
 			(* Product over all boxes in the ssyt *)
 			Product[
 				( z[ n+1-Extract[ssyt[[1]],s] ] - (s[[2]]-1) + (s[[1]]-1)/a )
-			, {s, ShapeBoxes[mu]}]
+			, {s, DiagramBoxes[mu]}]
 			*
 			With[{ribbons = Table[YoungTableauShape[ssyt, i], {i, Max[ssyt]}]},
 				Product[
@@ -1569,7 +1652,7 @@ DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
 DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
 		
 		(* Monomials defined by shape. *)
-		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]);
+		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]);
 		
 		(* This correspond to f[B(mu)] -- it is quicker than plethysm *)
 		
@@ -1584,7 +1667,7 @@ NablaOperator[g_, q_, t_] := DeltaOperator[ElementaryESymmetric[SymmetricFunctio
 DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
 
 		(* Monomials defined by shape. *)
-		monoms[mu_List] := Rest[q^(#1 - 1) t^(#2 - 1) & @@@ ShapeBoxes[mu]];
+		monoms[mu_List] := Rest[q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]];
 		
 		(* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
 		

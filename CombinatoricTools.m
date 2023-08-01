@@ -11,6 +11,7 @@ Unit-testing: https://www.wolfram.com/mathematica/new-in-10/integrated-unit-test
 *)
 
 UnimodalQ;
+LatticeWordQ;
 Nicify;
 ExcedancesSet;
 Excedances;
@@ -18,6 +19,7 @@ FixedPointsSet;
 FixedPoints;
 DescentSet;
 Descents;
+Ascents;
 MajorIndex;
 CoMajorIndex;
 Inversions;
@@ -79,6 +81,8 @@ PartitionLessEqualQ;
 PartitionDominatesQ;
 PartitionStrictDominatesQ;
 PartitionN;
+PartitionPath;
+
 ZCoefficient;
 PartitionAddBox;
 PartitionRemoveBox;
@@ -87,7 +91,7 @@ PartitionRemoveVerticalStrip;
 
 PartitionArm;
 PartitionLeg;
-ShapeBoxes;
+DiagramBoxes;
 MacdonaldPsi;
 JackPsi;
 JackPsiPrime;
@@ -130,6 +134,7 @@ IsPermutationAvoidingQ;
 PermutationAllCycles;
 PermutationType;
 PermutationCycleMap;
+PermutationGenus;
 ReducedWord;
 PermutationFromWord;
 PermutationCode;
@@ -198,6 +203,17 @@ SyntaxInformation[UnimodalQ] = {"ArgumentsPattern" -> {{_...}}};
 UnimodalQ[list_List] := With[{dd = Reverse@DeleteCases[Sign@Differences[list], 0]}, dd === Sort[dd]];
 
 
+SyntaxInformation[UnimodalQ] = {"LatticeWordQ" -> {{_...}}};
+LatticeWordQ::usage="LatticeWordQ[w] returns true if w is a lattice word.";
+LatticeWordQ[word_List] :=
+  Module[{m = Max@word, tally, n = Length@word},
+   tally[0] := ConstantArray[0, m];
+   tally[i_Integer] := MapAt[# + 1 &, tally[i - 1], word[[i]]];
+   Table[
+    GreaterEqual @@ tally[k]
+    , {k, n}]
+];
+
 SyntaxInformation[ExcedancesSet] = {"ArgumentsPattern" -> {{_...}}};
 ExcedancesSet[pi_List] := Select[Range@Length@pi, # < pi[[#]] &];
 
@@ -215,6 +231,9 @@ DescentSet[p_List]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
 
 SyntaxInformation[Descents] = {"ArgumentsPattern" -> {{_...}}};
 Descents[pi_List] := Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}];
+
+SyntaxInformation[Ascents] = {"ArgumentsPattern" -> {{_...}}};
+Ascents[pi_List] := Sum[Boole[pi[[i]] < pi[[i + 1]]], {i, Length[pi] - 1}];
 
 SyntaxInformation[MajorIndex] = {"ArgumentsPattern" -> {{_...}}};
 MajorIndex[p_List] := Tr@DescentSet[p];
@@ -733,6 +752,18 @@ PartitionStrictDominatesQ[p1_List,p2_List]:=And[p1!=p2,PartitionDominatesQ[p1,p2
 PartitionN[p_List] := Sum[(i-1)*p[[i]], {i, Length@p}];
 
 
+PartitionPath::usage = "PartitionPath[lam] returns the North-East path outlining the partition."
+PartitionPath[{}] := {};
+PartitionPath[k_Integer] := Append[ConstantArray["e", k], "n"];
+PartitionPath[{k_Integer}] := PartitionPath[k];
+PartitionPath[lam_List] := Join[
+   PartitionPath[lam[[-1]]],
+   Join @@ Table[
+     PartitionPath[lam[[j - 1]] - lam[[j]]]
+     , {j, Length[lam], 2, -1}]
+];
+
+
 ZCoefficient::usage = "ZCoefficient[lam] returns the Z-coefficient, as p. 299, Enumerative Combinatorics II, Stanley";
 ZCoefficient[{}]:=1;
 ZCoefficient[lam_List] := Times@@MapIndexed[ (#1!) * First[#2]^#1 &, PartitionPartCount@lam];
@@ -811,9 +842,9 @@ PartitionArm[mu_List,{r_Integer,c_Integer}]:= If[r> Length@mu, 0, mu[[r]] - c];
 PartitionLeg[mu_List,{r_Integer,c_Integer}]:= PartitionArm[ ConjugatePartition@mu, {c,r} ];
 
 
-ShapeBoxes::usage = "ShapeBoxes[{lam,mu}] returns a list of (r,c)-coords of boxes in the shape.";
-ShapeBoxes[lam_List] := ShapeBoxes[{lam, {}}];
-ShapeBoxes[{lam_List, mu_List}] :=
+DiagramBoxes::usage = "DiagramBoxes[{lam,mu}] returns a list of (r,c)-coords of boxes in the shape.";
+DiagramBoxes[lam_List] := DiagramBoxes[{lam, {}}];
+DiagramBoxes[{lam_List, mu_List}] :=
    Join @@ Table[
      If[Length[mu] < r,
       Table[{r, j}, {j, lam[[r]]}],
@@ -826,8 +857,8 @@ ShapeBoxes[{lam_List, mu_List}] :=
 JackPsi[{lam_List, mu_List}, a_] := JackPsi[{lam, mu}, a] = Module[
 	{s,stripBoxes,muBoxes,rowOk,colOk},
  
-	stripBoxes = ShapeBoxes[{lam,mu}];
-	muBoxes    = ShapeBoxes[{mu,{}}];
+	stripBoxes = DiagramBoxes[{lam,mu}];
+	muBoxes    = DiagramBoxes[{mu,{}}];
 	
 	(* Product over all skew boxes in lam/mu, but only some of them count;
 	namely those boxes that DO have a proper box (somewhere) to the right, 
@@ -850,8 +881,8 @@ JackPsiPrime[{lam_List, mu_List}, a_]:=JackPsi[{ConjugatePartition@lam,Conjugate
 (*p. 340, Macdonald *)
 MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Module[{s,stripBoxes,muBoxes,rowOk,colOk,bb},
 	
-	stripBoxes = ShapeBoxes[{lam,mu}];
-	muBoxes    = ShapeBoxes[{mu,{}}];
+	stripBoxes = DiagramBoxes[{lam,mu}];
+	muBoxes    = DiagramBoxes[{mu,{}}];
 	
 	(* Product over all boxes mu, but only some of them count;
 	namely those boxes that DO have a proper box (somewhere) to the right, 
@@ -862,7 +893,7 @@ MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Modu
 	
 	(*p. 340, Macdonald *)
 	bb[nu_, s_List]:=If[
-		MemberQ[ShapeBoxes[nu],s],
+		MemberQ[DiagramBoxes[nu],s],
 			Divide[
 				1-q^(PartitionArm[nu,s])*t^(1+PartitionLeg[nu,s]) 
 				,
@@ -1092,12 +1123,24 @@ PermutationCycleMap[p_List] := (
 
 
 (* The genus of a permutation *)
+PermutationGenus::usage = "PermutationGenus[pi] returns the genus of the permutation."
 PermutationGenus[sigma_List] := PermutationGenus[sigma, RotateLeft[Range@Max@sigma]];
 PermutationGenus[sigma_List, alpha_List] := 
 With[{n = Max[sigma], z = (Length[PermutationAllCycles[#]] &)},
 	1 + (n - z[alpha] - z[sigma] - z[ Ordering[alpha][[sigma]]  ])/2
 ];
-
+(* From https://arxiv.org/pdf/2306.16237.pdf
+*)
+(*
+PermutationGenus2[pi_List] := (1/2) With[{n = Max@pi
+     },
+    n + 1 - Length[PermutationAllCycles[pi]] -
+     Length[PermutationAllCycles[
+       Ordering[RotateRight@pi]
+       ]
+      ]
+    ];
+*)
 
 ReducedWord::usage = "ReducedWord[pi] returns a reduced word for pi.";
 ReducedWord[{}] := {};

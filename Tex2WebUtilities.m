@@ -612,13 +612,10 @@ BibliographyHTMLRules[textBlob_String] := Module[
 
 
 
-
 (* Returns {{fname, lname}...} list *)
 
 ParseAuthor[str_String] := Module[{authList, fnameLnameList},
-   authList = 
-    StringTrim /@ 
-     StringSplit[StringReplace[str, WhitespaceCharacter .. -> " "], 
+   authList = StringTrim /@ StringSplit[StringReplace[str, WhitespaceCharacter .. -> " "],
       " and "];
    
    (* Replace spaces in "{van Helen}" so that we get van+Helen *) 
@@ -642,23 +639,22 @@ ParseAuthor[str_String] := Module[{authList, fnameLnameList},
 
 (* List of last names, and year --- generates a key. *)
 
-AuthorBibKey[authors_List, year_: ""] := 
-  Module[{lastNamesFirstLetters, authKey},
-   lastNamesFirstLetters[str_String] := 
-    StringJoin @@ (StringTake[#, 1] & /@ StringSplit[str, " "]);
-   (* TODO - handle double last names! *)
-   authKey = Which[
-     Length@authors == 1 && StringLength@authors[[1]] >= 3,
-     StringTake[authors[[1]], 3]
-     ,
-     Length@authors == 1 && StringLength@authors[[1]] <= 2,
-     authors[[1]]
-     ,
-     True,
-     StringJoin @@ (lastNamesFirstLetters /@ authors)
-     ];
-   authKey <> If[StringLength[year] >= 4, StringTake[year, {3, 4}], ""]
-   ];
+AuthorBibKey[authors_List, year_: ""] := Module[{lastNamesFirstLetters, authKey},
+
+  lastNamesFirstLetters[str_String] := StringJoin @@ (StringTake[#, 1] & /@ StringSplit[str, " "]);
+    (* TODO - handle double last names! *)
+    authKey = Which[
+      Length@authors == 1 && StringLength@authors[[1]] >= 3,
+        StringTake[authors[[1]], 3]
+      ,
+      Length@authors == 1 && StringLength@authors[[1]] <= 2,
+        authors[[1]]
+      ,
+      True,
+        StringJoin @@ (lastNamesFirstLetters /@ authors)
+      ];
+    authKey <> If[StringLength[year] >= 4, StringTake[year, {3, 4}], ""]
+];
 
 FixLaTeXCapitalization[Missing] := "";
 FixLaTeXCapitalization[""] := "";
@@ -687,11 +683,10 @@ RawBibTexEntries[bibData_String] :=
        Shortest[
         "@" ~~ type : LetterCharacter .. ~~ "{" ~~ 
          key : WordCharacter .. ~~ "," ~~ 
-         m : BalancedBracketPattern[] ~~ "}"] :> {type, key, m}
+         body : BalancedBracketPattern[] ~~ "}"] :> {type, key, body}
      ];
    
-   fixValue[str_String] := 
-    StringTrim@StringReplace[str, WhitespaceCharacter .. :> " "];
+   fixValue[str_String] := StringTrim@StringReplace[str, WhitespaceCharacter .. :> " "];
    
    splitEntry[more_String] := StringCases[more, {
       Shortest[
@@ -707,16 +702,18 @@ RawBibTexEntries[bibData_String] :=
       ,
       "month" ~~ WhitespaceCharacter ... ~~ "=" ~~ 
         WhitespaceCharacter ... ~~
-        
         value : WordCharacter .. :> ("month" -> value)
       }
      , IgnoreCase -> True
      ];
    
-   (* TODO: Save raw bibtex entry as well. *)
-   
+   (* TODO: Save raw bibtex entry as well, for debugging purposes? *)
    Association[
-      Join[{"id" -> #2, "type" -> ToLowerCase@#1, "year" -> ""}, 
+      Join[
+        {"id" -> #2,
+        "type" -> ToLowerCase@#1,
+        "author" -> Missing,
+        "year" -> ""},
        splitEntry[#3]]] & @@@ entries
    ];
 

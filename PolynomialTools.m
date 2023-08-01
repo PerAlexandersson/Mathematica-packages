@@ -16,7 +16,7 @@ RealRootedQ;
 
 SamePhaseStableQ;
 StablePolynomialQ;
-FindStablePolynomialCounterexample;
+FindStablePolynomialCounterExample;
 
 FindPolynomialRecurrence;
 VariableDegree;
@@ -53,7 +53,7 @@ SamePhaseStableQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 			With[{vals = RandomReal[{0,1},Length@vars]},
 				If[ !RealRootedQ[ poly/.  MapThread[#1 -> t*#2 &, {vars, vals},1], t], 
 				(* Todo, send error here, if we want to get counter-example. *)
-					Print["Not same phase stabe. Counterexamle: ", {vars, vals}];
+					Print["Not same phase stable. Counterexample: ", {vars, vals}];
 					Throw[False]
 				]
 			]
@@ -68,7 +68,7 @@ StablePolynomialQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 			With[{lam = RandomReal[{0,1},Length@vars], mu = RandomReal[{0,1},Length@vars]},
 				If[ !RealRootedQ[ poly/.  MapThread[#1 -> t*#2 + #3 &, {vars, lam, mu},1], t], 
 				(* Todo, send error here, if we want to get counter-example. *)
-				Print["Not stabe. Counterexamle: ", {vars, lam, mu}];
+				Print["Not stable. Counterexample: ", {vars, lam, mu}];
 				Throw[False]
 				]
 			]
@@ -76,9 +76,11 @@ StablePolynomialQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 	True]
 ];
 
-FindStablePolynomialCounterexample::usage = "FindStablePolynomialCounterexample[poly] uses
+FindStablePolynomialCounterExample::usage = "FindStablePolynomialCounterexample[poly] uses
 Mathematicas FindInstance method to look for counterexample.";
+
 FindStablePolynomialCounterExample[poly_]:=With[{vv=Variables@poly},
+	Print[FindStablePolynomialCounterExample];
 	FindInstance[ 
 		And @@ Thread[(Im /@vv) > 0] && poly == 0, vv]
 ];
@@ -94,6 +96,10 @@ if the roots interleave (weakly). In particular, largest root of Q is greater th
 (*
 InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[ pp, qq, First@Variables[{pp,qq}]];
 *)
+
+(* By convention *)
+InterleavingRootsQ[0, qq1_, t_Symbol]:=True;
+InterleavingRootsQ[pp1_, 0, t_Symbol]:=True;
 
 InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ},
 	
