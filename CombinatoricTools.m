@@ -1438,9 +1438,7 @@ InverseKostkaCoefficient::usage = "InverseKostkaCoefficient[lam,mu] returns the 
 
 InverseKostkaCoefficient[mu_List, mu_List]  :=1;
 InverseKostkaCoefficient[lam_List, mu_List] := (0 /; PartitionDominatesQ[lam, mu]);
-InverseKostkaCoefficient[lam_List, mu_List] := inverseKostkaHelper[
-Reverse@lam, Reverse@mu];
-
+InverseKostkaCoefficient[lam_List, mu_List] := inverseKostkaHelper[Reverse@lam, Reverse@mu];
 
 
 (* The convention in https://doi.org/10.1080/03081089008817966
@@ -1464,7 +1462,7 @@ inverseKostkaHelper[lam_List, mu_List] := inverseKostkaHelper[lam, mu] = If[
 					ReplacePart[lam, pos -> Nothing]
 					,
 						(* Subtract 1 from the first j-1 entries, and drop jth entry *)
-						MapAt[ If[#==1,Nothing,#-1]&, Drop[mu, {j}], List/@Range[j-1] ]
+						MapAt[If[#==1,Nothing,#-1]&, Drop[mu, {j}], List/@Range[j-1] ]
 				]
 			]
 		]

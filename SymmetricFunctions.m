@@ -131,6 +131,9 @@ NablaOperator;
 DeltaPrimOperator;
 
 
+PrecomputeBasisMatrices;
+LoadBasisMatrices;
+
 Begin["`Private`"];
 
 sortToPartition[mu_List]:=Sort[Select[mu,Positive],Greater];
@@ -1676,6 +1679,56 @@ DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, 
 		inH = Expand[ToMacdonaldHBasis[g, q, t]];
 		Together[
 		inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
+];
+
+
+PrecomputeBasisMatrices::usage = "PrecomputeBasisMatrices[Dimensions->n] computes the transition matrices for
+all the most common elementary symmetric functions indexed by partitions of size at most n.
+These matrices are stored as a local object (in your home folder).
+Use LoadBasisMatrices[] to load these matrices.
+Note that time and space used grows rapidly with n!";
+
+Options[PrecomputeBasisMatrices] = {Dimensions -> 20};
+PrecomputeBasisMatrices[opts : OptionsPattern[]] :=
+  Module[{bases, file},
+   file = LocalObject["SymmetricFunctionsMatrices"];
+   bases = {
+     MonomialSymmetric,
+     CompleteHSymmetric,
+     ElementaryESymmetric,
+     PowerSumSymmetric,
+     SchurSymmetric};
+   Do[
+    Do[
+      If[b1 =!= b2,
+       SymmetricFunctions`Private`symFuncTransMatInternal[b1, b2, d]
+       ]
+      , {b1, bases}, {b2, bases}];
+    , {d, OptionValue[Dimensions]}];
+   (*
+   file=FileNameJoin[OptionValue[Directory],OptionValue[
+   FileName]];
+   *)
+   DumpSave[file,
+    SymmetricFunctions`Private`symFuncTransMatInternal]
+];
+
+
+LoadBasisMatrices::usage = "LoadBasisMatrices[] loads previously stored transition matrices.
+To store transition matrices, use PrecomputeBasisMatrices[]";
+Options[LoadBasisMatrices] = {
+   Directory -> HomeDirectory[]
+   };
+LoadBasisMatrices[opts : OptionsPattern[]] := Module[{file},
+   file = LocalObject["SymmetricFunctionsMatrices"];
+   Check[
+    Get[file];
+    ,
+    Print[
+      "No precomputed matrices found.\nUse PrecomputeBasisMatrices to \
+compute and store matrices."];
+    ,
+    LocalObject::nso]
 ];
 
 
