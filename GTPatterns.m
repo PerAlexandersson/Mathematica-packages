@@ -219,10 +219,6 @@ quickGTPatterns[l_List,mu_List,w_List, cylindricShift_:Infinity] := Module[
 ];
 
 
-
-
-
-
 End[]; (*End private*)
 
 EndPackage[];

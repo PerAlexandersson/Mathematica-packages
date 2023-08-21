@@ -7,10 +7,9 @@ for those who prefers Mathematica over Sage.
 
 ## SymmetricFunctions.m
 
-This is a package for working with symmetric functions.
+This is a package for working with symmetric functions, see https://www.symmetricfunctions.com/. 
 It has the core bases, as well as Jack and Macdonald polynomials, LLT polynomials,
-SchurP and SchurQ functions, the Hall inner product, plethysm 
-and the Delta operator.
+SchurP and SchurQ functions, the Hall inner product, plethysm and the Delta operator.
 
 This also has support for working multiple alphabets, which is useful when dealing with plethysm calculus.
 
@@ -19,6 +18,7 @@ Compare with Stembridge's sf package for Maple, or Curtis Greene's symfun13 pack
 See the SymmetricFunctions-Introduction.nb for a brief introduction.
 
 *Updates*
+- 2023-08-08 Code added for storing transition matrices between sessions.
 - 2020-08-25 Finished big refactoring. 
   Many functions are now more intuitive, and basis conversion is quicker.
 
@@ -33,8 +33,7 @@ and various helper functions.
 ## NewTableaux.m
 
 Functions for generating standard Young tableaux, semi-standard Young tableaux,
-RSK, promotion and crystal operators.
-
+RSK, promotion and crystal operators. 
 
 
 ## CatalanObjects.m
@@ -49,6 +48,11 @@ and ways to draw them.
 Chromatic (quasi)symmetric functions and LLT polynomials
 associated with unit interval graphs.
 Various functions related to unit-interval graphs.
+
+## GTPatterns.m
+
+Methods for generating GT-patterns (Gelfand-Tsetlin patterns) which are in bijection with
+semi-standard Young tableaux.
 
 
 ## MacdonaldPolynomials.m
@@ -68,6 +72,7 @@ There are also functions for converting `ytableau` syntax to HTML.
 ## PosetData.m
 
 This is a file which mainly contains non-isomorphic posets.
+
 
 ## TreesData.m
 
