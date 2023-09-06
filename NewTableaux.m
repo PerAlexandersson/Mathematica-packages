@@ -931,64 +931,96 @@ UnitTest[SYTEvacuation] :=
 (****************************************************************************************************)
 
 
+
 CrystalOp[YoungTableau[ssyt_], i_Integer, f_Function] := Module[
-   {newWord, word, subWord, coord},
-   
-   (* The subword consisting of elements in {i,i+1} *)
-   subWord =
-    Join @@ MapIndexed[
-      If[IntegerQ[#] && (#1 == i || #1 == i + 1), #2 -> #1, Nothing] &,
-      ssyt, {2}];
-   (* Make sure order is reading-word order. *)
-   
-   subWord = SortBy[subWord, {-#[[1, 1]] &, #[[1, 2]] &}];
-   
-   (* Remove matching parenthesises.  *)
-   (* 
-   Word is now of the form (i)^a,(i+1)^b *)
-   
-   subWord = ReplaceRepeated[subWord,
-     {first___, {_Integer, _Integer} -> i + 1,
-       {_Integer, _Integer} -> i, last___} :> {first, last}];
-   
-   (* Apply the supplied operator on the matched word *)
-   
-   word = Last /@ subWord;
-   coord = First /@ subWord;
-   
-   
-   newWord = f[word];
-   
-   (* Map on the SSYT *)
-   
-   YoungTableau@ReplacePart[ssyt, Thread[Rule[coord, newWord]]]
-   ];
+	{newWord, word, subWord, coord},
+	
+	(* The subword consisting of elements in {i,i+1} *)
+	subWord =
+		Join @@ MapIndexed[
+		If[IntegerQ[#] && (#1 == i || #1 == i + 1), #2 -> #1, Nothing] &,
+		ssyt, {2}];
+	(* Make sure order is reading-word order. *)
+	
+	subWord = SortBy[subWord, {-#[[1, 1]] &, #[[1, 2]] &}];
+	
+	(* Remove matching parenthesises.  *)
+	(* Word is now of the form (i)^a,(i+1)^b *)
+	
+	subWord = ReplaceRepeated[subWord,
+		{first___, {_Integer, _Integer} -> i + 1,
+		{_Integer, _Integer} -> i, last___} :> {first, last}];
+	
+	(* Apply the supplied operator on the matched word *)
+	
+	word = Last /@ subWord;
+	coord = First /@ subWord;
+	
+	newWord = f[word];
+	
+	If[newWord === Undefined,
+		Undefined,
+		(* Map on the SSYT *)
+		YoungTableau@ReplacePart[ssyt, Thread[Rule[coord, newWord]]]
+	]
+];
 
-CrystalEi::usage = "CrystalEi[ssyt,i] performs the crystal raising operator ei on the tableau. It also works on lists";
+CrystalEi::usage = "CrystalEi[ssyt,i] performs the crystal raising operator ei on the tableau. 
+It also works on lists";
 
-CrystalEi[YoungTableau[ssyt_], i_Integer] := 
-  CrystalOp[YoungTableau@ssyt, i,
-   Function[{w}, If[w == {}, {}, Prepend[Most[w], i]]]];
-CrystalEi[w_List, i_Integer] := 
-  CrystalEi[YoungTableau[{w}], i][[1, 1]];
+
+(* Replaces i+1 with i *)
+CrystalEi[YoungTableau[ssyt_], i_Integer,k_Integer:1] := 
+CrystalOp[YoungTableau@ssyt, i,
+	Function[{w}, 
+		With[{a=Count[w,i],b=Count[w,i+1]},
+			Which[
+				b>=k, Join[ConstantArray[i,a+k],ConstantArray[i+1,b-k]],
+				True, Undefined
+			]
+		]
+	]
+];
+CrystalEi[w_List, i_Integer,k_Integer:1] := With[
+{out = CrystalEi[YoungTableau[{w}], i,k]},
+	If[out === Undefined, out, out[[1, 1]] ]
+];
 
 CrystalFi::usage = "CrystalFi[ssyt,i] performs the crystal lowering operator fi on the tableau. It also works on lists";
-  
-CrystalFi[YoungTableau[ssyt_], i_Integer] := 
-  CrystalOp[YoungTableau@ssyt, i,
-   Function[{w}, If[w == {}, {}, Append[Rest[w], i + 1]]]];
-CrystalFi[w_List, i_Integer] := 
-  CrystalFi[YoungTableau[{w}], i][[1, 1]];
+
+CrystalFi[YoungTableau[ssyt_], i_Integer,k_Integer:1] := 
+CrystalOp[YoungTableau@ssyt, i,
+	Function[{w}, 
+		With[{a=Count[w,i],b=Count[w,i+1]},
+			Which[
+				a>=k, Join[ConstantArray[i,a-k],ConstantArray[i+1,b+k]],
+				True, Undefined
+			]
+		]
+	]
+];
+
+CrystalFi[w_List, i_Integer,k_Integer:1] := With[
+{out = CrystalFi[YoungTableau[{w}], i,k]},
+	If[out === Undefined, out, out[[1, 1]] ]
+];
 
 CrystalSi::usage = "CrystalSi[ssyt,i] performs the crystal 
 transposition operator si on the tableau. It also works on lists";
 CrystalSi[YoungTableau[ssyt_], i_Integer] := 
   CrystalOp[YoungTableau@ssyt, i, Function[{w}, Reverse[w]/.{i+1->i,i->i+1}]];
-CrystalSi[w_List, i_Integer] := CrystalSi[YoungTableau[{w}], i][[1, 1]];
+CrystalSi[w_List, i_Integer] := With[
+{out = CrystalSi[YoungTableau[{w}], i,k]},
+	If[out === Undefined, out, out[[1, 1]] ]
+];
+
+
+(**********************************************************************************)
 
 
 End[]; (*End private*)
 
 EndPackage[];
+
 
 

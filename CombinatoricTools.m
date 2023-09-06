@@ -73,6 +73,7 @@ CompositionWord;
 WordComposition;
 CompositionSlinky;
 PartitionPartCount;
+PartitionToMultirectangular;
 PartitionCores;
 HookLengths;
 ConjugatePartition;
@@ -152,6 +153,8 @@ KostkaCoefficient;
 InverseKostkaCoefficient;
 
 PermutationMatrixPlot;
+OperatorConnectedComponent;
+
 
 Begin["Private`"];
 
@@ -698,6 +701,21 @@ PartitionJoin[a_List, b_List] := Sort[Join[a, b], Greater];
 PartitionPartCount::usage="PartitionPartCount[lam] returns (m1,m2,...) so that mi is then number of parts of size i.";
 PartitionPartCount[{}]:={};
 PartitionPartCount[lam_List] := Normal[SparseArray[#1 -> #2 & @@@ Tally[ DeleteCases[lam,0]  ]]];
+
+
+(*
+Returns the widths and heights of the rectangles in the multirectangular
+coordinates. Lower left rectangle is first.
+*)
+PartitionToMultirectangular::usage = "PartitionToMultirectangular[lam] returns the widths and heights of the rectangles,
+in multirectangular notation.";
+PartitionToMultirectangular[lam_List] := Module[{t, widths, heights},
+   t = SortBy[Tally[lam], -#[[1]] &];
+   widths = Differences@Reverse[Append[(First /@ t), 0]];
+   heights = Reverse[Last /@ t];
+   {widths, heights}
+];
+
 
 
 PartitionCores::usage = "PartitionCores[n,p] returns all partitions of n with no hook-length divisible by p.";
@@ -1533,6 +1551,32 @@ PermutationMatrixPlot[p_List] := With[{n = Max@p},
    ];
 
 
+   
+   
+OperatorConnectedComponent::usage = 
+  "OperatorConnectedComponent[init,ops] returns a list of everything \
+  that can be obtained from the initial list by applying the operators \
+  iteratively.";
+Options[OperatorConnectedComponent] = {"Function" -> True};
+OperatorConnectedComponent[init_List, ops_List, 
+   opts : OptionsPattern[]] := Module[
+   {final = {}, toExplore = init, v, new, func},
+   func = OptionValue["Function"];
+   While[Length[toExplore] > 0,
+    v = First@toExplore;
+    toExplore = Rest[toExplore];
+    new = Union @@ Table[
+       With[{val = f@v},
+        (* If we are in function mode, 
+        we must handle when output is undefined. *)
+        If[func, If[val === Undefined || val === Null, {}, {val}], val]
+        ]
+       , {f, ops}];
+    toExplore = Join[toExplore, Complement[new, toExplore, final]];
+    AppendTo[final, v];
+    ];
+   Sort@final
+];
 
 
 (**TESTING**)
