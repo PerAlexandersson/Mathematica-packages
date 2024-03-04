@@ -107,6 +107,7 @@ SchursPSymmetric;
 BigSchurSymmetric;
 
 MacdonaldPSymmetric;
+MacdonaldJSymmetric;
 MacdonaldHSymmetric;
 SkewMacdonaldESymmetric;
 
@@ -133,6 +134,10 @@ DeltaPrimOperator;
 
 PrecomputeBasisMatrices;
 LoadBasisMatrices;
+
+
+SnModuleCharacters;
+
 
 Begin["`Private`"];
 
@@ -1314,6 +1319,13 @@ MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := ChangeFunctionAlphabet[
 	, x] /. {SPECIALQ -> q, SPECIALT -> t};
 
 
+MacdonaldJSymmetric::usage = "MacdonaldJSymmetric[lam,q,t] is the integral form Macdonald J polynomial.";
+MacdonaldJSymmetric[lam_List,q_,t_,x_:None]:=(
+	Together[
+		MacdonaldPSymmetric[lam,q,t,x] * 
+		Product[1-q^PartitionArm[lam,s]*t^(1+PartitionLeg[lam,s])
+			, {s,DiagramBoxes[lam]}]]);
+	
 (* 7.13' p. 346 in Macdonald's book. *)
 MacdonaldPSymmetricHelper[mu_List, q_, t_]:=MacdonaldPSymmetricHelper[mu,q,t]=
 Together@Sum[
@@ -1730,6 +1742,64 @@ compute and store matrices."];
     ,
     LocalObject::nso]
 ];
+
+
+
+
+SnModuleCharacters::usage = "SnModuleCharacters[polynomialBasis, x] takes a list of polynomials in x[1]...x[n] and returns the Sn-character under the action where Sn acts on the variable indices";
+SnModuleCharacters[polysBasis_List, xx_]:=SnModuleCharacters[polysBasis,{xx}];
+
+SnModuleCharacters[{}, varList_List]:=0;
+SnModuleCharacters[{1}, varList_List]:=1; (* Really should be Schur[{n}] *)
+
+SnModuleCharacters[polysBasis_List, varList_List] := Module[
+   {vars, monomialSupport, polynomialToBasisVector, basisMatrix,
+   n, subst,vv,lSolveFunc, imgVec, character},
+   
+   (* All variables appearing in total in the bases. *)
+   vars = Cases[Variables[polysBasis], a_[_Integer]];
+   vars = Select[vars, MemberQ[varList, Head[#]] &];
+   
+   (* Compute largest index appearing. This is Sn-group size *)
+   n = Max[Last/@vars];
+   
+   (* All monomials (as lists) appearing among all bases. *)
+   monomialSupport = 
+    Union[Join @@ 
+      Table[First /@ CoefficientRules[bb, vars], {bb, polysBasis}]];
+   
+   (* Writes any vector as combination of monomials appearing in the basis *)
+   polynomialToBasisVector[pol_] := 
+    Table[Coefficient[pol, Times @@ (vars^m)], {m, monomialSupport}];
+   
+   (* Each COLUMN here is a basis vector. *)
+   basisMatrix = Transpose[polynomialToBasisVector /@ polysBasis];
+   Quiet[
+    lSolveFunc = LinearSolve[basisMatrix];
+    ];
+    
+   (* TODO: Add more checks? *)
+   If[MatrixRank[lSolveFunc] < Length[polysBasis],
+    Print[
+      "Error: The set of polynomials in the basis are not linearly independent!"];
+    ];
+   
+   (* Compute the characters. *)
+	Sum[
+		character = Tr@Table[
+			pi = Permute[Range[n], Cycles[PartitionList[Range@n, mu]]];
+			
+			(* Rule for the diagonal action on variables. *)
+			subst = Join@@Table[ vv[i] -> vv[pi[[i]]] , {i,n}, {vv, varList}];
+			
+			imgVec = polynomialToBasisVector[bb /. subst];
+			lSolveFunc[imgVec]
+			
+		, {bb, polysBasis}];
+		character*PowerSumSymbol[mu]/ZCoefficient[mu]
+		, {mu, IntegerPartitions@n}]
+];
+
 
 
 End[(* End private *)];

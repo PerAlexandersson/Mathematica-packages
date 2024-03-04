@@ -6,7 +6,7 @@ BeginPackage["PolynomialTools`"];
 
 InterleavingRootsQ;
 HStarPolynomial;
-
+HVectorInequalitiesQ;
 
 EulerianA;
 EulerianAPolynomial;
@@ -80,7 +80,6 @@ FindStablePolynomialCounterExample::usage = "FindStablePolynomialCounterexample[
 Mathematicas FindInstance method to look for counterexample.";
 
 FindStablePolynomialCounterExample[poly_]:=With[{vv=Variables@poly},
-	Print[FindStablePolynomialCounterExample];
 	FindInstance[ 
 		And @@ Thread[(Im /@vv) > 0] && poly == 0, vv]
 ];
@@ -151,6 +150,32 @@ HStarPolynomial[poly_, k_] := Expand@Module[
 		cl.Table[ (1 - k)^(Length[cl] - 1 - j) If[j == 0, 1, k] EulerianAPolynomial[j, k]
 	,{j, 0, Length[cl] - 1}]];
 
+
+HVectorInequalitiesQ::usage = "HVectorInequalitiesQ[{1,h1,h2,..,hd}] returns true if it satisfies the inequalities expected of an h*-vector. These are only neccesary, not sufficient.";
+HVectorInequalitiesQ[hh_List] :=
+  Module[{h, d = Length[hh] - 1, s, hibiQ, hibi2Q, stanleyQ,
+    ballettiQ},
+   (* h is indexed 0,...,d *)
+   h[j_] := hh[[j + 1]];
+   (* If h[d]>0, then polytope has interior pts *)
+
+   s = Last@Select[Range[0, d], h[#] > 0 &];
+   hibiQ = And @@ Table[
+      Total[h /@ Range[d - i, d]]
+       <= Total[h /@ Range[1, i + 1]]
+      , {i, 0, Floor[d/2] - 1}];
+   stanleyQ = And @@ Table[
+      Total[h /@ Range[0, i]]
+       <= Total[h /@ Range[s - i, s]]
+      , {i, 0, Floor[s/2] - 1}];
+   hibi2Q = Or[h[d] == 0, And @@ Table[h[1] <= h[i], {i, d-1}]];
+   (* Scotts inequality, for general polytopes *)
+
+   ballettiQ =
+    Or[d < 3, h[3] > 0, h[2] == 0, h[1] <= 3 h[2] + 3,
+     h[1] == 7 && h[2] == 1];
+   And[hibiQ, stanleyQ, hibi2Q, ballettiQ]
+];
 
 VariableDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";

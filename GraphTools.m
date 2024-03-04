@@ -12,6 +12,8 @@ FerrersBoardGraph;
 
 ConnectedSimpleGraphs;
 
+KeepLoops;
+KeepMultipleEdges;
 GraphContractVertices;
 GraphDeleteEdge;
 
@@ -58,7 +60,7 @@ CompleteBipartiteGraph[sizes_List] := With[
 	vertSets = PartitionList[Range@Total[sizes], sizes],
 	edgesFunc := Join @@ Outer[List, #1, #2] &
 	},
-Join @@ Table[edgesFunc @@ ss, {ss, Subsets[vertSets, {2}]}]
+	Join @@ Table[edgesFunc @@ ss, {ss, Subsets[vertSets, {2}]}]
 ];
 
 
@@ -73,6 +75,7 @@ FerrersBoardGraph[lam_List] := Module[{rows, cols},
     ]
    ];
 
+FerrersBoardGraph::usage = "FerrersBoardGraph[lam,mu] returns the bipartite graph associated with a Ferrers board.";
 FerrersBoardGraph[lam_List, muIn_List] := Module[{rows, cols, mu},
    mu = PadRight[muIn, Length@lam];
    rows = Range[Length[lam]];
@@ -83,7 +86,7 @@ FerrersBoardGraph[lam_List, muIn_List] := Module[{rows, cols, mu},
       Table[{i, cols[[j]]}, {j, mu[[i]] + 1, lam[[i]]}]
       , {i, rows}]
     ]
-   ];
+];
 
 
 StirlingGraph::usage = "StirlingGraph[n] returns a bipartite graph, where matchings sizes are S(n,k).";
@@ -91,28 +94,39 @@ StirlingGraph[n_Integer] := Join @@ Table[
 		If[i < j, {i, n + j}, Nothing], {i, n}, {j, n}];
 
 GraphContractVertices::usage= "GraphContractVertices[Graph[g],v] constracts all vertices in v into a single vertex; the name of this vertex is the first entry in v. V can also be an edge.";
-GraphContractVertices[gg_Graph, DirectedEdge[u_,v_]]:=GraphContractVertices[gg,{u,v}];
-GraphContractVertices[gg_Graph, UndirectedEdge[u_,v_]]:=GraphContractVertices[gg,{u,v}];
-GraphContractVertices[gg_Graph, Rule[u_,v_]]:=GraphContractVertices[gg,{u,v}];
-GraphContractVertices[gg_Graph, contr_List] := With[{
+
+Options[GraphContractVertices] := {KeepLoops -> False};
+GraphContractVertices[gg_Graph, DirectedEdge[u_,v_],opts:OptionsPattern[]]:=GraphContractVertices[gg,{u,v},opts];
+GraphContractVertices[gg_Graph, UndirectedEdge[u_,v_],opts:OptionsPattern[]]:=GraphContractVertices[gg,{u,v},opts];
+GraphContractVertices[gg_Graph, Rule[u_,v_],opts:OptionsPattern[]]:=GraphContractVertices[gg,{u,v},opts];
+GraphContractVertices[gg_Graph, contr_List,opts:OptionsPattern[]] := With[{
+	keep = OptionValue[KeepLoops],
     verts = VertexList[gg],
     ee = EdgeList@gg,
     f = (If[MemberQ[contr, #], First@contr, #] &)
     },
 	
-	(* Make sure to remove multiple edges and loops. *)
 	Graph[
 		Union[f /@ verts], 
-		DeleteCases[Union[Map[f, ee, {2}]], a_[b_, b_]]
+		If[!keep, (* Make sure to remove multiple edges and loops. *)
+			DeleteCases[Union[Map[f, ee, {2}]], a_[b_, b_]]
+		,
+			Map[f, ee, {2}]
+		]
 	]
 ];
 
 GraphDeleteEdge::usage= "GraphDeleteEdge[Graph[g],e] removes the edge e from the graph.";
-GraphDeleteEdge[gg_Graph, e_] := With[{
+Options[GraphDeleteEdge] := {KeepMultipleEdges -> False};
+GraphDeleteEdge[gg_Graph, e_,opts:OptionsPattern[]] := With[{
     verts = VertexList[gg],
     ee = EdgeList@gg
 },
-	Graph[verts, Select[ee, First@#!=e[[1]] || Last@#!=e[[2]] & ] ]
+	If[!OptionValue[KeepMultipleEdges],
+		Graph[verts, Select[ee, First@#!=e[[1]] || Last@#!=e[[2]] & ] ]
+		,
+		Graph[verts, DeleteCases[ee,  a_[e[[1]], e[[2]]] |  a_[e[[2]], e[[1]]]  , 1, 1] ]
+	]
 ];
 
 

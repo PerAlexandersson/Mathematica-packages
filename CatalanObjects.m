@@ -69,6 +69,7 @@ AreaRemoveVertices;
 
 DyckPath;
 DyckPaths;
+FussCatalanPaths;
 DyckCoordinates;
 DyckPlot;
 DyckPathToTikz;
@@ -714,7 +715,25 @@ DyckPaths[n_Integer] := DyckPaths[n] = Flatten[
 		Outer[
 			DyckPath[Join[#1[[1]], {"n"}, #2[[1]], {"e"}]] &,
 			DyckPaths[n - 1 - k], DyckPaths[k], 1]
-	, {k, 0, n - 1}], 2];
+, {k, 0, n - 1}], 2];
+
+FussCatalanPaths::usage = "FussCatalanPaths[n,k] returns all Fuss-Catalan paths in the n by kn rectangle.";
+FussCatalanPaths[0, k_Integer : 2] := {DyckPath@{}};
+FussCatalanPaths[1, k_Integer : 2] := {DyckPath[{"n", "e"}]};
+FussCatalanPaths[n_Integer, k_Integer : 2] := 
+  FussCatalanPaths[n, k] = (Join @@ Table[
+      Flatten@
+       Outer[
+        DyckPath[
+          Join[
+           #1[[1]],
+           Sequence @@ (Prepend[First[#], "n"] & /@ Rest[{##}]),
+           {"e"}]
+          ] &
+        ,
+        Sequence @@ Table[FussCatalanPaths[a, k], {a, alpha}], 1
+        ]
+      , {alpha, WeakIntegerCompositions[n - 1, k]}]);
 
 
 DyckPath[neWord_String]:=DyckPath[Characters@neWord];
@@ -732,13 +751,14 @@ DyckCoordinates[dp_List] := Accumulate@Prepend[ReplaceAll[dp,
 DyckPlot[path_String] := DyckPlot[Characters@path];
 
 DyckPlot[DyckPath[path_List]] := Module[
-   {coords = DyckCoordinates[path], n},
-   n = Max@coords;
+   {coords = DyckCoordinates[path], nx,ny},
+   nx = Max@(First/@coords);
+   ny = Max@(Last/@coords);
    Graphics[{
-     {LightGray, Polygon[Append[coords, {0, n}]]},
+     {LightGray, Polygon[Append[coords, {0, ny}]]},
      {Gray, PointSize[0.02], 
-      Point@(Join @@ Table[{c, r}, {r, 0, n}, {c, 0, r}])},
-     {Dashed, Gray, Line[{{0, 0}, {n, n}}]},
+      Point@(Join @@ Table[If[c*ny <= r*nx,{c, r},Nothing], {r, 0, ny}, {c, 0, nx}])},
+     {Dashed, Gray, Line[{{0, 0}, {nx, ny}}]},
      {Thick, Line[coords]},
      {PointSize[0.03], Point[coords]}
      }, ImageSize -> 50]

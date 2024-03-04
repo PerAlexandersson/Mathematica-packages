@@ -8,6 +8,7 @@ BeginPackage["PosetData`",{"CombinatoricTools`"}];
 (* Need to do much more, say, complete edges to transitive closure *)
 
 SkewShapePoset;
+StembridgePoset;
 
 Poset;
 PosetPlot;
@@ -27,6 +28,7 @@ EqualEdges;
 ColorWeight;
 
 PosetMinimalElements;
+
 
 
 (*
@@ -64,25 +66,27 @@ SkewShapePoset[{lam_List, mu_List}] := Module[
 ];
 
 
+(* Poset on 17 elements,  with non-real-rooted W-polynomial. *)
+StembridgePoset[] := Poset[16, Join[
+    Partition[{1, 3, 5, 7, 9, 11, 13, 14, 16}, 2, 1]
+    ,
+    Partition[{2, 4, 6, 8, 10, 12, 15, 17}, 2, 1]
+    ,
+    {{1, 12}, {3, 15}, {5, 17}, {2, 3}, {4, 5}, {6, 7}, {8, 9}, {10,
+      11}, {12, 13}, {15, 16}}
+]];
 
 PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";
 PosetMinimalElements[Poset[n_, edg_]] := Complement[Range@n, Last /@ edg];
 
 PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
-	
-	vrf[coord_, lbl_] := {
-		White,
-		EdgeForm[Black],
-		Disk[coord, .1], 
-		Black, Text[lbl, coord]};
-		
-	erf[coordList_, edg_, lbl_: ""] := {Thick, Black, Arrowheads[0.04], Arrow[coordList, 0.1]};
-	
+	vrf[coord_, lbl_, {w_, h_}] := {White, EdgeForm[Black],
+    Disk[coord, .1], Black, Text[lbl, coord]};
+  erf[coordList_, edg_, lbl_ : ""] := {Thick, Black, Arrowheads[0.04],
+     Arrow[coordList, 0.1]};
+
 	LayeredGraphPlot[Rule @@@ allEdges, Bottom,
-		VertexLabeling -> True,
-		VertexRenderingFunction -> vrf,
-		EdgeRenderingFunction -> erf
-	]
+		VertexShapeFunction -> vrf, EdgeShapeFunction -> erf]
 ];
 
 PosetPlotOld::usage = "PosetPlot[StrictEdges->{}, WeakEdges-{},EqualEdges->{}] plots the poset";
@@ -116,7 +120,7 @@ PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, 
 ];
 
 (* Given all order relations, remove the implicit ones. *)
-(* Make better, to work with general edges. *)
+(* TODO: Make better, to work with general edges. *)
 
 PosetToHasseDiagram::usage = "PosetToHasseDiagram[edges], given list of edges, remove the implicit ones.";
 PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
@@ -131,6 +135,16 @@ PosetToHasseDiagram[edgesIn_List] := Module[{verts, edges,edges2},
         ]
 	, {e1, edges}, {e2, edges}];
 	edges2
+];
+
+PosetNaturalLabeling::usage = "PosetNaturalLabeling[poset] returns an isomorphic poset where the vertices have a natural labeling.";
+PosetNaturalLabeling[pp_Poset] := Module[{n = pp[[1]], newRel = pp[[2]],  b},
+	(* This is basically bubble-sort *)
+	While[(b = Select[newRel, ! OrderedQ[#] &, 1]) != {},
+		b = First[b];
+		newRel = newRel /. Thread[b -> Reverse[b]];
+	];
+	Poset[n, newRel]
 ];
 
 
@@ -310,12 +324,12 @@ WeightedPosetFunction[weak_List, weights_List, x_] :=
 
 
 (* This assumes minimal elements in the bottom, and edges are increasing relations. *)
+(* LINEAR EXTENSIONS ARE OFC ORDER-PRESERVING MAPS (think of Young diagrams *)
 PosetLinearExtensions::usage = "PosetLinearExtensions[poset] returns all order-preserving labelings of the edges.";
 PosetLinearExtensions[Poset[n_,edges_]] := PosetColorings[Poset[n,edges],ColorWeight->ConstantArray[1,n]];
 
-
 JordanHolderSet::usage = "JordanHolderSet[poset] returns all permutations one can get by extending the edges to a total order.";
-JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@ PosetLinearExtensions[pp];
+JordanHolderSet[pp_Poset] := JordanHolderSet[pp] =Ordering/@PosetLinearExtensions[pp];
 
 
 OrderPolynomial::usage = "OrderPolynomial[poset,t] returns the order polynomial in t.";
@@ -325,19 +339,19 @@ OrderPolynomial[pp_Poset,t_]:=Expand@FunctionExpand[
 		Sum[
 			(* The inner sum counts number of descents. *)
 			Binomial[t+n- Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}] -1,n]
-		,{pi, PosetLinearExtensions[pp]}]
+		,{pi, JordanHolderSet[pp]}]
 	]
 ];
 
 
 PEulerianPolynomial::usage = "PEulerianPolynomial[poset,t] returns the P-Eulerian polynomial in t.";
-
+(* SEE IF DEF IS CORRECT, JH or linext??*)
 PEulerianPolynomial[pp_Poset,t_]:=
 	With[{n=First@pp}, 
 		Sum[
 			(* The inner sum counts number of descents. *)
 			t^(1 + Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}])
-		,{pi, PosetLinearExtensions[pp]}]
+		,{pi, JordanHolderSet[pp]}]
 ];
 
 

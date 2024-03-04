@@ -74,6 +74,7 @@ WordComposition;
 CompositionSlinky;
 PartitionPartCount;
 PartitionToMultirectangular;
+MultiRectangularToPartition;
 PartitionCores;
 HookLengths;
 ConjugatePartition;
@@ -89,6 +90,8 @@ PartitionAddBox;
 PartitionRemoveBox;
 PartitionRemoveHorizontalStrip;
 PartitionRemoveVerticalStrip;
+PartitionInterval;
+PartitionIntervalSize;
 
 PartitionArm;
 PartitionLeg;
@@ -158,6 +161,9 @@ OperatorConnectedComponent;
 
 Begin["Private`"];
 
+(* Pattern for list of integers *)
+iList = {RepeatedNull[_Integer]};
+
 SyntaxInformation[Nicify] = {"ArgumentsPattern" -> {_}};
 Nicify::usage = "Rewrites polynomial expression in a nice form";
 Nicify[expr_] := Module[{polVars, collected},
@@ -184,7 +190,7 @@ Protect[Permutations];
 (* Sends 123-avoiding to 132-avoiding *)
 SyntaxInformation[SimionSchmidtMap] = {"ArgumentsPattern" -> {{_...}}};
 SimionSchmidtMap::usage = "SimionSchmidtMap[perm] ,see https://core.ac.uk/download/pdf/82232421.pdf";
-SimionSchmidtMap[pi_List] := 
+SimionSchmidtMap[pi:iList] := 
   Module[{x = pi[[1]], n = Length@pi, out},
    out = {x};
    Do[
@@ -208,7 +214,7 @@ UnimodalQ[list_List] := With[{dd = Reverse@DeleteCases[Sign@Differences[list], 0
 
 SyntaxInformation[UnimodalQ] = {"LatticeWordQ" -> {{_...}}};
 LatticeWordQ::usage="LatticeWordQ[w] returns true if w is a lattice word.";
-LatticeWordQ[word_List] :=
+LatticeWordQ[word:iList] :=
   Module[{m = Max@word, tally, n = Length@word},
    tally[0] := ConstantArray[0, m];
    tally[i_Integer] := MapAt[# + 1 &, tally[i - 1], word[[i]]];
@@ -218,43 +224,43 @@ LatticeWordQ[word_List] :=
 ];
 
 SyntaxInformation[ExcedancesSet] = {"ArgumentsPattern" -> {{_...}}};
-ExcedancesSet[pi_List] := Select[Range@Length@pi, # < pi[[#]] &];
+ExcedancesSet[pi:iList] := Select[Range@Length@pi, # < pi[[#]] &];
 
 SyntaxInformation[Excedances] = {"ArgumentsPattern" -> {{_...}}};
-Excedances[pi_List] := Length@ExcedancesSet@pi;
+Excedances[pi:iList] := Length@ExcedancesSet@pi;
 
 SyntaxInformation[FixedPoints] = {"ArgumentsPattern" -> {{_...}}};
-FixedPointsSet[pi_List] := Select[Range@Length@pi, # == pi[[#]] &];
+FixedPointsSet[pi:iList] := Select[Range@Length@pi, # == pi[[#]] &];
 
 SyntaxInformation[FixedPoints] = {"ArgumentsPattern" -> {{_...}}};
-FixedPoints[pi_List] := Length@FixedPointsSet@pi;
+FixedPoints[pi:iList] := Length@FixedPointsSet@pi;
 
 SyntaxInformation[DescentSet] = {"ArgumentsPattern" -> {{_...}}};
-DescentSet[p_List]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
+DescentSet[p:iList]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
 
 SyntaxInformation[Descents] = {"ArgumentsPattern" -> {{_...}}};
-Descents[pi_List] := Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}];
+Descents[p:iList] := Sum[Boole[p[[i]] > p[[i + 1]]], {i, Length[p] - 1}];
 
 SyntaxInformation[Ascents] = {"ArgumentsPattern" -> {{_...}}};
-Ascents[pi_List] := Sum[Boole[pi[[i]] < pi[[i + 1]]], {i, Length[pi] - 1}];
+Ascents[p:iList] := Sum[Boole[p[[i]] < p[[i + 1]]], {i, Length[p] - 1}];
 
 SyntaxInformation[MajorIndex] = {"ArgumentsPattern" -> {{_...}}};
-MajorIndex[p_List] := Tr@DescentSet[p];
+MajorIndex[p:iList] := Tr@DescentSet[p];
 
 SyntaxInformation[CoMajorIndex] = {"ArgumentsPattern" -> {{_...}}};
-CoMajorIndex[w_List] := With[{n = Length@w}, Sum[Boole[w[[i]] > w[[i + 1]]] (n - i), {i, n - 1}]];
+CoMajorIndex[w:iList] := With[{n = Length@w}, Sum[Boole[w[[i]] > w[[i + 1]]] (n - i), {i, n - 1}]];
 
 SyntaxInformation[Inversions] = {"ArgumentsPattern" -> {{_...}}};
-Inversions[p_List] := With[{n = Length@p}, 
+Inversions[p:iList] := With[{n = Length@p}, 
 	Sum[Boole[p[[i]] > p[[j]]], {i, n}, {j,i+1,n}]
 ];
 
 SyntaxInformation[CoInversions] = {"ArgumentsPattern" -> {{_...}}};
-CoInversions[p_List]:=Binomial[Length@p,2]-Inversions[p];
+CoInversions[p:iList]:=Binomial[Length@p,2]-Inversions[p];
 
 SyntaxInformation[RightToLeftMinima] = {"ArgumentsPattern" -> {{_...}}};
 RightToLeftMinima::usage = "RightToLeftMinima returns the elements in p which are right-to-left minima.";
-RightToLeftMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
+RightToLeftMinima[p:iList] := p[[Table[If[p[[i]] == Min[p[[i ;;]]], i, Nothing], {i, Length@p}]]];
 
 SyntaxInformation[RightToLeftMaxima] = {"ArgumentsPattern" -> {{_...}}};
 RightToLeftMaxima::usage = "RightToLeftMaxima returns the elements in p which are right-to-left maxima.";
@@ -262,11 +268,11 @@ RightToLeftMaxima[p_List] := p[[Table[If[p[[i]] == Max[p[[i ;;]]], i, Nothing], 
 
 SyntaxInformation[LeftToRightMinima] = {"ArgumentsPattern" -> {{_...}}};
 LeftToRightMinima::usage = "RightToLeftMinima returns the elements in p which are left-to-right minima.";
-LeftToRightMinima[p_List] := p[[Table[If[p[[i]] == Min[p[[;;i]]], i, Nothing], {i, Length@p}]]];
+LeftToRightMinima[p:iList] := p[[Table[If[p[[i]] == Min[p[[;;i]]], i, Nothing], {i, Length@p}]]];
 
 SyntaxInformation[LeftToRightMaxima] = {"ArgumentsPattern" -> {{_...}}};
 LeftToRightMaxima::usage = "LeftToRightMaxima returns the elements in p which are left-to-right maxima.";
-LeftToRightMaxima[p_List] := p[[Table[If[p[[i]] == Max[p[[;;i]]], i, Nothing], {i, Length@p}]]];
+LeftToRightMaxima[p:iList] := p[[Table[If[p[[i]] == Max[p[[;;i]]], i, Nothing], {i, Length@p}]]];
 
 
 
@@ -280,25 +286,25 @@ RunSort[pi_List] := Flatten@LexSort@Runs@pi;
 
 
 SyntaxInformation[PermutationPeaks] = {"ArgumentsPattern" -> {{_...}}};
-PermutationPeaks[pi_List] := Tr[
+PermutationPeaks[pi:iList] := Tr[
    Boole[#1 < #2 > #3] & @@@ Partition[pi, 3, 1]
 ];
 
 SyntaxInformation[PermutationPeaksSet] = {"ArgumentsPattern" -> {{_...}}};
-PermutationPeaksSet[pi_List] := Select[Range[2,Length[pi]-1],
+PermutationPeaksSet[pi:iList] := Select[Range[2,Length[pi]-1],
    pi[[#-1]]<pi[[#]]>pi[[#+1]]&
 ];
 
 SyntaxInformation[PermutationPeakValues] = {"ArgumentsPattern" -> {{_...}}};
-PermutationPeakValues[pi_List]:=Sort[pi[[PermutationPeaksSet[pi]]]];
+PermutationPeakValues[pi:iList]:=Sort[pi[[PermutationPeaksSet[pi]]]];
 
 SyntaxInformation[PermutationValleys] = {"ArgumentsPattern" -> {{_...}}};
-PermutationValleys[pi_List] := Tr[
+PermutationValleys[pi:iList] := Tr[
    Boole[#1 > #2 < #3] & @@@ Partition[pi, 3, 1]
 ];
 
 SyntaxInformation[PermutationValleysSet] = {"ArgumentsPattern" -> {{_...}}};
-PermutationValleysSet[pi_List] := Select[
+PermutationValleysSet[pi:iList] := Select[
    Range[2,Length[pi]-1], pi[[#-1]]>pi[[#]]<pi[[#+1]]&
 ];
 
@@ -317,21 +323,21 @@ PermutationMinorDescents[pi_List] := Tr[
 (* ToSubExcedance preserves the RTLMin set. *)
 
 ToSubExcedance[{1}] := {1};
-ToSubExcedance[pi_List] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
+ToSubExcedance[pi:iList] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
 
 
 (* With this definition, we can use FromSubexcedance on any word 
 where entries <= length.*)
 
-FromSubExcedance[f_List] := FromSubExcedance[f, Range[Length@f]];
-FromSubExcedance[{}, pi_List] := pi;
-FromSubExcedance[f_List, pi_List] := With[{n = Length@f, fn = Last@f},
+FromSubExcedance[f:iList] := FromSubExcedance[f, Range[Length@f]];
+FromSubExcedance[{}, pi:iList] := pi;
+FromSubExcedance[f:iList, pi:iList] := With[{n = Length@f, fn = Last@f},
    (* Apply transposition *)
    ReplaceAll[FromSubExcedance[Most@f, pi], {fn -> n, n -> fn}]
 ];
 
 
-WeakStandardize[list_List]:=With[{rule = Thread[Union[list]->Ordering@Union[list]]}, list /. rule];
+WeakStandardize[list:iList]:=With[{rule = Thread[Union[list]->Ordering@Union[list]]}, list /. rule];
 
 StandardizeList::usage = "StandardizeList[list] standardizes the list. For equal entries, order from the left.";
 StandardizeList[list_List]:=Ordering[ Range[Length[list]][[Ordering@list]] ];
@@ -342,7 +348,7 @@ UnitTest[StandardizeList]:=And[
 
 
 
-IntervalSplit[p_List] := Module[{splitAt},
+IntervalSplit[p:iList] := Module[{splitAt},
 	splitAt = First /@ SequencePosition[p, {a_, b_} /; a + 1 != b];
 	PartitionList[p, Differences@Join[{0}, splitAt, List@Length[p]]]
 ];
@@ -363,11 +369,10 @@ LexSort[w_List] := Sort[w, LexOrder];
 PackedWords::usage = "PackedWords[n] returns all packed words of length n.";
 PackedWords[n_Integer] := PackedWords[n] = Union[WeakStandardize /@ Tuples[Range[n], n]];
 
-
 Derangements::usage = "Derangements[n] returns a list of all derangements of 1,2,...,n.";
 Derangements[n_Integer] := Derangements[n] = Derangements[Range@n];
 Derangements[{i_Integer}] := If[i == 1, {}, {{i}}];
-Derangements[lst_List] := With[{n = Length@lst},
+Derangements[lst:iList] := With[{n = Length@lst},
    Join @@ Table[
      If[lst[[m]] == n,
       {},
@@ -379,9 +384,9 @@ Derangements[lst_List] := With[{n = Length@lst},
 PartitionList::usage = "PartitionList[list,mu] partitions the list into non-overlapping pieces of sizes given by mu.";
 
 PartitionList::mismatch = "The list must have same length as sum of part sizes.";
-PartitionList[lst_List, mu_List]/;(Length[lst]!=Tr[mu]):= Message[PartitionList::mismatch];
+PartitionList[lst_List, mu:iList]/;(Length[lst]!=Tr[mu]):= Message[PartitionList::mismatch];
 
-PartitionList[lst_List, mu_List] := With[
+PartitionList[lst_List, mu:iList] := With[
 {acc = Accumulate@Prepend[mu, 0]},
  Table[lst[[1 + acc[[i - 1]] ;; acc[[i]]]], {i, 2, Length@acc}]
 ];
@@ -410,8 +415,8 @@ Shuffles[listA_, lists___] := Join @@ (Shuffles[listA, #] & /@ Shuffles[lists]);
 ChargeWordDecompose::usage = "ChargeWordDecompose[word] decomposes a word with partition type into a list of standard subwords.";
 ChargeWordDecompose[{}] = {};
 ChargeWordDecompose[{},{}] = {};
-ChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
-	{findPos, n = Length@word, 
+ChargeWordDecompose[word:iList, subwordSizes_List:{}]:= Module[
+	{findPos, n = Length@word,
 	currPos = Length@word, nPos, subWordIdx = {}, swSize},
 	
 	swSize = If[
@@ -450,10 +455,10 @@ ChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
 ];
 
 WordCharge::usage = "WordCharge[w] returns the charge of a word with partition weight.";
-WordCharge[w_List]:=Tr[PermutationCharge/@ChargeWordDecompose[w]];
+WordCharge[w:iList]:=Tr[PermutationCharge/@ChargeWordDecompose[w]];
 
 WordCocharge::usage = "WordCocharge[w] returns the cocharge of a word with partition weight.";
-WordCocharge[w_List]:=Tr[PermutationCocharge/@ChargeWordDecompose[w]];
+WordCocharge[w:iList]:=Tr[PermutationCocharge/@ChargeWordDecompose[w]];
 
 
 
@@ -481,7 +486,7 @@ Catalan Paths are fixed points.
 https://en.wikipedia.org/wiki/Catalan_number#Third_proof
 *)
 PathExceedanceDecreaseMap::usage="PathExceedanceDecreaseMap[bw] applies the path exceedance map on a path from (0,0) to (n,n).";
-PathExceedanceDecreaseMap[w_List] := Module[
+PathExceedanceDecreaseMap[w:iList] := Module[
    {size = Length@w, a, x, aw, above},
    aw = Accumulate[w];
    above = Select[Range[size], 2 aw[[#]] > # &, 1];
@@ -659,14 +664,14 @@ Module[{n = Length@comp, refs},
 
 
 CompositionToDescentSet::usage = "CompositionToDescentSet[alpha] returns the set presentation of the composition.";
-CompositionToDescentSet[alpha_List] := Most@Accumulate[alpha];
+CompositionToDescentSet[alpha:iList] := Most@Accumulate[alpha];
 
 DescentSetToComposition::usage = "DescentSetToComposition[des,n] returns the composition associated with a descent set D subset [n-1].";
-DescentSetToComposition[des_List, n_Integer] := Differences[Join[{0},des,{n}]];
+DescentSetToComposition[des:iList, n_Integer] := Differences[Join[{0},des,{n}]];
 
 
 CompositionToRibbon::usage = "CompositionToRibbon[alpha] returns a ribbon skew shape, where row j from the bottom has a_j boxes.";
-CompositionToRibbon[alpha_List] := 
+CompositionToRibbon[alpha:iList] := 
   Module[{lam, mu, n = Length@alpha},
    lam = Reverse[Accumulate[alpha] - Range[0, n - 1]];
    mu = Rest[lam] - 1;
@@ -674,16 +679,16 @@ CompositionToRibbon[alpha_List] :=
 ];
 
 CompositionWord::usage = "CompositionWord[alpha] returns a binary word representing the composition.";
-CompositionWord[comp_List] := Table[Boole@MemberQ[Accumulate@comp, j], {j, Tr[comp] - 1}];
+CompositionWord[comp:iList] := Table[Boole@MemberQ[Accumulate@comp, j], {j, Tr[comp] - 1}];
 WordComposition::usage = "WordComposition[bw] is the inverse of CompositionWord, and returns a composition.";
 WordComposition[{}] := {}; 
-WordComposition[bw_List] := Differences@Join[{0}, Pick[Range[Length[bw]], bw, 1], {1 + Length@bw}]
+WordComposition[bw:iList] := Differences@Join[{0}, Pick[Range[Length[bw]], bw, 1], {1 + Length@bw}]
 
 
 CompositionSlinky::usage = "CompositionSlinky[comp] applies the slinky rule to the composition.
 The return value is {lam,s} where lam is the resulting partition, and s is the sign, i.e, parity of number of 'slinks'
 The value of s=0 is a partition could not be reached.";
-CompositionSlinky[comp_List] := Module[{slink, doSlink, s = 0, final},
+CompositionSlinky[comp:iList] := Module[{slink, doSlink, s = 0, final},
 	doSlink[a_, b_] := (s++; {a, b});
 	slink[v_] := 
 		SequenceReplace[
@@ -700,7 +705,7 @@ PartitionJoin[a_List, b_List] := Sort[Join[a, b], Greater];
 
 PartitionPartCount::usage="PartitionPartCount[lam] returns (m1,m2,...) so that mi is then number of parts of size i.";
 PartitionPartCount[{}]:={};
-PartitionPartCount[lam_List] := Normal[SparseArray[#1 -> #2 & @@@ Tally[ DeleteCases[lam,0]  ]]];
+PartitionPartCount[lam:iList] := Normal[SparseArray[#1 -> #2 & @@@ Tally[ DeleteCases[lam,0]  ]]];
 
 
 (*
@@ -709,13 +714,17 @@ coordinates. Lower left rectangle is first.
 *)
 PartitionToMultirectangular::usage = "PartitionToMultirectangular[lam] returns the widths and heights of the rectangles,
 in multirectangular notation.";
-PartitionToMultirectangular[lam_List] := Module[{t, widths, heights},
+PartitionToMultirectangular[lam:iList] := Module[{t, widths, heights},
    t = SortBy[Tally[lam], -#[[1]] &];
    widths = Differences@Reverse[Append[(First /@ t), 0]];
    heights = Reverse[Last /@ t];
    {widths, heights}
 ];
 
+MultiRectangularToPartition::usage = "MultiRectangularToPartition[{rr,ss}] is the inverse of PartitionToMultirectangular";
+MultiRectangularToPartition[{rr_List, ss_List}] := Join @@ Table[
+   ConstantArray[Tr@rr[[1 ;; i]], ss[[i]]]
+, {i, Length@ss, 1, -1}];
 
 
 PartitionCores::usage = "PartitionCores[n,p] returns all partitions of n with no hook-length divisible by p.";
@@ -727,7 +736,7 @@ PartitionCores[n_Integer,p_Integer]:=
 
 
 HookLengths::usage="HookLengths[lam] returns a table with hook values as entries.";
-HookLengths[lambda_List]:=Module[{cLambda,r,c},
+HookLengths[lambda:iList]:=Module[{cLambda,r,c},
 	cLambda=ConjugatePartition@lambda;
 	Table[
 		1-c+lambda[[r]]-r+cLambda[[c]]
@@ -740,7 +749,7 @@ UnitTest[HookLengths]:=And[
 
 ConjugatePartition::usage = "ConjugatePartition[lam] returns the conjugate of partition.";
 ConjugatePartition[{}]={};
-ConjugatePartition[p_List]:=Table[Count[p, j_ /; j >= m], {m, First[p]}];
+ConjugatePartition[p:iList]:=Table[Count[p, j_ /; j >= m], {m, First[p]}];
 UnitTest[ConjugatePartition]:=And[
 	ConjugatePartition[{}]==={},
 	ConjugatePartition[{2,1,1}]==={3,1},
@@ -761,20 +770,20 @@ UnitTest[PartitionLessEqualQ]:=And[
 
 
 PartitionDominatesQ::usage = "PartitionDominatesQ[lam, mu] returns true if mu dominates lam.";
-PartitionDominatesQ[p1_List, p2_List] := With[{n=Max[Length/@{p1,p2}]},
+PartitionDominatesQ[p1:iList, p2:iList] := With[{n=Max[Length/@{p1,p2}]},
 	 And@@Thread[Accumulate[PadRight[p1,n]]<=Accumulate[PadRight[p2,n]]] 
 ];
-PartitionStrictDominatesQ[p1_List,p2_List]:=And[p1!=p2,PartitionDominatesQ[p1,p2]];
+PartitionStrictDominatesQ[p1:iList,p2:iList]:=And[p1!=p2,PartitionDominatesQ[p1,p2]];
 
 
-PartitionN[p_List] := Sum[(i-1)*p[[i]], {i, Length@p}];
+PartitionN[p:iList] := Sum[(i-1)*p[[i]], {i, Length@p}];
 
 
 PartitionPath::usage = "PartitionPath[lam] returns the North-East path outlining the partition."
 PartitionPath[{}] := {};
 PartitionPath[k_Integer] := Append[ConstantArray["e", k], "n"];
 PartitionPath[{k_Integer}] := PartitionPath[k];
-PartitionPath[lam_List] := Join[
+PartitionPath[lam:iList] := Join[
    PartitionPath[lam[[-1]]],
    Join @@ Table[
      PartitionPath[lam[[j - 1]] - lam[[j]]]
@@ -784,11 +793,11 @@ PartitionPath[lam_List] := Join[
 
 ZCoefficient::usage = "ZCoefficient[lam] returns the Z-coefficient, as p. 299, Enumerative Combinatorics II, Stanley";
 ZCoefficient[{}]:=1;
-ZCoefficient[lam_List] := Times@@MapIndexed[ (#1!) * First[#2]^#1 &, PartitionPartCount@lam];
+ZCoefficient[lam:iList] := Times@@MapIndexed[ (#1!) * First[#2]^#1 &, PartitionPartCount@lam];
 
 
 PartitionAddBox::usage = "PartitionAddBox[lam] returns all partitions with one box more than lambda.";
-PartitionAddBox[lam_List] := With[{lamP = DeleteCases[lam, 0]},
+PartitionAddBox[lam:iList] := With[{lamP = DeleteCases[lam, 0]},
    Append[
     Table[
      Which[r == 1, MapAt[# + 1 &, lamP, 1],
@@ -813,7 +822,7 @@ UnitTest[PartitionAddBox] := SameQ[
 PartitionRemoveBox::usage = "PartitionRemoveBox[lam] lists all partitions obtainable from lambda with one box removed.";
 PartitionRemoveBox[{}] := {};
 PartitionRemoveBox[{lam__, 0}] := PartitionRemoveBox[{lam}];
-PartitionRemoveBox[lam_List] := With[{ll = Length[lam]},
+PartitionRemoveBox[lam:iList] := With[{ll = Length[lam]},
    Table[
     Which[
      r == ll && lam[[ll]] == 1, Most[lam],
@@ -851,11 +860,39 @@ PartitionRemoveHorizontalStrip[la_List, k_Integer, r_Integer] :=
        PartitionRemoveHorizontalStrip[MapAt[# - b &, la, r], k - b, r + 1]
        , {b, 0, bb}]
 ]]];
-		
+
 PartitionRemoveVerticalStrip[la_List, k_Integer] := Map[ 
 	ConjugatePartition, PartitionRemoveHorizontalStrip[ConjugatePartition@la, k], 1];
 
-		
+
+PartitionInterval::usage="PartitionInterval[lam,mu] returns all partitions nu, such that mu<=nu<=lam in Young's lattice.";
+
+PartitionInterval[lam:iList]:=PartitionInterval[lam,{}];
+PartitionInterval[lam:iList, mu:iList] := Module[
+   {nu, toExplore = {mu}, done = {}},
+   While[Length@toExplore > 0,
+      nu = First[toExplore];
+      toExplore = Rest@toExplore;
+      If[PartitionLessEqualQ[nu, lam],
+         AppendTo[done, nu];
+         toExplore = Union[toExplore,
+               Select[PartitionAddBox[nu],
+               PartitionLessEqualQ[#, lam] &]
+               ];
+      ];
+   ];
+   done
+];
+PartitionIntervalSize::usage="PartitionIntervalSize[lam,mu] returns the number of partitions nu, such that mu<=nu<=lam in Young's lattice.";
+PartitionIntervalSize[lam_List, mu_List] := Module[
+   {n = Max[Length[lam], Length[mu]], a, b},
+   If[!PartitionLessEqualQ[mu, lam], 0,
+      a = PadRight[lam, n];
+      b = PadRight[mu, n];
+      Det[Table[Binomial[a[[i]] - b[[j]] + 1, i - j + 1], {i, n}, {j, n}]]
+   ]
+];
+
 PartitionArm[mu_List,{r_Integer,c_Integer}]:= If[r> Length@mu, 0, mu[[r]] - c];
 PartitionLeg[mu_List,{r_Integer,c_Integer}]:= PartitionArm[ ConjugatePartition@mu, {c,r} ];
 
@@ -1414,15 +1451,28 @@ With[{mu = {muS}},
 (* This is based on Macdonald, p.327, and is extremely fast. *)
 KostkaCoefficient::usage = "KostkaCoefficient[lam,mu,[a=1]] returns the Kostka coefficient. For general a, this gives the JackP symmetric function coefficients.";
 
-KostkaCoefficient[mu_List, mu_List, a_: 1] := 1;
-KostkaCoefficient[mu_List, nu_List, a_: 1] := 0 /; (! PartitionDominatesQ[nu, mu]);
-KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = Together[With[
+
+KostkaCoefficient[mu_List, nu_List, a_: 1] := With[
+{mus=Sort[DeleteCases[mu,0],Greater],
+ nus=Sort[DeleteCases[nu,0],Greater]
+},
+   Which[
+      Tr[mus]!=Tr[nus],0,
+      mus==nus, 1,
+      !PartitionDominatesQ[nus, mus], 0,
+      True, kostkaCoefficientInternal[mus,nus,a]
+   ]
+];
+
+kostkaCoefficientInternal[mu_List, mu_List, a_: 1] := 1;
+kostkaCoefficientInternal[mu_List, nu_List, a_: 1] := 0 /; (! PartitionDominatesQ[nu, mu]);
+kostkaCoefficientInternal[lam_List, mu_List, a_: 1] := 
+   kostkaCoefficientInternal[lam, mu, a] = Together[With[
 	{n = Length@mu,
 	ee = Function[{ll}, 
 		a PartitionN[ConjugatePartition@ll] - PartitionN[ll]
 		]
 	},
-	
 	1/(ee[lam]-ee[mu])
 	Sum[
 		With[{mu2 =
@@ -1431,7 +1481,7 @@ KostkaCoefficient[lam_List, mu_List, a_: 1] := KostkaCoefficient[lam, mu, a] = T
 			Greater]
 			},
 			
-			(mu[[i]] - mu[[j]] + 2 r) KostkaCoefficient[lam, mu2, a]
+			(mu[[i]] - mu[[j]] + 2 r) kostkaCoefficientInternal[lam, mu2, a]
 		]
 	, {i, n}
 	,{j, i + 1, n}
@@ -1544,11 +1594,11 @@ inverseKostkaHuan[la_List, mu_List] :=
 PermutationMatrixPlot::usage = "PermutationMatrixPlot[pi] returns a graphical representation of the permutation.";
 
 PermutationMatrixPlot[p_List] := With[{n = Max@p},
-   ArrayPlot[
+ArrayPlot[
     Normal@SparseArray[Transpose[{Range[n], p}] -> 1, {n, n}]
     , Mesh -> True, Frame -> False
     ,PixelConstrained -> 6]
-   ];
+];
 
 
    

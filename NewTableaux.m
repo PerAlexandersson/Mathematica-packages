@@ -36,6 +36,7 @@ YoungTableauShape;
 StandardYoungTableaux;
 SemiStandardYoungTableaux;
 YoungTableauForm;
+YoungDiagramForm;
 CylindricTableaux;
 CylindricSYT;
 PlanePartitions;
@@ -425,7 +426,7 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 	is = OptionValue[ItemSize];
 	
 	If[ Max@Select[Flatten[diagram],IntegerQ] >9,
-		is = 1.5;
+		is = Max[is,1.5];
 	];
 	
 	gridItems = Table[
@@ -460,6 +461,20 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 	]
 ];
 
+Options[YoungDiagramForm]={ItemSize->1, DescentSet->False};
+YoungDiagramForm[lam:{Repeated[_Integer]}, opts:OptionsPattern[]]:=YoungDiagramForm[{lam,{}},opts];
+
+YoungDiagramForm[{lam_List,mu_List}, opts:OptionsPattern[]]:= Module[{is,tab,r},
+	is = OptionValue[ItemSize];
+	tab=Table[
+		Join[
+			ConstantArray[None, If[Length[mu] >= r, mu[[r]], 0]]
+			,
+			ConstantArray["\[CenterDot]", If[Length[mu] >= r, lam[[r]] - mu[[r]], lam[[r]]]]
+		]
+	, {r, Length@lam}];
+	YoungTableauForm[tab,ItemSize->is]
+];
 
 TableauShortTeX::usage = "YoungTableauTeX[tab] returns the \\tableaushort{..} TeX version of the tableau.";
 
