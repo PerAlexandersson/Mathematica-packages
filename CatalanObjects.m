@@ -65,7 +65,7 @@ Labels;
 AreaToBounceShape;
 AreaBounce;
 AreaRemoveVertices;
-
+AreaToPartition;
 
 DyckPath;
 DyckPaths;
@@ -972,6 +972,9 @@ RookInversionList[board_List, pl_List]:=With[{invSet=RookInversions[board,pl],n=
 ];
 
 
+AreaToPartition::usage="AreaToPartition[area] returns the partition associated with the area sequence.";
+AreaToPartition[aa_List]:=With[{n = Length@aa}, n + 1 - Range[n] + aa];
+
 AreaToFerrersBoard[aa_List]:=With[{n=Length@aa},(Join @@ Table[{r, c}, {r, n}, {c, r - aa[[r]], n}])];
 
 
@@ -1104,8 +1107,7 @@ Av231[n_Integer] := Reverse /@ Av132[n];
 Av213[n_Integer] := Reverse[n + 1 - #] & /@ Av132[n];
 Av312[n_Integer] := n + 1 - # & /@ Av132[n];
 Av123[n_Integer] := From132To123Avoiding /@ Av132[n];
-Av321[n_Integer] := Reverse[From132To123Avoiding[#]] & /@ Av132[n];		
-		
+Av321[n_Integer] := Reverse[From132To123Avoiding[#]] & /@ Av132[n];
 		
 	
 End[(* End private *)];

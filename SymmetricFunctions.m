@@ -85,7 +85,8 @@ SymmetricFunctionToPolynomial;
 
 PrincipalSpecialization;
 Plethysm;
-
+KroneckerCoefficient;
+InternalProduct;
 
 (* This expands into e's *)
 SkewSchurSymmetric;
@@ -1133,8 +1134,75 @@ Plethysm[f_, g_, xx_: None] := Module[
 ];
 
 
+KroneckerCoefficient::usage = "KroneckerCoefficient[lam,mu,nu] returns the Kronecker coefficient.";
+KroneckerCoefficient[lam_List, mu_List, nu_List] := Module[{pleth, n = Tr@lam, x, y},
+   If[Not[Tr[lam] == Tr[mu] == Tr[nu]], 0,
+    pleth =
+     ToSchurBasis[
+      Plethysm[SchurSymbol[lam, x],
+       PowerSumSymbol[1, x] PowerSumSymbol[1, y], {x}], {x, y}];
+    (*Memoize*)
+    Do[
+     KroneckerCoefficient[lam, muP, nuP] = Coefficient[
+        pleth, SchurSymbol[muP, x] SchurSymbol[nuP, y]];
+     , {muP, IntegerPartitions@n}, {nuP, IntegerPartitions@n}];
+    KroneckerCoefficient[lam, mu, nu]
+    ]
+];
 
+InternalProduct::usage = "InternalProduct[f,g] coputes the internal product of two symmetric functions. This is same as Kronecker product.";
+InternalProduct[f_, g_, x_ : None] :=
+  Module[{ff, gg, vars, rulesF, rulesG, vF, vG, rF,
+    rG},(*Convert to Schur basis*)ff = ToPowerSumBasis[f, x];
+   gg = ToPowerSumBasis[g, x];
+   vars =
+    Cases[Variables[{ff, gg}], PowerSumSymbol[__, x], {0, Infinity}];
+   rulesF = CoefficientRules[ff, vars];
+   rulesG = CoefficientRules[gg, vars];
+   Sum[
+    vF = First@rF;
+    vG = First@rG;
+    Which[vF =!= vG, 0,(*Special cases depending on constant term.*)
 
+         Tr[vF] == Tr[vG] == 0,
+     Last[rF]*Last[rG], True,
+     With[{lam = Pick[vars, vF, 1][[1, 1]]},
+      Last[rF]*Last[rG] PowerSumSymbol[lam] ZCoefficient[lam]]
+     ]
+    , {rF, rulesF}, {rG, rulesG}]
+   ];
+
+(*
+InternalProduct[f_, g_, x_ : None] := Module[{ff, gg, lam, mu, nu, vars, rulesF, rulesG, vF, vG, rF, rG},
+   (*Convert to Schur basis *)
+   ff = ToSchurBasis[f, x];
+   gg = ToSchurBasis[g, x];
+   vars =
+    Cases[Variables[{ff, gg}], SchurSymbol[__, x], {0, Infinity}];
+   rulesF = CoefficientRules[ff, vars];
+   rulesG = CoefficientRules[gg, vars];
+
+   (* Combine all Schur terms *)
+   Sum[
+    vF = First@rF;
+    vG = First@rG;
+    (*Special cases depending on constant term.*)
+
+    If[Tr@vF == 0, lam = {}, lam = Pick[vars, vF, 1][[1, 1]]];
+    If[Tr@vG == 0, mu = {}, mu = Pick[vars, vG, 1][[1, 1]]];
+
+    Which[
+     Tr[lam] != Tr[mu], 0,
+     Tr[vF] == Tr[vG] == 0, Last[rF]*Last[rG],
+     True,
+     Last[rF]*
+      Last[rG] Sum[
+       KroneckerCoefficient[lam, mu, nu] SchurSymbol[nu, x], {nu,
+        IntegerPartitions@Tr@mu}]
+     ]
+    , {rF, rulesF}, {rG, rulesG}]
+   ];
+*)
 
 (*********************************************************************************************)
 (*********************************************************************************************)
@@ -1747,44 +1815,63 @@ compute and store matrices."];
 
 
 SnModuleCharacters::usage = "SnModuleCharacters[polynomialBasis, x] takes a list of polynomials in x[1]...x[n] and returns the Sn-character under the action where Sn acts on the variable indices";
-SnModuleCharacters[polysBasis_List, xx_]:=SnModuleCharacters[polysBasis,{xx}];
+SnModuleCharacters[polysBasisIn_List, xx_]:=SnModuleCharacters[polysBasisIn,{xx}];
 
 SnModuleCharacters[{}, varList_List]:=0;
 SnModuleCharacters[{1}, varList_List]:=1; (* Really should be Schur[{n}] *)
 
-SnModuleCharacters[polysBasis_List, varList_List] := Module[
-   {vars, monomialSupport, polynomialToBasisVector, basisMatrix,
-   n, subst,vv,lSolveFunc, imgVec, character},
-   
-   (* All variables appearing in total in the bases. *)
-   vars = Cases[Variables[polysBasis], a_[_Integer]];
-   vars = Select[vars, MemberQ[varList, Head[#]] &];
-   
-   (* Compute largest index appearing. This is Sn-group size *)
-   n = Max[Last/@vars];
-   
-   (* All monomials (as lists) appearing among all bases. *)
-   monomialSupport = 
-    Union[Join @@ 
-      Table[First /@ CoefficientRules[bb, vars], {bb, polysBasis}]];
-   
-   (* Writes any vector as combination of monomials appearing in the basis *)
-   polynomialToBasisVector[pol_] := 
-    Table[Coefficient[pol, Times @@ (vars^m)], {m, monomialSupport}];
-   
-   (* Each COLUMN here is a basis vector. *)
-   basisMatrix = Transpose[polynomialToBasisVector /@ polysBasis];
-   Quiet[
-    lSolveFunc = LinearSolve[basisMatrix];
-    ];
-    
-   (* TODO: Add more checks? *)
-   If[MatrixRank[lSolveFunc] < Length[polysBasis],
-    Print[
-      "Error: The set of polynomials in the basis are not linearly independent!"];
-    ];
-   
-   (* Compute the characters. *)
+SnModuleCharacters[polysBasisIn_List, varList_List] := Module[
+	{LinIndependentRows,vars,polysBasis, monomialSupport, polynomialToBasisVector, basisMatrix, rank,
+	n, subst,vv,lSolveFunc, imgVec, character, monomialList, indx},
+	
+	polysBasis = polysBasisIn;
+	
+	LinIndependentRows[A_List] := Module[{ranks},
+		ranks = MatrixRank[A[[1 ;; #]]] & /@ Range[Length@A];
+		 First[FirstPosition[ranks, #]] & /@ Range[MatrixRank@A] 
+	];
+	
+	
+	(* All variables appearing in total in the bases. *)
+	vars = Cases[Variables[polysBasis], a_[_Integer]];
+	vars = Select[vars, MemberQ[varList, Head[#]] &];
+	
+	(* Compute largest index appearing. This is Sn-group size *)
+	n = Max[Last/@vars];
+	
+	(* All monomials (as lists) appearing among all bases. *)
+	monomialSupport = 
+		Union[Join @@ 
+		Table[First /@ CoefficientRules[bb, vars], {bb, polysBasis}]];
+	
+	(* Writes any vector as combination of monomials appearing in the basis *)
+	polynomialToBasisVector[pol_] := 
+		Table[Coefficient[pol, Times @@ (vars^m)], {m, monomialSupport}];
+	
+	(* Each ROW here is a basis vector. *)
+	basisMatrix = polynomialToBasisVector /@ polysBasis;
+	
+	(* If columns are not linearly independent, need to select a subset to be a basis. *)
+	rank = MatrixRank[basisMatrix];
+	
+	Print["The rank is ", rank, "   number of rows in is : ", Length@basisMatrix];
+	
+	If[rank < Length[basisMatrix],
+		indx = LinIndependentRows[basisMatrix];
+		basisMatrix = basisMatrix[[indx]];
+		polysBasis =  polysBasis[[indx]];
+	];
+	
+	Print[" rank again: ",MatrixRank[basisMatrix]];
+	
+	(* Each COLUMN is now a basis vector. *)
+	basisMatrix = Transpose@basisMatrix;
+	
+	Quiet[
+		lSolveFunc = LinearSolve[basisMatrix];
+	];
+	
+	(* Compute the characters. *)
 	Sum[
 		character = Tr@Table[
 			pi = Permute[Range[n], Cycles[PartitionList[Range@n, mu]]];
@@ -1793,6 +1880,9 @@ SnModuleCharacters[polysBasis_List, varList_List] := Module[
 			subst = Join@@Table[ vv[i] -> vv[pi[[i]]] , {i,n}, {vv, varList}];
 			
 			imgVec = polynomialToBasisVector[bb /. subst];
+			
+			(* HERE! NEED TO REDUCE WRT THE GB AGAIN, BEFORE !!! *)
+			
 			lSolveFunc[imgVec]
 			
 		, {bb, polysBasis}];

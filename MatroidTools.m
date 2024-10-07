@@ -6,14 +6,31 @@ BeginPackage["MatroidTools`",{"CombinatoricTools`"}];
 Unprotect["`*"]
 ClearAll["`*"]
 
+(* TODO:
+
+-Matroid from matrix (over a field?)
+-Matroid from a graph
+
+*)
+
 
 IsMatroidQ;
 IsSubsetClosedQ;
 
 MatroidDual;
+IndependentSets;
+MatroidSetRank;
+MatroidFlats;
+LatticeOfFlats;
+
 MatroidLoops;
-MatroidColoops
+MatroidColoops;
+MatroidDeletion;
+MatroidContraction;
 MatroidTuttePolynomial;
+MatroidCharacteristicPolynomial;
+InternallyActiveElements;
+ExternallyActiveElements;
 
 TransversalBases;
 RookBases;
@@ -21,15 +38,19 @@ PathBases;
 VamosBases;
 UniformBases;
 
+MatroidIsomorphisms;
 SetSymmetries;
 SetIsomorphisms;
 SetsGeneratingPolynomial;
+
+Basis01Vector;
 
 Begin["`Private`"];
 
 IsMatroidQ::usage = "Given a list of sets, see if they satisfy the basis exchange axioms.";
 
-IsMatroidQ[bases_List] := Module[{AA, BB, aSet, bSet, a, b},
+IsMatroidQ[bases_List] := Module[{AA, BB, aSet, bSet, a, b,basesSorted},
+  basesSorted = Sort/@bases;
    And @@ Join[
      Table[
       AA = ss[[1]];
@@ -39,13 +60,14 @@ IsMatroidQ[bases_List] := Module[{AA, BB, aSet, bSet, a, b},
       (* Checking basis exchange axiom. *)
       And @@ Table[
         Or @@ Table[
-          MemberQ[bases,
+          MemberQ[basesSorted,
            Sort[Append[DeleteCases[AA, a], b]]
            ]
           , {b, bSet}]
         , {a, aSet}]
       , {ss, Subsets[bases, {2}]}]]
 ];
+
 
 IsSubsetClosedQ::usage = "IsSubsetClosedQ[sets] returns true if every subset of every set in list of sets is also in the list of sets.";
 IsSubsetClosedQ[sets_List] := Module[{i, set},
@@ -64,12 +86,54 @@ MatroidDual::usage = "MatroidDual[e,bases] returns the list of bases for the dua
 MatroidDual[ee_List, bb_List]:=(Complement[ee,#]&/@bb);
 
 
+IndependentSets::usage = "IndependentSets[bases] returns all independent sets";
+IndependentSets[bases_List] := Module[{independentSets, toExplore, basis},
+   independentSets = CreateDataStructure["HashSet"];
+   toExplore = CreateDataStructure["HashSet"];
+   toExplore["Insert", #] & /@ bases;
+
+   While[! toExplore["EmptyQ"],
+    basis = toExplore["Pop"];
+    independentSets["Insert", basis];
+    Do[
+     With[{ni = Drop[basis, {i}]},
+       If[! independentSets["MemberQ", ni],
+        toExplore["Insert", ni]]];
+     , {i, Range[Length@basis]}];
+    ];
+   Normal@independentSets
+];
+
+
+MatroidSetRank[bases_List, set_List]:=MatroidSetRank[bases,set]=Max[Table[Length[Intersection[b, set]], {b, bases}]];
+
+MatroidFlats[bases_List] := Module[{indSets, grndSet},
+   indSets = IndependentSets[bases];
+   grndSet = Union @@ bases;
+   Union@Table[
+     Sort[
+      Join[ind,
+       Select[Complement[grndSet,
+         ind], ! MemberQ[indSets, Sort@Append[ind, #]] &]]]
+     , {ind, indSets}]
+   ];
+
+LatticeOfFlats[bases_List] := With[
+   {verts = MatroidFlats[bases]},
+   Join @@ Table[
+     If[a != b && SubsetQ[b, a], {a, b}, Nothing]
+     , {a, verts}, {b, verts}]
+   ];
+
+
 MatroidLoops[ee_List, bb_List] := Complement[ee, Union @@ bb];
 MatroidColoops[ee_List, bb_List] := 
   If[Length@bb == 0, {}, Intersection @@ bb];
-MatroidDeletion[bb_List, e_] := Select[bb, ! MemberQ[#, e] &];
-MatroidContraction[bb_List, e_] := 
-  DeleteCases[#, e, 1, 1] & /@ Select[bb, MemberQ[#, e] &];
+  
+MatroidDeletion[bb_List, e_Integer] := Select[bb, !MemberQ[#, e] &];
+MatroidDeletion[bb_List, es_List] := Select[bb, !IntersectingQ[#, es] &];
+MatroidContraction[bb_List, e_Integer] := DeleteCases[#, e, 1, 1] & /@ Select[bb, MemberQ[#, e] &];
+MatroidContraction[bb_List, es_List] := Complement[#,es]& /@ Select[bb,SubsetQ[#,es] &];
 
 MatroidTuttePolynomial[{ee_List, bb_List}, {x_, y_}] := Module[
    {loops, coloops},
@@ -97,10 +161,32 @@ MatroidTuttePolynomial[{ee_List, bb_List}, {x_, y_}] := Module[
     ]
 ];
 
+MatroidCharacteristicPolynomial::usage="MatroidCharacteristicPolynomial[{groundSet,bases},t] returns the characteristic polynomial.";
+MatroidCharacteristicPolynomial[{groundSet_List, bases_List}, t_]:=Expand@If[Length@bases==0,0,
+(-1)^Length[First@bases] MatroidTuttePolynomial[{groundSet,bases},{1-t,0}]];
 
 
+InternallyActiveElements::usage = "InternallyActiveElements[groundSet, B, F] returns all internally active elements with respect to the basis F";
+InternallyActiveElements[groundSet_List, bases_List, b_] := Table[
+   With[{bd = DeleteCases[b, e]},
+    Catch[
+     Do[
+      If[MemberQ[bases, Sort[Append[bd, f]]], Throw@Nothing]
+      , {f, TakeWhile[groundSet, # != e &]}]; e]
+    ]
+   , {e, b}];
+ExternallyActiveElements::usage = "ExternallyActiveElements[groundSet, B, F] returns all externally active elements with respect to the basis F";
+ExternallyActiveElements[groundSet_List, bases_List, b_] := Table[
+   With[{bf = Append[b, e]},
+    Catch[
+     Do[
+      If[MemberQ[bases, Sort[DeleteCases[bf, f]]], Throw@Nothing]
+      , {f, TakeWhile[groundSet, # != e &]}]; e]
+    ]
+   , {e, Complement[groundSet, b]}];
 
 
+(* WARNING: THIS CODE HAS SOME BUGS if some sets appear several times. *)
 TransversalBases::usage = "TransversalBases[sets] returns all complete transversals of the list of sets.";
 TransversalBases[sets_List] := Module[{bases},
    Which[
@@ -126,14 +212,15 @@ TransversalBases[sets_List] := Module[{bases},
 
 
 RookBases::usage="RookBases[lam,mu] returns the rook matroid bases associated with the skew shape.";
+RookBases[{}, mu_List : {}]:={{}};
 RookBases[lam_List, mu_List : {}] := Module[{
     boxes, tSets,
     rows = Length@lam, cols = lam[[1]]},
-   boxes = DiagramBoxes[{lam, mu}];
-   tSets = Table[
-     Append[
+    boxes = DiagramBoxes[{lam, mu}];
+    tSets = Table[
+    Append[
       First /@ Select[boxes, Last[#] == k &], rows + k]
-     , {k, cols}];
+    , {k, cols}];
   TransversalBases[tSets]
 ];
 
@@ -164,20 +251,20 @@ UniformBases[r_Integer,n_Integer]:=Subsets[Range@n,{r}];
 
 
 
-
+MatroidIsomorphisms[basesA_List,basesB_List]:=SetIsomorphisms[basesA,basesB];
 
 SetIsomorphisms::usage = "SetIsomorphisms[setsA,setsB] returns all isomorphisms between the two sets.";
-SetIsomorphisms[setsA_List, setsB_List] := Module[{from, to, sub},
+SetIsomorphisms[setsA_List, setsB_List] := Module[{from, to, sub, toPerm},
    from = Union @@ setsA;
-   to = Union @@ setsB;
+   to =   Union @@ setsB;
    Which[Length[from] != Length[to], {},
     Length[setsA] != Length[setsB], {},
     True,
     Table[
-     sub = Thread[from -> to[[pi]]];
+     sub = Thread[from -> toPerm ];
      If[Complement[Sort /@ setsB, Sort /@ (setsA /. sub)] == {},
       sub, Nothing]
-     , {pi, Permutations@to}]
+     , {toPerm, Permutations@to}]
     ]
 ];
 
@@ -197,6 +284,17 @@ SetSymmetries[sets_List] := Module[{ground = Union @@ sets, edges},
 
 SetsGeneratingPolynomial::usage = "SetsGeneratingPolynomial[sets,x] returns the multivariate set generating polynomial. Each set {a1,a2,...,ak} contributes with a monomial x[a1]x[a2]...x[ak].";
 SetsGeneratingPolynomial[sets_List,x_]:=Sum[Times @@ (x /@ s), {s, sets}];
+
+
+Basis01Vector::usage = "Basis01Vector[bases] or Basis01Vector[groundSet,basis] returns a 01-vector representing the basis, or a list of such.";
+Basis01Vector[groundSet_List, bb_] := Table[
+   Boole[MemberQ[bb, i]]
+   , {i, groundSet}];
+
+Basis01Vector[bases_List] := With[{grnd = Sort[Union @@ bases]},
+   Basis01Vector[grnd, #] & /@ bases
+   ];
+
 
 End[(* End private *)];
 EndPackage[];

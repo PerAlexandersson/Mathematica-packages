@@ -126,7 +126,7 @@ GTShape[GTPattern[gtp_]]:=With[
 	{DeleteCases[Last@gtp,0],DeleteCases[First@gtp,0],w}
 ];
 
-
+(* TODO: add row-flag condition also. *)
 
 GTPatterns::usage = "GTPatterns[lam,mu,w] returns a list of all GT-patterns with these characteristics.";
 

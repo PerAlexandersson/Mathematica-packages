@@ -8,10 +8,16 @@ InterleavingRootsQ;
 HStarPolynomial;
 HVectorInequalitiesQ;
 
+SymmetricDecomposition;
+
 EulerianA;
 EulerianAPolynomial;
 BinomialEulerianPolynomial;
+RefinedEulerian;
+RefinedEulerianCoefficients;
 
+LogConcaveQ;
+UltraLogConcaveQ;
 RealRootedQ;
 
 SamePhaseStableQ;
@@ -27,6 +33,25 @@ Homogeneous;
 
 
 Begin["`Private`"];
+
+
+
+LogConcaveQ::usage="LogConcaveQ[poly,t] returns true if coefficients form a log-concave sequence.";
+LogConcaveQ[poly_, t_] := Module[{c},
+   c = CoefficientList[poly, t];
+   If[Length[c] < 3, True,
+    And @@ Table[c[[i]]^2 >= c[[i - 1]] c[[i + 1]], {i, 2, Length[c] - 1}]
+    ]
+   ];
+UltraLogConcaveQ::usage="LogConcaveQ[poly,t] returns true if coefficients form an ultra log-concave sequence.";
+UltraLogConcaveQ[poly_, t_] := Module[{c},
+   c = CoefficientList[poly, t];
+   If[Length[c] < 3, True,
+    And @@
+     And @@ Table[ i c[[i]]^2 >= (i + 1) c[[i - 1]] c[[i + 1]], {i, 2, Length[c] - 1}]
+	]
+];
+
 
 Clear[RealRootedQ];
 RealRootedQ::usage = "RealRootedQ[poly] returns true if the poly is a real-rooted univariate polynomial, or a constant.";
@@ -97,22 +122,26 @@ InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[ pp, qq, First@Variables[{pp,qq
 *)
 
 (* By convention *)
-InterleavingRootsQ[0, qq1_, t_Symbol]:=True;
-InterleavingRootsQ[pp1_, 0, t_Symbol]:=True;
+Options[InterleavingRootsQ]={WorkingPrecision -> 30};
 
-InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ},
+InterleavingRootsQ[0, qq1_, t_Symbol,opts:OptionsPattern[]]:=True;
+InterleavingRootsQ[pp1_, 0, t_Symbol,opts:OptionsPattern[]]:=True;
+
+InterleavingRootsQ[pp1_, qq1_, t_Symbol,opts:OptionsPattern[]] := Module[
+	{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ,wp},
 	
 	(* Factor out common roots. *)
 	gcd = PolynomialGCD[pp1, qq1];
 	pp = Together[pp1/gcd];
 	qq = Together[qq1/gcd];
 	
+	wp = OptionValue[WorkingPrecision];
 	
 	rootsPP = If[NumberQ[pp], {},
-		Sort[t /. NSolve[pp == 0, t, WorkingPrecision -> 160]]
+		Sort[t /. NSolve[pp == 0, t, WorkingPrecision -> wp]]
 	];
 	rootsQQ = If[NumberQ[qq], {},
-		Sort[t /. NSolve[qq == 0, t, WorkingPrecision -> 160]]
+		Sort[t /. NSolve[qq == 0, t, WorkingPrecision -> wp]]
 	];
 	
 	interleavesQ[lstF_, {}] := True;
@@ -122,13 +151,23 @@ InterleavingRootsQ[pp1_, qq1_, t_Symbol] := Module[{pp, qq, gcd, rootsPP, rootsQ
 	(0<=Exponent[qq,t]-Exponent[pp,t]<=1) && interleavesQ[rootsPP, rootsQQ]
 ];
 
-InterleavingRootsQ[polys_List, t_Symbol]:=Module[{pp},
+InterleavingRootsQ[polys_List, t_Symbol,opts:OptionsPattern[]]:=Module[{pp},
 	And@@Table[
-		InterleavingRootsQ[ pp[[1]], pp[[2]] , t]
+		InterleavingRootsQ[ pp[[1]], pp[[2]] , t,opts]
 		,{pp, Subsets[polys,{2}]}]
 ];
 
 
+(*
+https://arxiv.org/pdf/1808.04141.pdf
+*)
+SymmetricDecomposition::usage = "SymmetricDecomposition[p,x] returns two palindromic polynomials, a,b, such that p=a+xb";
+SymmetricDecomposition[pp_, x_] := Module[{d = Exponent[pp, x], ii},
+   If[d < 0, {0, 0},
+    ii = Together[x^d (pp /. (x -> 1/x))];
+    Together /@ {(pp - x ii)/(1 - x), (ii - pp)/(1 - x)}
+    ]
+   ];
 
 (* Eulerian numbers. *)
 EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
@@ -143,8 +182,26 @@ BinomialEulerianPolynomial[n_Integer, t_] := BinomialEulerianPolynomial[n,t] = E
 1 + t Sum[Binomial[n, m] EulerianAPolynomial[m, t], {m, n}]];
 
 
+RefinedEulerian::usage ="RefinedEulerian[n,j,t] is the des-generating polynomial for permutations in Sn with pi(1)=j.";
+RefinedEulerian[1, 1, t_] := 1;
+RefinedEulerian[n_Integer, j_Integer, t_] := RefinedEulerian[n, j, t] =
+   If[1 <= j <= n,
+    Expand[Sum[
+      If[j <= k, 1, t] RefinedEulerian[n - 1, k, t]
+      , {k, n}]], 0];
+
+
+RefinedEulerianCoefficients::usage = "RefinedEulerianCoefficients[poly,t] returns the coefficients in the refined Eulerian basis.";
+RefinedEulerianCoefficients[poly_, t_] := Module[{n, tbz, c, vars},
+   n = Max[0, Exponent[poly, t]];
+   tbz = poly - Sum[c[j] RefinedEulerian[n + 1, j, t], {j, n + 1}];
+   vars = c /@ Range[n + 1];
+   vars /. Solve[Thread[CoefficientList[tbz, t] == 0], vars]
+];
+      
 HStarPolynomial::usage="HStarPolynomial[pol,x] returns the h*-polynomial.";
 
+HStarPolynomial[poly_]:=HStarPolynomial[poly,Variables[poly][[1]]];
 HStarPolynomial[poly_, k_] := Expand@Module[
 	{cl = CoefficientList[poly, k],j},
 		cl.Table[ (1 - k)^(Length[cl] - 1 - j) If[j == 0, 1, k] EulerianAPolynomial[j, k]

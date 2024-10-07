@@ -10,6 +10,7 @@ Use https://reference.wolfram.com/language/ref/SyntaxInformation.html
 Unit-testing: https://www.wolfram.com/mathematica/new-in-10/integrated-unit-testing/run-one-off-tests.html
 *)
 
+ListSplits;
 UnimodalQ;
 LatticeWordQ;
 Nicify;
@@ -34,8 +35,6 @@ PermutationValleys;
 PermutationValleysSet;
 RunSort;
 
-ToSubExcedance;
-FromSubExcedance;
 
 LeftToRightMinima;
 LeftToRightMaxima;
@@ -78,6 +77,8 @@ MultiRectangularToPartition;
 PartitionCores;
 HookLengths;
 ConjugatePartition;
+PartitionDropColumn;
+PartitionDropRow;
 PartitionJoin;
 PartitionLessEqualQ;
 PartitionDominatesQ;
@@ -96,6 +97,7 @@ PartitionIntervalSize;
 PartitionArm;
 PartitionLeg;
 DiagramBoxes;
+Durfee;
 MacdonaldPsi;
 JackPsi;
 JackPsiPrime;
@@ -120,42 +122,18 @@ qHookFormula;
 qCatalan;
 qCarlitzCatalan;
 qtCatalan;
+qtFibonacci;
 qNarayana;
 qKreweras;
 qAlternatingSignMatrices;
 qIntegerFactorize;
 
 
-Is123AvoidingQ;
-Is132AvoidingQ;
-Is213AvoidingQ;
-Is231AvoidingQ;
-Is312AvoidingQ;
-Is321AvoidingQ;
-IsPermutationAvoidingQ;
-
-
-PermutationAllCycles;
-PermutationType;
-PermutationCycleMap;
-PermutationGenus;
-ReducedWord;
-PermutationFromWord;
-PermutationCode;
-FoataMap;
-CarlitzMap;
-SimionSchmidtMap;
-StrongBruhatGreaterQ;
-WeakOrderGreaterQ;
-PermutationCharge;
-PermutationCocharge;
-
-
 SnCharacter;
 KostkaCoefficient;
 InverseKostkaCoefficient;
 
-PermutationMatrixPlot;
+
 OperatorConnectedComponent;
 
 
@@ -185,25 +163,11 @@ Permutations[n_Integer?Positive] :=
 ];
 Protect[Permutations];
 
+ListSplits::usage = "ListSplits[list] returns all 2^(n-1) ways to split the list into non-empty sublists";
+ListSplits[list_List]:=Table[PartitionList[list, alpha], {alpha,IntegerCompositions@Length@list}];
 
-(* Prop 19 in https://core.ac.uk/download/pdf/82232421.pdf *)
-(* Sends 123-avoiding to 132-avoiding *)
-SyntaxInformation[SimionSchmidtMap] = {"ArgumentsPattern" -> {{_...}}};
-SimionSchmidtMap::usage = "SimionSchmidtMap[perm] ,see https://core.ac.uk/download/pdf/82232421.pdf";
-SimionSchmidtMap[pi:iList] := 
-  Module[{x = pi[[1]], n = Length@pi, out},
-   out = {x};
-   Do[
-    If[pi[[i]] < x,
-     (AppendTo[out, pi[[i]]]; x = pi[[i]];)
-     ,
-     AppendTo[out,
-      Min[Select[Range[x + 1, n], ! MemberQ[out, #] &]]
-      ]
-     ]
-    , {i, 2, n}];
-   out
-];
+
+
 
 
 (**Lists and words **)
@@ -320,21 +284,6 @@ PermutationMinorDescents[pi_List] := Tr[
 *)
 
 
-(* ToSubExcedance preserves the RTLMin set. *)
-
-ToSubExcedance[{1}] := {1};
-ToSubExcedance[pi:iList] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
-
-
-(* With this definition, we can use FromSubexcedance on any word 
-where entries <= length.*)
-
-FromSubExcedance[f:iList] := FromSubExcedance[f, Range[Length@f]];
-FromSubExcedance[{}, pi:iList] := pi;
-FromSubExcedance[f:iList, pi:iList] := With[{n = Length@f, fn = Last@f},
-   (* Apply transposition *)
-   ReplaceAll[FromSubExcedance[Most@f, pi], {fn -> n, n -> fn}]
-];
 
 
 WeakStandardize[list:iList]:=With[{rule = Thread[Union[list]->Ordering@Union[list]]}, list /. rule];
@@ -652,6 +601,7 @@ WeakIntegerCompositions[n_Integer, nparts_Integer] :=
 
 
 CompositionRefinements::usage="CompositionRefinements[comp] returns all refinements of the composition.";
+(*
 CompositionRefinements[comp_List/;(VectorQ[comp,IntegerQ] && Max[comp]==1)]:= {comp};
 CompositionRefinements[comp_List/;VectorQ[comp,IntegerQ]] := CompositionRefinements[comp] = 
 Module[{n = Length@comp, refs},
@@ -660,6 +610,12 @@ Module[{n = Length@comp, refs},
 	, {i, n}, {k, comp[[i]]-1}];
 	
 	Union@Join[{comp}, refs, Join @@ (CompositionRefinements /@ refs)]
+];
+*)
+CompositionRefinements::usage="CompositionRefinements[comp] returns all refinements of the composition.";
+CompositionRefinements[comp_List /; (VectorQ[comp, IntegerQ])] :=
+  With[{icl = IntegerCompositions /@ comp},
+   Flatten[Outer[List[##] &, Sequence @@ icl, 1], Length[comp] - 1]
 ];
 
 
@@ -756,6 +712,12 @@ UnitTest[ConjugatePartition]:=And[
 	ConjugatePartition[{4}]==={1,1,1,1},
 	ConjugatePartition[{1}]==={1}
 ];
+
+PartitionDropColumn::usage = "PartitionDropColumn[i][nu] removes column i from the partition.";
+PartitionDropColumn[i_Integer][nu_List] := Map[If[# >= i, If[# > 1, # - 1, Nothing], #] &, nu];
+
+PartitionDropRow::usage = "PartitionDropRow[i][nu] removes row i from the partition.";
+PartitionDropRow[i_Integer][nu_List] := If[i <= Length[nu], Drop[nu, {i}], nu];
 
 
 PartitionLessEqualQ::usage = "PartitionLessEqualQ[lam,mu] returns true if lam is entrywise less-equal to mu.";
@@ -906,6 +868,11 @@ DiagramBoxes[{lam_List, mu_List}] :=
       Table[{r, j}, {j, mu[[r]] + 1, lam[[r]]}]
       ]
      , {r, Length@lam}];
+
+
+Durfee::usge = "Durfee[mu] or Durfee[{lam,mu}] returns the size of largest square that can fit in the diagram.";
+Durfee[lam_List] := Max[Length /@ GatherBy[DiagramBoxes[lam], # . {1, -1} &]];
+Durfee[{lam_List, mu_List}] := Max[Length /@ GatherBy[DiagramBoxes[{lam, mu}], # . {1, -1} &]];
 
 
 
@@ -1123,197 +1090,6 @@ TupleInversions[tupl_List] :=
    ];
 
 
-
-(**PERMUTATIONS**)
-
-Is213AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; c > a > b];
-Is231AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; b > a > c];
-Is123AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; c > b > a];
-Is132AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; b > c > a];
-Is312AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > c > b];
-Is321AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > b > c];
-
-
-IsPermutationAvoidingQ::usage = "IsPermutationAvoidingQ[sigma,pi] returns true if pi avoids the pattern sigma.";
-IsPermutationAvoidingQ[pi_?PermutationListQ, p_List]:= !MemberQ[Ordering /@ Subsets[Ordering@p, {Length@pi}], pi];
-
-(*
-Map from section 4,
- http://repository.gunadarma.ac.id/1424/1/Three%20Length%20Pattern%20Avoiding%20Permutation%20and%20the%20Catalan%20Numbers_UG.pdf
-*)
-
-
-
-PermutationCharge[p_List] := PermutationCharge[p] = MajorIndex[Reverse@Ordering@p];
-
-PermutationCocharge[p_List] := PermutationCocharge[p] = Binomial[Max@p,2]-MajorIndex[Reverse@Ordering@p];
-
-
-(* Produces a reduced word from a permutation in one-line notation *)
-(* The list {1,2,3,1} corresponds to the word "s1,s2,s3,s1" *)
-
-ReducedWord::usage = "ReducedWord[perm] takes a permutation in one-line notation and produces a reduced word. ";
-ReducedWord[pi_List] := {} /; (Sort[pi] == pi);
-ReducedWord[pi_List] := Module[{d, piSort},
-	d = First@DescentSet[pi];
-	piSort = ReplacePart[pi, {d -> pi[[d + 1]], d + 1 -> pi[[d]]}];
-	Join[{d},ReducedWord[piSort]]
-];
-
-PermutationAllCycles::usage="PermutationAllCycles[pi] returns all cycles of the permutation, including fixed-points.";
-PermutationAllCycles[perm_List]:=With[{cycles = PermutationCycles[perm][[1]]},
-	SortBy[Join[ cycles, List/@Complement[ Range[Length@perm], Join@@cycles] ],First]
-];
-
-PermutationType::usage = "PermutationType[pi] returns the partition of cycle lengths";
-PermutationType[pi_List]:=Sort[Length/@PermutationAllCycles[pi],Greater];
-
-
-PermutationCycleMap::usage = "PermutationCycleMap[p] is the map defined on p.23 Stanley's EC1, where one writes the permutation in cycle form, and removes parenthesises.";
-PermutationCycleMap[p_List] := (
-   Join @@ (
-     RotateRight@RotateLeft[#, Position[#, Max@#][[1, 1]]] &
-      /@ SortBy[PermutationAllCycles[p], Max])
-   );
-
-
-(* The genus of a permutation *)
-PermutationGenus::usage = "PermutationGenus[pi] returns the genus of the permutation."
-PermutationGenus[sigma_List] := PermutationGenus[sigma, RotateLeft[Range@Max@sigma]];
-PermutationGenus[sigma_List, alpha_List] := 
-With[{n = Max[sigma], z = (Length[PermutationAllCycles[#]] &)},
-	1 + (n - z[alpha] - z[sigma] - z[ Ordering[alpha][[sigma]]  ])/2
-];
-(* From https://arxiv.org/pdf/2306.16237.pdf
-*)
-(*
-PermutationGenus2[pi_List] := (1/2) With[{n = Max@pi
-     },
-    n + 1 - Length[PermutationAllCycles[pi]] -
-     Length[PermutationAllCycles[
-       Ordering[RotateRight@pi]
-       ]
-      ]
-    ];
-*)
-
-ReducedWord::usage = "ReducedWord[pi] returns a reduced word for pi.";
-ReducedWord[{}] := {};
-ReducedWord[pi_List] := With[{onePos = Ordering[pi, 1][[1]]},
-	If[onePos == 1,
-		1 + ReducedWord[(Rest@pi) - 1]
-	,
-		Prepend[
-			ReducedWord[
-			Join[pi[[1 ;; onePos - 2]], {1, pi[[onePos - 1]]}, 
-			pi[[onePos + 1 ;;]]]]
-		, onePos - 1]
-	]
-];
-
-PermutationFromWord::usage = "PermutationFromWord[perm,n] returns a permutation of [n] from a word of simple transpositions. ";
-
-PermutationFromWord[{}, n_Integer] := Range[n];
-PermutationFromWord[word_List, n_Integer] := PermutationFromWord[word] = Module[{perms, prod},
-	perms = Cycles[{{#, # + 1}}] & /@ Reverse[word];
-	prod = PermutationProduct @@ perms;
-	If[n > 0, 
-		Permute[Range[n], prod]
-		, 
-		{}
-	]
-];
-
-UnitTest[PermutationFromWord]:=And@@Table[
- PermutationFromWord[ReducedWord[pi], 5] == pi
- , {pi, Permutations@Range@5}];
-
-
-(* Same as Lehmer code .*)
-PermutationCode::usage = "PermutationCode[p] returns the code of the permutation.";
-PermutationCode[p_List] := Table[Count[p[[i + 1 ;;]], a_ /; a < p[[i]]], {i, Length@p}];
-
-
-CarlitzMap::usage = "CarlitzMap[pi] sends inv to maj.";
-CarlitzMap[p_List] := Module[{code, new = {}, n = Length@p, n2},
-   code = Reverse@PermutationCode[p];
-   Do[
-    new = Catch[
-       Do[
-        n2 = Insert[new, n + 1 - i, j];
-        If[MajorIndex[n2] - MajorIndex[new] == code[[i]],
-         Throw[n2]]
-        , {j, n + 1}]
-       ];
-    , {i, n}];
-   new
-];
-
-FoataMap::usage = "FoataMap[pi] sends maj to inv.";
-FoataMap[{}] = {};
-FoataMap[{1}] = {1};
-FoataMap[p_List] := FoataMap[p] = Module[{n = Length@p, foataAdd},
-	foataAdd[{a_}, s_Integer] := {a, s};
-	foataAdd[q_List, s_Integer] :=
-	
-	DeleteCases[Flatten[RotateRight /@ SplitBy[
-		{Sequence @@ Which[
-			Last[q] < s,
-			ReplaceAll[q, i_ /; (i < s) :> Sequence[i, 0]],
-			Last[q] > s,
-			ReplaceAll[q, i_ /; (i > s) :> Sequence[i, 0]]
-			], s}, # != 0 &]], 0];
-		Fold[foataAdd, {First@p}, Rest[p]]
-];
-
-UnitTest[FoataMap]:=(FoataMap[{4,1,3,7,5,6,2}]=={7,1,4,3,5,6,2});
-
-
-
-(* Weak Bruhat order. TODO -- Check that this is ok *)
-(* This corresponds to using ADJACENT/simple transpositions. *)
-WeakOrderGreaterQ::usage = "WeakOrderGreaterQ[p1,p2] returns true iff p1 is greater 
-than p2 in weak order. The identity is smaller than all other, and w0 is largest.";
-WeakOrderGreaterQ[p1_List, p2_List] := WeakOrderGreaterQ[p1, p2] = Module[{diff},
-	(*
-		Message["WeakOrderGreaterQ is experimental!"];
-	*)
-	diff = Ordering[p1][[p2]];
-	Inversions[p1] == Inversions[diff] + Inversions[p2]
-];
-
-
-(* This uses all transpositions *)
-StrongBruhatGreaterQ::usage="StrongBruhatGreaterQ[p1,p2] returns true iff p1 
-is greater-equal than p2 in strong Bruhat order. The identity is smaller than all other, and w0 is largest.";
-
-StrongBruhatGreaterQ[p1_List,p2_List]:=StrongBruhatGreaterQ[p1,p2]=MemberQ[
-StrongBruhatDownSet[p1],p2];
-
-StrongBruhatDownSet[p_List] := ({p} /; p == Range[Max@p]);
-StrongBruhatDownSet[p_List] := StrongBruhatDownSet[p] = Module[{ss, n = Max@p},
-	Union[
-	Append[
-		Join @@ Table[
-			If[Greater @@ p[[ss]]
-			,
-			With[{a = ss[[1]], b = ss[[2]]},
-				With[{pSort = ReplacePart[p, {a -> p[[b]], b -> p[[a]]}]},
-				Append[StrongBruhatDownSet[pSort], pSort]
-				]
-				],
-			Nothing
-			]
-			, {ss, Subsets[Range[n], {2}]}]
-		,
-		p
-	]]
-];
-
-
-
-
-
 (**Q-ANALOGS**)
 qBinomial[n_Integer,k_Integer,q_:1]:=0 /; Not[ 0<= k <=n ];
 qBinomial[n_Integer,k_Integer,q_:1]:=qBinomial[n,k,q]=FunctionExpand[QBinomial[n,k,q]];
@@ -1353,7 +1129,17 @@ qtCatalan::usage = "qtCatalan[n,q,t] is the qt-Catalan polynomial.";
 qtCatalan[n_Integer, q_: 1, t_: 1] := Together[qtH[n + 1, 1, q, t]/t^n];
 
 
+qtFibonacci::usage = "qtFibonacci[n,q,t] returns the n:th qt-Fibonacci number.";
+qtFibonacci[0, q_, t_] := 0;
+qtFibonacci[1, q_, t_] := 1;
+qtFibonacci[n_Integer, q_, t_] := 
+  qtFibonacci[n, q, t] = 
+   Expand[q qtFibonacci[n - 1, q, t] + t qtFibonacci[n - 2, q, t]];
 
+(* Used in Rao and Suk, Dihedral sieving phenomena *)
+qtFibotorial[n_, q_, t_] := Product[qtFibonacci[k, q, t], {k, n}];
+qtFibonomial[n_, k_, q_, t_] := Together[ 
+   qtFibotorial[n, q, t]/(qtFibotorial[n - k, q, t] qtFibotorial[k, q, t])];
 
 qAlternatingSignMatrices[n_Integer, q_] := qAlternatingSignMatrices[n, q] = 
 Module[{qq,k, poly },
@@ -1589,19 +1375,6 @@ inverseKostkaHuan[la_List, mu_List] :=
 ];
 
 
-
-
-PermutationMatrixPlot::usage = "PermutationMatrixPlot[pi] returns a graphical representation of the permutation.";
-
-PermutationMatrixPlot[p_List] := With[{n = Max@p},
-ArrayPlot[
-    Normal@SparseArray[Transpose[{Range[n], p}] -> 1, {n, n}]
-    , Mesh -> True, Frame -> False
-    ,PixelConstrained -> 6]
-];
-
-
-   
    
 OperatorConnectedComponent::usage = 
   "OperatorConnectedComponent[init,ops] returns a list of everything \

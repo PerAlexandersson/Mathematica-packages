@@ -6,6 +6,7 @@ BeginPackage["QuasiSymmetricFunctions`",{"CombinatoricTools`"}];
 Unprotect["`*"]
 ClearAll["`*"]
 
+PartitionedCompositionCoarsenings;
 
 MonomialQSymmetric;
 FundamentalQSymmetric;
@@ -28,9 +29,12 @@ ToZPowerSumQSymBasis;
 
 Begin["`Private`"];
 
+(* Pattern for list of integers *)
+iList = {RepeatedNull[_Integer]};
 
 (*This takes a list of lists!*)
 (* This is used for quasisymmetric power-sums. *)
+(*
 PartitionedCompositionCoarsenings[{{a_Integer}}] := {{{a}}};
 PartitionedCompositionCoarsenings[alpha_List] := 
 Module[{rest, first},
@@ -42,7 +46,11 @@ Module[{rest, first},
 		PartitionedCompositionCoarsenings[rest], 
 			{Join[first, #1], ##2} & @@@ PartitionedCompositionCoarsenings[rest]]
 ];
+*)
 
+PartitionedCompositionCoarsenings[alpha_List] := Module[{v, n = Length@alpha},
+	Map[Join @@ # &, ListSplits[alpha], {2}]
+];
 
 (*********************************************************)
 
@@ -181,7 +189,7 @@ createQSymBasis[ZPowerSumQSymbol, "z\[Psi]",
 FundamentalQSymmetric[alpha_List, x_: None] := 
 FundamentalQSymmetric[alpha, x] = Sum[
 	MonomialQSymbol[beta, x]
-	, {beta, CompositionRefinements[alpha]}];
+	, {beta, Join@@@CompositionRefinements[alpha]}];
 
 	
 (* The fundamental Qsym fulfills the shuffle product rule. *)

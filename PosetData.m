@@ -9,6 +9,7 @@ BeginPackage["PosetData`",{"CombinatoricTools`"}];
 
 SkewShapePoset;
 StembridgePoset;
+PermutationPoset;
 
 Poset;
 PosetPlot;
@@ -75,6 +76,15 @@ StembridgePoset[] := Poset[16, Join[
     {{1, 12}, {3, 15}, {5, 17}, {2, 3}, {4, 5}, {6, 7}, {8, 9}, {10,
       11}, {12, 13}, {15, 16}}
 ]];
+
+PermutationPoset::usage = "PermutationPoset[pi] returns the poset associated with the permutation pi.
+We have the edge (i,j) if i<j and i appears before j in pi.
+The Jordan Hölder set of this poset is the same as the interval [id,pi] in the weak order.";
+
+PermutationPoset[pi_List] := With[{n = Length@pi},
+   Poset[n,
+    Select[Subsets[Range@n, {2}], (Less @@ Ordering[pi][[#]]) &]]];
+
 
 PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";
 PosetMinimalElements[Poset[n_, edg_]] := Complement[Range@n, Last /@ edg];
@@ -329,7 +339,7 @@ PosetLinearExtensions::usage = "PosetLinearExtensions[poset] returns all order-p
 PosetLinearExtensions[Poset[n_,edges_]] := PosetColorings[Poset[n,edges],ColorWeight->ConstantArray[1,n]];
 
 JordanHolderSet::usage = "JordanHolderSet[poset] returns all permutations one can get by extending the edges to a total order.";
-JordanHolderSet[pp_Poset] := JordanHolderSet[pp] =Ordering/@PosetLinearExtensions[pp];
+JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@PosetLinearExtensions[pp];
 
 
 OrderPolynomial::usage = "OrderPolynomial[poset,t] returns the order polynomial in t.";

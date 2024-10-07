@@ -98,7 +98,7 @@ Sum[
 ];
 
 
-SYTDescents[syt_YoungTableau] := Descents[Ordering@SYTReadingWord@syt];
+
 
 YoungTableauSize::usage = "YoungTableauSize[tab] returns the number of boxes in the shape. Does not count skew boxes.";
 YoungTableauSize[syt_YoungTableau]:=Length[SYTReadingWord[syt]];
@@ -110,9 +110,10 @@ YoungTableauShape[YoungTableau[syt_]]:=Length/@syt;
 
 YoungTableauShape[syt_YoungTableau, v_Integer]:=YoungTableauShape[syt/.{i_Integer /; i>v :> Nothing}];
 
+(* This code is probably wrong. *)
+(*
 SYTDescentSet::usage = "SYTDescentSet[syt] returns the descent set of the standard Young tableau.";
 SYTDescentSet[YoungTableau[syt_]] := Module[{lookUp, n = SYTMax@YoungTableau@syt },
-	
     lookUp = Last /@ SortBy[
             Join @@ MapIndexed[If[IntegerQ[#1], #1 -> #2 ,Nothing] &, syt, {2}]
         ,
@@ -122,6 +123,19 @@ SYTDescentSet[YoungTableau[syt_]] := Module[{lookUp, n = SYTMax@YoungTableau@syt
         Range[n-1], 
         lookUp[[#,1]] < lookUp[[#+1,1]] &]
 ];
+*)
+
+(* All i such that i+1 appears south if i *)
+SYTDescentSet[YoungTableau[tt_]] := Module[{rows, ri},
+  rows = Table[Select[rr, IntegerQ], {rr, tt}];
+  (* Encode in which row entries are in. *)
+  ri = SparseArray@
+    Flatten[Table[Table[v -> i, {v, rows[[i]]}], {i, Length@rows}]];
+  (* All i such that i+1 appears south of i *)
+  DescentSet[Normal@ri]
+];
+
+SYTDescents[syt_YoungTableau] := Length@SYTDescentSet[syt];
 
 
 
