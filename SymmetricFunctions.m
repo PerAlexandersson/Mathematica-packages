@@ -1483,7 +1483,7 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := Module[
 
 
 ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] := 
-Expand@Together@toOtherSymmetricBasis[ {ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
+Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
 
 createBasis[MacdonaldHSymbol, "H", 
 	MultiplicationFunction -> None,
@@ -1708,7 +1708,7 @@ LyndonSymmetric[lam_List, x_: None] := Module[{n = Tr@lam, nn},
        ]
       , {nn, Union[lam]}] // Expand
     ]
-   ];
+];
 
 
 

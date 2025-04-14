@@ -5,7 +5,11 @@ ClearAll["PolynomialTools`*"];
 BeginPackage["PolynomialTools`"];
 
 InterleavingRootsQ;
+
+
+GammaPolynomial;
 HStarPolynomial;
+HStarVectorToEhrhart;
 HVectorInequalitiesQ;
 
 SymmetricDecomposition;
@@ -15,6 +19,7 @@ EulerianAPolynomial;
 BinomialEulerianPolynomial;
 RefinedEulerian;
 RefinedEulerianCoefficients;
+SEulerianPolynomial;
 
 LogConcaveQ;
 UltraLogConcaveQ;
@@ -31,6 +36,8 @@ DifferentialDegree;
 RecurrenceLength;
 Homogeneous;
 
+CompleteHomogeneousPolynomial;
+ElementarySymmetricPolynomial;
 
 Begin["`Private`"];
 
@@ -198,15 +205,44 @@ RefinedEulerianCoefficients[poly_, t_] := Module[{n, tbz, c, vars},
    vars = c /@ Range[n + 1];
    vars /. Solve[Thread[CoefficientList[tbz, t] == 0], vars]
 ];
+
+SEulerianPolynomial::usage = "SEulerianPolynomial[s,t] returns the s-Eulerian polynomial associated with positive vector s.";
+SEulerianPolynomial[{},t_]:=0;
+SEulerianPolynomial[s_List, t_] := SEulerianPolynomial[s,t]=Module[{i, ascE, ranges},
+   ascE[ee_List] := Sum[
+     If[i == 0, Boole[ee[[1]] > 0],
+      Boole[ee[[i]] s[[i + 1]] < ee[[i + 1]] s[[i]]]
+      ]
+     , {i, 0, Length[ee] - 1}];
+
+   ranges = Range[0, # - 1] & /@ s;
+   Total[Flatten@Outer[t^ascE[List@##] &, Sequence @@ ranges, 1]]
+   ];
+
+
+GammaPolynomial::usage = "GammaPolynomial[poly,x] expands a palindromic polynomial in the gamma-basis. See Athanasiadis for background.";
+GammaPolynomial[poly_, x_] := Module[{c, inGamma, i, n = Exponent[poly, x], vars},
+   inGamma = Sum[c[i] x^i (1 + x)^(n - 2 i), {i, 0, Floor[n/2]}];
+   vars = Table[c[i], {i, 0, Floor[n/2]}];
+   Expand[
+    Sum[c[i] x^i, {i, 0, Floor[n/2]}] /. 
+     First[Solve[Thread[CoefficientList[poly - inGamma, x] == 0], 
+       vars]]]
+];
+
       
 HStarPolynomial::usage="HStarPolynomial[pol,x] returns the h*-polynomial.";
 
-HStarPolynomial[poly_]:=HStarPolynomial[poly,Variables[poly][[1]]];
+HStarPolynomial[poly_]:=HStarPolynomial[poly,First@Variables@poly];
 HStarPolynomial[poly_, k_] := Expand@Module[
 	{cl = CoefficientList[poly, k],j},
 		cl.Table[ (1 - k)^(Length[cl] - 1 - j) If[j == 0, 1, k] EulerianAPolynomial[j, k]
 	,{j, 0, Length[cl] - 1}]];
 
+HStarVectorToEhrhart::usage = "HStarVectorToEhrhart[vec,t] returns the Ehrhart polynomial associated with the h-vector.";
+HStarVectorToEhrhart[vec_List, t_] := Module[{d = Length[vec] - 1},
+   Expand@Sum[Binomial[t + d - j, d] vec[[j + 1]], {j, 0, d}]
+];
 
 HVectorInequalitiesQ::usage = "HVectorInequalitiesQ[{1,h1,h2,..,hd}] returns true if it satisfies the inequalities expected of an h*-vector. These are only neccesary, not sufficient.";
 HVectorInequalitiesQ[hh_List] :=
@@ -324,6 +360,26 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	]
 ];
 
+
+CompleteHomogeneousPolynomial::usage = "CompleteHomogeneousPolynomial[d,{a,b},x] returns the degree-d complete homogeneous polynomial in variables x[a]...x[b].";
+CompleteHomogeneousPolynomial[d_Integer, {a_Integer, b_Integer}, x_] := 
+  CompleteHomogeneousPolynomial[d, {a, b}, x] = Expand[
+    Which[
+     Not[1 <= a <= b], 0,
+     a == b, x[a]^d,
+     a < b, 
+     Sum[x[a]^k CompleteHomogeneousPolynomial[d - k, {a + 1, b}, x], {k, 0, d}]
+     ]];
+
+ElementarySymmetricPolynomial::usage = "ElementarySymmetricPolynomial[d,{a,b},x] returns the degree-d elementary symmetric polynomial in variables x[a]...x[b].";
+ElementarySymmetricPolynomial[d_Integer, {a_Integer, b_Integer}, x_] := 
+  ElementarySymmetricPolynomial[d, {a, b}, x] = Expand[
+    Which[
+     Not[1 <= a <= b && (d <= a - b + 1)], 0,
+     a == b && d == 1, x[a],
+     a < b, 
+     x[a] ElementarySymmetricPolynomial[d - 1, {a + 1, b}, x] + ElementarySymmetricPolynomial[d, {a + 1, b}, x]
+     ]];
 
 End[(* End private *)];
 EndPackage[];

@@ -17,14 +17,16 @@ ClearAll["`*"]
 IsMatroidQ;
 IsSubsetClosedQ;
 
+
+MatroidLoops;
+MatroidColoops;
+
 MatroidDual;
 IndependentSets;
 MatroidSetRank;
 MatroidFlats;
 LatticeOfFlats;
 
-MatroidLoops;
-MatroidColoops;
 MatroidDeletion;
 MatroidContraction;
 MatroidTuttePolynomial;
@@ -32,6 +34,9 @@ MatroidCharacteristicPolynomial;
 InternallyActiveElements;
 ExternallyActiveElements;
 
+
+RookSetSystem;
+PathSetSystem;
 TransversalBases;
 RookBases;
 PathBases;
@@ -82,6 +87,11 @@ IsSubsetClosedQ[sets_List] := Module[{i, set},
     ]
 ];
 
+MatroidLoops::usage = "MatroidLoops[groundSet,bases] returns the list of loops (dependent 1-element sets).";
+MatroidLoops[ee_List, bb_List] := Complement[ee, Sequence @@ bb];
+MatroidColoops::usage = "MatroidColoops[groundSet,bases] returns the list of coloops (elements independent from all other).";
+MatroidColoops[ee_List, bb_List] := If[Length@bb == 0, {}, Intersection @@ bb];
+
 MatroidDual::usage = "MatroidDual[e,bases] returns the list of bases for the dual of the matroid.";
 MatroidDual[ee_List, bb_List]:=(Complement[ee,#]&/@bb);
 
@@ -125,16 +135,33 @@ LatticeOfFlats[bases_List] := With[
      , {a, verts}, {b, verts}]
    ];
 
-
-MatroidLoops[ee_List, bb_List] := Complement[ee, Union @@ bb];
-MatroidColoops[ee_List, bb_List] := 
-  If[Length@bb == 0, {}, Intersection @@ bb];
   
-MatroidDeletion[bb_List, e_Integer] := Select[bb, !MemberQ[#, e] &];
-MatroidDeletion[bb_List, es_List] := Select[bb, !IntersectingQ[#, es] &];
-MatroidContraction[bb_List, e_Integer] := DeleteCases[#, e, 1, 1] & /@ Select[bb, MemberQ[#, e] &];
-MatroidContraction[bb_List, es_List] := Complement[#,es]& /@ Select[bb,SubsetQ[#,es] &];
+MatroidDeletion::usage = "MatroidDeletion[bases,e] deletes the element(s) e from the matroid.";
 
+MatroidDeletion[bb_List, e_Integer] := With[{del = Select[bb, !MemberQ[#, e] &]},
+  (* If true, then e is coloop, so e is in every basis. *)
+  If[Length@del==0, DeleteCases[#, e, 1, 1] & /@bb, del]
+];
+
+(* Keep only bases that avoids es, and then remove all coloops. *) 
+MatroidDeletion[bb_List, es_List] := With[{coloops = Intersection[es,Sequence@@bb]},
+ (* Remove coloops in es, and only keep bases not intersecting remaining elements in es. *)
+  Complement[#,coloops]& /@ Select[bb, !IntersectingQ[#, Complement[es,coloops]] &];
+];
+
+MatroidContraction::usage = "MatroidContraction[bases,e] contracts with respect to element(s) e in the matroid.";
+
+
+MatroidContraction[bb_List, e_Integer] := With[{contr = Select[bb, MemberQ[#, e] &]},
+  If[Length@contr==0, bb, DeleteCases[#, e, 1, 1] & /@ contr]
+];
+MatroidContraction[bb_List, es_List] :=  With[
+  {contr = Complement[es, Complement[es, Sequence@@bb]]},(* Remove loops, result is contr. *)
+  Complement[#,contr]& /@ Select[bb,SubsetQ[#,contr] &]
+];
+
+
+MatroidTuttePolynomial::usage = "MatroidTuttePolynomial[{groundSet,bases},{x,y}] returns the Tutte polynomial associated with the matroid.";
 MatroidTuttePolynomial[{ee_List, bb_List}, {x_, y_}] := Module[
    {loops, coloops},
    
@@ -186,22 +213,22 @@ ExternallyActiveElements[groundSet_List, bases_List, b_] := Table[
    , {e, Complement[groundSet, b]}];
 
 
-(* WARNING: THIS CODE HAS SOME BUGS if some sets appear several times. *)
 TransversalBases::usage = "TransversalBases[sets] returns all complete transversals of the list of sets.";
 TransversalBases[sets_List] := Module[{bases},
    Which[
     Length[sets] == 0, {},
-    Length[sets] == 1,
-    List /@ First[sets]
-    ,
+    Length[sets] == 1, List /@ First[sets],
+    
     True,
+    
     bases = Join @@ Table[
-       With[{tb =
-          TransversalBases[
-           Select[DeleteCases[#, j] & /@ Rest[sets], 
-            Length[#] > 0 &]]
-         },
-        Prepend[#, j] & /@ tb
+       With[{smallerSystem = Select[DeleteCases[#, j] & /@ Rest[sets], Length[#] > 0 &]},
+          (* Need to ensure that we have enough non-empty sets left. *)
+          If[Length[smallerSystem] + 1 == Length[sets],
+            Prepend[#, j] & /@ TransversalBases[smallerSystem]
+            ,
+            {}
+           ]
         ]
        , {j, First@sets}
        ];
@@ -210,19 +237,34 @@ TransversalBases[sets_List] := Module[{bases},
 ];
 
 
+RookSetSystem::usage="RookSetSystem[lam,mu] returns a set system to produce the rook matroid.";
+RookSetSystem[{}, mu_List : {}]:={{}};
+RookSetSystem[lam_List, mu_List : {}] := With[{
+    boxes= DiagramBoxes[{lam, mu}],
+    rows = Length@lam, 
+    cols = lam[[1]]
+    },
+    Table[
+      Append[
+        First /@ Select[boxes, Last[#] == k &], rows + k]
+    , {k, cols}]
+];
 
 RookBases::usage="RookBases[lam,mu] returns the rook matroid bases associated with the skew shape.";
 RookBases[{}, mu_List : {}]:={{}};
-RookBases[lam_List, mu_List : {}] := Module[{
-    boxes, tSets,
-    rows = Length@lam, cols = lam[[1]]},
-    boxes = DiagramBoxes[{lam, mu}];
-    tSets = Table[
-    Append[
-      First /@ Select[boxes, Last[#] == k &], rows + k]
-    , {k, cols}];
-  TransversalBases[tSets]
+RookBases[lam_List, mu_List : {}] := TransversalBases[RookSetSystem[lam,mu]];
+
+
+PathSetSystem::usage = "PathSetSystem[lam,mu] returns the set system that gives rise to LPMs.";
+PathSetSystem[lam_List,mu_List]:=Module[{lp, mp, rows = Length@lam, cols},
+   lp = ConjugatePartition[lam];
+   cols=Length@lp;
+   mp = PadRight[ConjugatePartition[mu], cols];
+   Table[
+     Range[rows - lp[[k]], rows - mp[[k]]] + k
+     , {k, cols}]
 ];
+     
 
 PathBases::usage="PathBases[lam,mu] returns the path matroid bases associated with the skew shape.";
 PathBases[lam_List, mu_List : {}] := 
