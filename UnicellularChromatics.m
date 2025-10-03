@@ -199,7 +199,7 @@ ChromaticSymmetric[gg_Graph, opts : OptionsPattern[]] :=
      colorings = Select[colorings, properQ[#] &];
      Length[colorings]*MonomialSymmetric[lam]
      , {lam, IntegerPartitions[Length@vv]}]
-    ];
+];
 
 
 

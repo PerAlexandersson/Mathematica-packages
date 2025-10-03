@@ -239,7 +239,7 @@ TeXToUTF8Rule[] := List[
 "{\\th}" -> "þ",
 "{\\TH}" -> "Þ",
 "\\textasciitilde "->"~",
-"{\\&}" -> "&"
+"\\&" -> "&"
 ];
 
 UTF8ToTeXRule[] := Reverse /@ TeXToUTF8Rule[];
@@ -480,7 +480,7 @@ YoungTableauToHTMLRule[] := Module[{ytableaushortToHTML, youngtabToHTML},
 (* Process bibFile text and generate replacement rules. *)
 (* TODO - HANDLE MATH? *)
 (* IS THIS USED? NO? *)
-BibliographyHTMLRules[textBlob_String] := Module[
+BibliographyHTMLRulesDEPRECATED[textBlob_String] := Module[
   {str, citations, citationToDataList, citeDatatoHTML, cleanStuff, 
     out},
   
@@ -606,8 +606,6 @@ BibliographyHTMLRules[textBlob_String] := Module[
 
 
 
-
-
 (***************** NEW Bibliography functions below ******************************)
 
 
@@ -638,7 +636,6 @@ ParseAuthor[str_String] := Module[{authList, fnameLnameList},
    ];
 
 (* List of last names, and year --- generates a key. *)
-
 AuthorBibKey[authors_List, year_: ""] := Module[{lastNamesFirstLetters, authKey},
 
   lastNamesFirstLetters[str_String] := StringJoin @@ (StringTake[#, 1] & /@ StringSplit[str, " "]);
@@ -653,6 +650,11 @@ AuthorBibKey[authors_List, year_: ""] := Module[{lastNamesFirstLetters, authKey}
       True,
         StringJoin @@ (lastNamesFirstLetters /@ authors)
       ];
+    
+    (* If too many author initials, take only first 4 and add + *)
+    If[StringLength@authKey>=5, 
+      authKey = StringTake[authKey,4]<>"+"
+    ];
     authKey <> If[StringLength[year] >= 4, StringTake[year, {3, 4}], ""]
 ];
 

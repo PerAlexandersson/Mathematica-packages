@@ -135,6 +135,12 @@ InverseKostkaCoefficient;
 
 
 OperatorConnectedComponent;
+RefineBijectionQ;
+RefineBijection;
+
+LinearlyIndependentRows;
+
+SetsStabilizer;
 
 
 Begin["Private`"];
@@ -403,6 +409,10 @@ ChargeWordDecompose[word:iList, subwordSizes_List:{}]:= Module[
 	]
 ];
 
+
+
+PermutationCharge[p_List] := PermutationCharge[p] = MajorIndex[Reverse@Ordering@p];
+PermutationCocharge[p_List] := PermutationCocharge[p] = Binomial[Max@p,2]-MajorIndex[Reverse@Ordering@p];
 WordCharge::usage = "WordCharge[w] returns the charge of a word with partition weight.";
 WordCharge[w:iList]:=Tr[PermutationCharge/@ChargeWordDecompose[w]];
 
@@ -411,6 +421,7 @@ WordCocharge[w:iList]:=Tr[PermutationCocharge/@ChargeWordDecompose[w]];
 
 
 
+MultiSubsets::usage = "MultiSubsets[set,k] returns all Binomial[n + k - 1, k] ways to pick with repetition, unordered.";
 MultiSubsets[a_Integer, b_Integer]:=MultiSubsets[Range@a,b];
 
 MultiSubsets[elems_List, 0] := {{}};
@@ -1377,8 +1388,8 @@ inverseKostkaHuan[la_List, mu_List] :=
 
    
 OperatorConnectedComponent::usage = 
-  "OperatorConnectedComponent[init,ops] returns a list of everything \
-  that can be obtained from the initial list by applying the operators \
+  "OperatorConnectedComponent[init,ops] returns a list of everything
+  that can be obtained from the initial list by applying the operators
   iteratively.";
 Options[OperatorConnectedComponent] = {"Function" -> True};
 OperatorConnectedComponent[init_List, ops_List, 
@@ -1400,6 +1411,71 @@ OperatorConnectedComponent[init_List, ops_List,
     ];
    Sort@final
 ];
+
+
+
+RefineBijectionQ::usage = "RefineBijectionQ[setA,setB,{{f1,g1},{f2.g2}...}] checks if there is a bijection phi:A->B 
+with the property that {f1(a) = g1(phi(a)) , f2(a) = g2(phi(a)) , ...} for all a in A.";
+
+RefineBijectionQ[setA_List, setB_List, fg_Rule] := RefineBijectionQ[setA, setB, {{First@fg, Last@fg}}];
+(* Want to see of there is a bijection A->B, such that the (joint) distribution of the stat-pairs agree. *)
+RefineBijectionQ[setA_List, setB_List, stats_List] := Module[{f, g, a, b},
+   Sort[Table[Table[f[a], {f, First /@ stats}], {a, setA}]] === Sort[
+     Table[Table[g[b], {g, Last /@ stats}], {b, setB}]
+     ]
+   ];
+
+RefineBijection::usage = "RefineBijectionQ[setA,setB,{{f1,g1},{f2.g2}...}] checks if there is a bijection phi:A->B 
+with the property that {f1(a) = g1(phi(a)) , f2(a) = g2(phi(a)) , ...} for all a in A.
+If so, we return lists { (A1,B1), (A2,B2),... } where Ak is a part of A that must map to the part Bk.";
+
+RefineBijection[setA_List, setB_List, fg_Rule] := RefineBijection[setA, setB, {{First@fg, Last@fg}}];
+RefineBijection[setA_List, setB_List, stats_List] := Module[
+   {f, g, a, b, AStat, BStat, sortedA, sortedB, keys, statsA, statsB, 
+    rows, gathered},
+   Catch[
+    AStat[a_] := Table[f[a], {f, First /@ stats}];
+    BStat[b_] := Table[g[b], {g, Last /@ stats}];
+    If[Length@setA != Length@setB, Throw[{}]];
+    
+    sortedA = SortBy[{#, AStat@#} & /@ setA, Last];
+    sortedB = SortBy[{#, BStat@#} & /@ setB, Last];
+    (* Sorted according to stat. Combine into rows. *)
+    rows = MapThread[Join, {sortedA, sortedB}, 1];
+    If[Not[And @@ (#2 == #4 & @@@ rows)], Throw[{}]];
+    (* Split into equivalence classes and remove stat.*)
+    Table[
+     Transpose[eqClass[[All, {1, 3}]]]
+     , {eqClass, SplitBy[rows, Last]}]
+    ]
+];
+   
+(* TODO: Use Row reduction instead *)
+LinearlyIndependentRows::usage = "LinearlyIndependentRows[A] returns indices of rows that span the row space.";
+LinearlyIndependentRows[A_?MatrixQ] := Module[{ranks},
+   ranks = Table[ MatrixRank[A[[1 ;; j]]], {j, Length@A} ];
+   First @ Table[ FirstPosition[ranks,j], {j, Max@ranks}]
+];
+
+
+
+SetsStabilizer::usage = "SetsStabilizer[sets] returns all permutations (of Union @@ sets ) that preserve each set.";
+SetsStabilizer[sets_List] := With[{
+    elems = Union @@ sets,
+    sSort = Sort /@ sets},
+   Select[Permutations@elems,
+    And @@ Table[
+       si === Sort[si /. Thread[elems -> #]], {si, sSort}] &
+    ]];
+
+(*
+SetsStabilizer[sets_List] := With[{pi = Ordering[Join @@ sets]},
+    Reap[
+     Outer[
+       Sow[(Join @@ {##})[[pi]]] &, Sequence @@ (Permutations /@ sets),
+        1];
+     ]][[-1, 1]];
+*)
 
 
 (**TESTING**)

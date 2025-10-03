@@ -9,14 +9,21 @@ KnGraph;
 CompleteBipartiteGraph;
 StirlingGraph;
 FerrersBoardGraph;
+TilingGraph;
+
+
+
 
 ConnectedSimpleGraphs;
+TreeGraphs;
 
 KeepLoops;
 KeepMultipleEdges;
 GraphContractVertices;
 GraphDeleteEdge;
 
+GraphIndependetSets;
+GraphIndependencePolynomial;
 GraphMatchings;
 GraphNonCrossingMatchings;
 GraphNonNestingMatchings;
@@ -33,6 +40,10 @@ GraphAcyclicOrientations;
 GraphOrientations;
 OrientationSinks;
 
+
+AcyclicSinkPolynomial;
+OrientationsSinkPolynomial;
+
 Begin["Private`"];
 
 KnGraph::usage = "KnGraph[n] gives the complete graph on n vertices.";
@@ -48,6 +59,25 @@ ConnectedSimpleGraphs[n_Integer] := Which[
    3 <= n <= 9,
    Import["~/Dropbox/mathematica-packages/graph" <>
      ToString[n] <> "c.g6"]
+   ,
+   True, Missing
+];
+
+TreeGraphs::usage = "TreeGraphs[n] returns a list of all non-isomorphic unlabeled trees on n vertices. 
+Taken from https://houseofgraphs.org/meta-directory/trees";
+
+TreeGraphs[1] := {Graph[{1}]};
+TreeGraphs[2] := {Graph[{1,2},{UndirectedEdge[1,2]}]};
+TreeGraphs[3] := {Graph[{1,2,3},{UndirectedEdge[1,2],UndirectedEdge[2,3]}]};
+TreeGraphs[4] := {
+  Graph[{1,2,3,4},{UndirectedEdge[1,2],UndirectedEdge[2,3],UndirectedEdge[3,4]}],
+  Graph[{1,2,3,4},{UndirectedEdge[1,2],UndirectedEdge[1,3],UndirectedEdge[1,4]}]
+};
+
+TreeGraphs[n_Integer] := TreeGraphs[n] = Which[
+   5 <= n <= 20,
+   Import["~/Dropbox/mathematica-packages/trees" <>
+     ToString[n] <> ".g6"]
    ,
    True, Missing
 ];
@@ -93,6 +123,35 @@ StirlingGraph::usage = "StirlingGraph[n] returns a bipartite graph, where matchi
 StirlingGraph[n_Integer] := Join @@ Table[
 		If[i < j, {i, n + j}, Nothing], {i, n}, {j, n}];
 
+
+TilingGraph::usage = "TilingGraph[w,h,tile] returns the graph where valid placements of the tile on the rectangle are vertices,
+and edges are overlaps of tiles.";
+TilingGraph[w_Integer, h_Integer, tile_List] := 
+  Module[{shiftTile, isOnQ,
+    modTile, board, cells, nn, edges, t},
+   (* Make a tile that contains the origin for sure. *)
+   modTile = # - First[tile] & /@ tile;
+   board = Join @@ Table[{i, j}, {i, w}, {j, h}];
+   
+   shiftTile[tt_, s_] := # + s & /@ tt;
+   
+   isOnQ[t_List] := And[
+     And @@ Thread[1 <= (First /@ t) <= w],
+     And @@ Thread[1 <= (Last /@ t) <= h]];
+   
+   (*Select all cells where if one place the origin of tile there,
+   the entire tile is on the board. *)
+   cells = Select[board, isOnQ[shiftTile[modTile, #]] &];
+   nn = Length[cells];
+   edges = Select[
+     Subsets[Range@nn, {2}],
+     IntersectingQ[shiftTile[modTile, cells[[First@#]]], 
+       shiftTile[modTile, cells[[Last@#]]]] &];
+   Graph[Range@nn, edges]
+   ];
+
+		
+		
 GraphContractVertices::usage= "GraphContractVertices[Graph[g],v] constracts all vertices in v into a single vertex; the name of this vertex is the first entry in v. V can also be an edge.";
 
 Options[GraphContractVertices] := {KeepLoops -> False};
@@ -128,6 +187,28 @@ GraphDeleteEdge[gg_Graph, e_,opts:OptionsPattern[]] := With[{
 		Graph[verts, DeleteCases[ee,  a_[e[[1]], e[[2]]] |  a_[e[[2]], e[[1]]]  , 1, 1] ]
 	]
 ];
+
+
+GraphIndependetSets::usage = "GraphIndependetSets[g] returns a list of all independence sets in the graph.";
+GraphIndependetSets[gg_Graph] := Module[{gmFnc, nbhd, vertices, edges},
+   vertices = VertexList@gg;
+   edges = EdgeList[gg] /. {DirectedEdge -> List, UndirectedEdge -> List};
+   
+   (* All neighbors of v *)
+   nbhd[v_] := nbhd[v] = Union[Sequence @@ Select[edges, MemberQ[#, v] &], {v}];
+   
+   (*Empty graph, one independent set.*)
+   gmFnc[{}] := {{}};
+   gmFnc[ss_List] := With[{v = First@ss},
+     Join @@ {
+       gmFnc[Rest@ss], (* v is not in *)
+       Append[#, v] & /@ gmFnc[Complement[ss, nbhd[v]]]}
+     ];
+   If[Length@vertices == 0, {}, gmFnc[vertices]]
+];
+
+GraphIndependencePolynomial::usage = "GraphIndependencePolynomial[g,t] returns the univariate independence polynomial of the graph g.";
+GraphIndependencePolynomial[gg_Graph, t_] := Sum[t^Length[ss], {ss, GraphIndependetSets[gg]}];
 
 
 GraphMatchings::usage = "GraphMatchings[edges] returns all matchings (as subsets of edges).";
@@ -316,6 +397,9 @@ OrientationSinks[gg_Graph] := With[
 	
 	Complement[verts, outVerts]
 ];
+
+AcyclicSinkPolynomial[g_Graph,t_] := AcyclicSinkPolynomial[g,t] = Sum[t^Length[OrientationSinks@ao], {ao, GraphAcyclicOrientations[g]}];
+OrientationsSinkPolynomial[g_Graph,t_] := OrientationsSinkPolynomial[g,t] = Sum[t^Length[OrientationSinks@ao], {ao, GraphOrientations[g]}];
 
 
 End[(* End private *)];

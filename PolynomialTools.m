@@ -5,7 +5,8 @@ ClearAll["PolynomialTools`*"];
 BeginPackage["PolynomialTools`"];
 
 InterleavingRootsQ;
-
+SturmSequenceQ;
+Interleaving2x2MinorQ;
 
 GammaPolynomial;
 HStarPolynomial;
@@ -29,12 +30,17 @@ SamePhaseStableQ;
 StablePolynomialQ;
 FindStablePolynomialCounterExample;
 
+IsLorentzianQ;
+
+
 FindPolynomialRecurrence;
 VariableDegree;
 IndexDegree;
 DifferentialDegree;
 RecurrenceLength;
 Homogeneous;
+RulesList;
+Prefactor;
 
 CompleteHomogeneousPolynomial;
 ElementarySymmetricPolynomial;
@@ -117,8 +123,84 @@ FindStablePolynomialCounterExample[poly_]:=With[{vv=Variables@poly},
 ];
 
 
+(* Private version used only here. There is public version of this method  in MatroidTools also. *)
+MConvexSetQ[set_List] := Module[{convexQ, aa, bb, e, n},
+   Catch[
+    If[Min[set] < 0 || ! AllSameBy[set, {Length[#], Total[#]} &],
+     Throw@False];
+    n = Length[set[[1]]];
+    
+    convexQ[a_List, b_List] := With[{c = Clip[a - b]},
+      And @@ (Or @@@ Table[
+          MemberQ[set, a - UnitVector[n, i] + UnitVector[n, j]]
+          , {i, Flatten@Position[c, 1]}, {j, Flatten@Position[c, -1]}])
+      ];
+    (* Check for convexity. *)
+    Do[If[! convexQ[aa, bb], Throw[False]], {aa, set}, {bb, set}];
+    True
+    ]
+];
+
+IsLorentzianQ::usage = "IsLorentzianQ[polynomial] returns true if the polynomial is Lorentzian (in all variables). Set second argument to true if check for Normalized Lorentzian.";
+IsLorentzianQ[poly_, normalized_ : False] := 
+  Module[{vars, cr, deg, n, mat,
+    deriv, exp, v, cc, al, i, j},
+   vars = Variables[poly];
+   n = Length@vars;
+   cr = CoefficientRules[poly, vars];
+   deg = Total[First@#] & /@ cr;
+   Catch[
+    If[! MConvexSetQ[First /@ cr],
+     Print["Not Lorentzian, needs to have MConvex support!"];
+     Throw@False
+     ];
+    If[Min[Last /@ cr] < 0,
+     Print["Not Lorentzian, needs to have non-neg coeffs!"];
+     Throw@False
+     ];
+    deg = First[deg];
+    
+    If[normalized,
+     cr = 
+       Table[First[cc] -> Last[cc]/(Times @@ (First[cc]!)), {cc, cr}];
+     ];
+    (* Loop over all possible derivatives here.*)
+    Do[
+     (* The Hessian matrix.*)
+     mat = ConstantArray[0, {n, n}];
+     Do[
+      (* Each monomial, cc, may contribute to the Hessian. *)
+      exp = First[cc];
+      deriv = exp - al;
+      (* Coefficient after derivatives, or not .*)
+      v = (Times @@ (exp!)) Last[cc];
+      Which[
+       Min[deriv] < 0, Continue[](* Do nothing.*),
+       
+       Max[deriv] == 1,
+       {i, j} = Join @@ Position[deriv, 1];
+       mat = MapAt[# + v/2 &, mat, {{i, j}, {j, i}}];
+       ,
+       Max[deriv] == 2,
+       i = Position[deriv, 2][[1, 1]];
+       (* Extra /2 here, since we get one extra from v *)
+       mat = MapAt[# + v/2 &, mat, {{i, i}}];
+       ]
+      , {cc, cr}];
+     If[Count[Eigenvalues@mat, _?Positive] >= 2, Throw[False]];
+     , {al, 
+     (* Weak integer compositions of deg-2, using n parts. *)
+      Join @@ (Permutations /@ IntegerPartitions[deg - 2, {n}, Range[0, deg - 2]])
+     }];
+    True
+    ]
+];
+
+
+
+
 (*
-Use this technique instead.
+TODO: Use this technique instead.
 https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-roots
 *)
 
@@ -163,6 +245,49 @@ InterleavingRootsQ[polys_List, t_Symbol,opts:OptionsPattern[]]:=Module[{pp},
 		InterleavingRootsQ[ pp[[1]], pp[[2]] , t,opts]
 		,{pp, Subsets[polys,{2}]}]
 ];
+
+
+SturmSequenceQ::usage = "SturmSequenceQ[polys,x] returns true if the sequence forms a Sturm sequence.";
+SturmSequenceQ[polys_List, x_] := Catch[
+	Do[If[!RealRootedQ[p],Throw@False],{p,polys}];
+	Do[If[!InterleavingRootsQ[pp, x], Throw@False], {pp, Partition[polys, 2, 1]}];
+	True
+];
+
+
+
+Interleaving2x2MinorQ::usage = "Interleaving2x2MinorQ[m,t] returns true if the 2x2-matrix m (in t) preserves interlacing. See Bränden's work.";
+Interleaving2x2MinorQ[m_, t_] := Module[
+   {pp, qq, aa, dd, checkDiscr, negPt, \[Lambda], \[Mu], a, b},
+   (* We check if pp << qq *)
+
+   pp = (\[Lambda] t + \[Mu]) m[[1, 2]] + m[[2, 2]];
+   qq = (\[Lambda] t + \[Mu]) m[[1, 1]] + m[[2, 1]];
+   Catch[
+    If[pp === 0 || qq === 0, Throw[True],
+     {pp, qq} = Together[{pp, qq}/PolynomialGCD[pp, qq]]
+     ];
+    If[pp === qq, Throw[True]];
+
+    (* In order to interleave, degree difference is at most 1. *)
+
+    If[Not[0 <= Exponent[qq, t] - Exponent[pp, t] <= 1], Throw[False]];
+
+    (* In order to interlace, (a t + b)pp+qq must be real-
+    rooted for all a,b>0 *)
+
+    dd = Discriminant[(a t + b) pp + qq, t];
+    If[NumberQ[dd] && dd >= 0, Throw[True]];
+
+    checkDiscr = FullSimplify[dd >= 0, Assumptions -> {a > 0, b > 0, \[Lambda] > 0, \[Mu] > 0}];
+    If[checkDiscr === True, Throw[True]];
+
+    negPt = FindInstance[ And @@ {dd < 0, a > 0, b > 0, \[Lambda] > 0, \[Mu] > 0}, {a, b, \[Lambda], \[Mu]}, Reals];
+    If[Length[negPt] > 0, Throw[False]];
+    Indeterminate
+    ]
+];
+
 
 
 (*
@@ -221,6 +346,7 @@ SEulerianPolynomial[s_List, t_] := SEulerianPolynomial[s,t]=Module[{i, ascE, ran
 
 
 GammaPolynomial::usage = "GammaPolynomial[poly,x] expands a palindromic polynomial in the gamma-basis. See Athanasiadis for background.";
+GammaPolynomial[0,x_]:=0;
 GammaPolynomial[poly_, x_] := Module[{c, inGamma, i, n = Exponent[poly, x], vars},
    inGamma = Sum[c[i] x^i (1 + x)^(n - 2 i), {i, 0, Floor[n/2]}];
    vars = Table[c[i], {i, 0, Floor[n/2]}];
@@ -275,13 +401,19 @@ IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer 
 DifferentialDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 RecurrenceLength::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 Homogeneous::usage = "Option for FindPolynomialRecurrence. True or False.";
+Prefactor::usage = "Option for FindPolynomialRecurrence. Polynomial in t and n as factor for left hand side.";
+
+(* Todo -- add option to have a coefficient for the left hand side of recursion,
+so that we may have rational coefficients. *)
 
 Options[FindPolynomialRecurrence] = {
 	VariableDegree -> 2,
 	IndexDegree -> 1,
 	DifferentialDegree -> 1,
 	RecurrenceLength -> 1,
-	Homogeneous -> True
+	RulesList -> False,
+	Homogeneous -> True,
+	Prefactor -> 1
 };
 
 FindPolynomialRecurrence::usage = "FindPolynomialRecurrence[{p1,p2,...,pk},{t,n}] returns 
@@ -291,21 +423,24 @@ and maximal degree in t and degree in n.";
 FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol}, 
 	opts : OptionsPattern[]] := Module[{c, coeffSum, vDeg, iDeg, rDeg,
 	dDeg, eqns, vars,
-	sol, solFormat, formatSingleCoeff, mm = Length@polys,
+	sol, solFormat, formatSingleCoeffString, mm = Length@polys,
 	ts = ToString@t,
 	ns = ToString@n,
-	homo
+	homo, ansAsRule, prefac
 	},
 	vDeg = OptionValue[VariableDegree];
 	iDeg = OptionValue[IndexDegree];
 	dDeg = OptionValue[DifferentialDegree];
 	rDeg = OptionValue[RecurrenceLength];
 	homo = OptionValue[Homogeneous];
+	ansAsRule = OptionValue[RulesList];
+	prefac = OptionValue[Prefactor];
 	
+
 	(* General coefficient. *)
 	coeffSum[r_Integer, d_Integer] := Sum[ c[r, d, i, j] n^i t^j, {i, 0, iDeg}, {j, 0, vDeg}];
 
-	formatSingleCoeff[r_, d_, s_] := Module[
+	formatSingleCoeffString[r_, d_, s_] := Module[
 		{coeff, polyPart},
 		
 		coeff = Sum[
@@ -320,13 +455,12 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 			1
 			,
 			True,
-			Subsuperscript["P", ns <> "-" <> ToString@r, 
-			"(" <> ToString[d] <> ")"]
+               Subsuperscript["P", ns <> "-" <> ToString@r,"(" <> ToString[d] <> ")"]
 			];
 		Which[
-		coeff === 0, 0,
-		coeff === 1, polyPart,
-		True, Factor[coeff]*polyPart
+            coeff === 0, 0,
+            coeff === 1, polyPart,
+            True, (Factor[coeff])*polyPart
 		]
 		];
 	
@@ -334,15 +468,25 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	solFormat[s_] := Total[
 		Join[
 			Join @@
-				Table[formatSingleCoeff[r, d, s], {d, 0, dDeg}, {r, rDeg}]
+				Table[formatSingleCoeffString[r, d, s], {d, 0, dDeg}, {r, rDeg}]
 			,
-			If[! homo, {formatSingleCoeff[-1, -1, s]}, {}]
-		]
+			If[! homo, {formatSingleCoeffString[-1, -1, s]}, {}]
+            ]
 		];
 	
+	(* Format solution as list of rules. *)
+	ruleFormatSolution[s_]:= Join[
+		Join@@Table[
+         {r,d} -> (Sum[(c[r, d, i, j] /. s) n^i t^j, {j, 0, vDeg}, {i, 0, iDeg}])
+		, {d, 0, dDeg}, {r, rDeg}]
+		,
+		If[!homo, {{-1,-1}->(Sum[(c[-1, -1, i, j] /. s) n^i t^j, {j, 0, vDeg}, {i, 0, iDeg}])}, {}]
+	];
+
+
 	eqns = Table[
 		(*To be zero*)
-		polys[[nn]] -
+		(prefac/.n->nn) * polys[[nn]] -
 		Sum[
 			(coeffSum[r, d] /. n -> nn)*D[polys[[nn - r]], {t, d}]
 			, {d, 0, dDeg}, {r, rDeg}]
@@ -356,7 +500,14 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	
 	If[Length@sol == 0,
 		None,
-		Row[{Subscript["P", ns], "=", solFormat[sol[[1]]]}]
+         If[ansAsRule,
+            ruleFormatSolution[sol[[1]]]
+            ,
+            Row[{
+               If[prefac===1,Nothing, "(" <> ToString[prefac] <> ")" ],
+               Subscript["P", ns], "=",
+               solFormat[sol[[1]]]}]
+         ]
 	]
 ];
 

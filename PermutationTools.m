@@ -1,7 +1,7 @@
 
 
 (* ::Package:: *)
-BeginPackage["PermutationTools`",{"CombinatoricTools`","CatalanObjects`"}];
+BeginPackage["PermutationTools`",{"CombinatoricTools`","CatalanObjects`","NewTableaux`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
@@ -47,9 +47,10 @@ BruhatLowerOrderIdeal; (* Same as StrongOrderDownSet, but more efficient. *)
 (* Subsets of permutations *)
 GrassmannPermutations;
 SimsunPermutations;
-
+SkewMergedPermutations;
 WachsPermutations;
 AlternatingPermutations;
+StirlingPermutations;
 
 
 (* Parity-alternating permutations *)
@@ -73,7 +74,16 @@ TypeBPermutations;
 
 PermutationMatrixPlot;
 
+
+NQueensPermutations;
+CanonPermutations;
+
+
 Begin["`Private`"];
+
+
+(* Pattern for list of integers *)
+iList = {RepeatedNull[_Integer]};
 
 Si[pi_List, i_Integer] := ReplacePart[pi, {i -> pi[[i + 1]], i + 1 -> pi[[i]]}];
 Si[i_Integer][pi_List] := ReplacePart[pi, {i -> pi[[i + 1]], i + 1 -> pi[[i]]}];
@@ -247,6 +257,7 @@ SimionSchmidtMap[pi:iList] :=
 
 (* ToSubExcedance preserves the RTLMin set. *)
 
+ToSubExcedance::usage = "ToSubExcedance[pi] returns the sub-excedance function associated with the permutation pi.";
 ToSubExcedance[{1}] := {1};
 ToSubExcedance[pi:iList] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi] /. {Max[pi] -> pi[[-1]]}]), pi[[-1]]];
 
@@ -369,6 +380,9 @@ SimsunPermutations[n_Integer] := SimsunPermutations[n] = Select[
      &];
 
 
+SkewMergedPermutations::usage = "See https://www.sciencedirect.com/science/article/pii/0012365X94902429";
+SkewMergedPermutations[n_Integer]:=Select[Permutations@n, IsPermutationAvoidingQ[{2, 1, 4, 3}, #] &&  IsPermutationAvoidingQ[{3, 4, 1, 2}, #]&];
+     
 WachsPermutations::usage = "WachsPermutations[n] returns a list of all Wachs permutations in S_n. See arxiv:2212.04932.";
 WachsPermutations[n_Integer] := 
   WachsPermutations[n] = Module[{iStar},
@@ -595,6 +609,33 @@ ArrayPlot[
     ,PixelConstrained -> 6]
 ];
 
+
+NQueensPermutations::usage = "NQueensPermutations[n] returns the list of permutations that solves the n-queens problem on the nxn-board.";
+NQueensPermutations[n_Integer]:=  NQueensPermutations[n] = Select[Permutations@n, 
+    And @@ (Join @@ 
+        Table[Abs[#[[i]] - #[[j]]] != Abs[i - j], {i, n}, {j, i + 1, 
+          n}]) &];
+
+
+CanonPermutations::usage = "CanonPermutations[lam] generates canon permutations with content lambda.";
+CanonPermutations[lam_List] := CanonPermutations[lam] = Module[{main},
+    main = Join @@ (Range /@ lam);
+    Table[
+     main[[Ordering[Join @@ tt[[1]]]]]
+     , {tt, StandardYoungTableaux[lam]}]
+];
+
+CanonPermutations[lam_List, sigma_List] := CanonPermutations[lam] /. Thread[Range[First@lam] -> sigma];
+CanonPermutations[lam_List, All] := Join @@ Table[ CanonPermutations[lam, sigma], {sigma, Permutations[Range@First@lam]}];
+
+
+
+StirlingPermutations::usage="StirlingPermutations[n] returns all Stirling permutations, https://en.wikipedia.org/wiki/Stirling_permutation";
+StirlingPermutations[1] := {{1, 1}};
+StirlingPermutations[n_Integer] :=
+  StirlingPermutations[n] = Join @@ Table[
+     Table[Insert[pi, n, {{j}, {j}}], {j, Length[pi] + 1}]
+     , {pi, StirlingPermutations[n - 1]}];
   
 End[(* End private *)];
 EndPackage[];

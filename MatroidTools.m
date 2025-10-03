@@ -1,7 +1,7 @@
 
 
 (* ::Package:: *)
-BeginPackage["MatroidTools`",{"CombinatoricTools`"}];
+BeginPackage["MatroidTools`",{"CombinatoricTools`","GraphTools`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
@@ -42,6 +42,7 @@ RookBases;
 PathBases;
 VamosBases;
 UniformBases;
+MatchingMatroidBases;
 
 MatroidIsomorphisms;
 SetSymmetries;
@@ -49,6 +50,8 @@ SetIsomorphisms;
 SetsGeneratingPolynomial;
 
 Basis01Vector;
+
+MConvexSetQ;
 
 Begin["`Private`"];
 
@@ -292,6 +295,11 @@ Subsets[Range@8,{4}],
 UniformBases[r_Integer,n_Integer]:=Subsets[Range@n,{r}];
 
 
+MatchingMatroidBases::usage = "MatchingMatroidBases[g] returns the bases for the matching matroid associated with g.";
+MatchingMatroidBases[g_Graph] := With[{mm = GraphMatchings[g]},
+  Union[Union @@@ MaximalBy[mm, Length]]
+];
+
 
 MatroidIsomorphisms[basesA_List,basesB_List]:=SetIsomorphisms[basesA,basesB];
 
@@ -337,6 +345,25 @@ Basis01Vector[bases_List] := With[{grnd = Sort[Union @@ bases]},
    Basis01Vector[grnd, #] & /@ bases
    ];
 
+
+MConvexSetQ::usage = "MConvexSetQ[sets] returns true if these sets form an M-convex set (of sets). ";
+
+MConvexSetQ[set_List] := Module[{convexQ, aa, bb, e, n},
+   Catch[
+    If[Min[set] < 0 || ! AllSameBy[set, {Length[#], Total[#]} &],
+     Throw@False];
+    n = Length[set[[1]]];
+    
+    convexQ[a_List, b_List] := With[{c = Clip[a - b]},
+      And @@ (Or @@@ Table[
+          MemberQ[set, a - UnitVector[n, i] + UnitVector[n, j]]
+          , {i, Flatten@Position[c, 1]}, {j, Flatten@Position[c, -1]}])
+      ];
+    (* Check for convexity. *)
+    Do[If[! convexQ[aa, bb], Throw[False]], {aa, set}, {bb, set}];
+    True
+    ]
+];
 
 End[(* End private *)];
 EndPackage[];

@@ -5,6 +5,10 @@ Clear["CatalanObjects`*"];
 
 BeginPackage["CatalanObjects`",{"CombinatoricTools`"}];
 
+FromTypeB;
+ToTypeB;
+TypeBSortInterval;
+
 (* Generic circular combinatorial object. *)
 CircularGraph;
 CircularGraphPlot;
@@ -58,7 +62,17 @@ Stanley60TypeB;
 NgonTriangulations;
 
 DyckAreaLists;
+DyckAreaCliqueDecomposition;
+DyckAreaCliqueNesting;
+LineGraphAreaQ;
+AbelianDyckAreaQ;
+
+LineGraphAreaLists;
+AreaPeaks;
+AreaToBracketing;
+AreaTo312Avoiding;
 AreaToDyckPath;
+AreaToIntervalGraph;
 AreaTranspose;
 AreaListPlot;
 Labels;
@@ -112,14 +126,37 @@ Av231;
 Av312;
 Av321;
 
+CompleteBinaryTrees;
+
+TypeBSetPartition0;
+TypeBSetPartitions;
+SetPartitionLinePlot;
+SetPartitionForm;
+FormatTypeBSetPartition;
+SeparatedNonCrossingPartitions;
+
 Begin["Private`"];
 
+(*Maps -1, -2, ... -n, to n+1,n+2,... 2n *)
+FromTypeB::usage="Convert negative type B integers to positive.";
+ToTypeB::usage="Convert integers >n to negative.";
+FromTypeB[n_Integer,i_Integer] := If[i < 0, n-i, i];
+ToTypeB[n_Integer,i_Integer]:=If[i>n, n-i, i];
+FromTypeB[n_,ii_List]:=FromTypeB[n,#]&/@ii;
+ToTypeB[n_,ii_List]:=ToTypeB[n,#]&/@ii;
 
+(* Given an interval on -[n] cup [n], present it sorted cyclically counterclockwise. *)
+TypeBSortInterval[ii_List] := With[{
+	pp = Sort[Select[ii, Positive]],
+	nn = Sort[Select[ii, Negative], Greater]},
+	If[MemberQ[ii, -1], Join[pp, nn], Join[nn, pp]]
+];
+
+(* A CircularGraph object is of the form CircularGraph[n, edges...] where edges are a multiset of subsets of vertices. *)
 CircularGraph::usage = "Head for object representing a circular object. It is of the form CircularGraph[n,edgeList].";
 
 (* Canonicalize the representation. *)
-CircularGraph[n_Integer, edges_List] := 
-CircularGraph[n, 
+CircularGraph[n_Integer, edges_List] := CircularGraph[n,
 	MapAll[If[ListQ@#, Sort@#, #]&, edges]
 ] /; !OrderedQ[edges] || Not[And@@(OrderedQ/@edges)];
 
@@ -128,15 +165,71 @@ CircularGraph[n,
 CircularGraph/:Format[CircularGraph[n_Integer,edges_List]]:=CircularGraphPlot[CircularGraph[n,edges]];
 CircularGraphPlot::usage="CircularGraphPlot[circularGraph] gives a graphical representation of the graph.";
 
+Options[CircularGraphPlot] = {VertexLabeling -> True, Circle -> True};
+CircularGraphPlot[CircularGraph[n_Integer, edgeList_List],
+   opts : OptionsPattern[]] := Module[
+   {typeB, d, edgeMultColor, coord, i, pts, lbls = {}, graphicObjects},
 
+   (* Negative n indicate a type B object so adjust number of vertices (d) accordingly. *)
+
+   d = If[n < 0, -2 n, n];
+
+   (*Maps -1, -2, ... -n, to n+1,n+2,... 2n *)
+   fromTypeB[i_Integer] := If[i < 0,-(i+n), i];
+   toTypeB[i_Integer]:=If[i>-n>0, -(i+n), i];
+
+   coord[i_Integer, rad_ : 1] :=rad {Cos[2 Pi (i - 1)/d], Sin[2 Pi (i - 1)/d]};
+   coord[il_List, rad_ : 1] := coord[#, rad] & /@ il;
+
+   (* Vertex points *)
+   pts = {EdgeForm[Black], White,Table[Disk[coord[i, 1], 0.18], {i, Range[d]}]};
+
+   (* Vertex text *)
+   If[OptionValue[VertexLabeling],
+    lbls = {{FontSize -> Scaled[0.10],
+        Table[
+			With[{j=toTypeB@i},
+				Text[ If[Negative@j,OverBar[-j],j], coord[i, 1.0]]
+			]
+		, {i, d}]}};
+    ];
+
+   (* Edge multiplicity to color *)
+   edgeMultColor[m_Integer] := Switch[m, 0, White, 1, Black, 2, Blue, 3, Red, _, Pink];
+
+   graphicObjects = Table[
+     (* Here, e is a set of vertices. *)
+
+     With[{e = Sort[fromTypeB /@ First[part]],color = edgeMultColor@Last@part},
+      Which[
+       (* Vertex *)
+
+       Length[e] == 1 || (Length[e] == 2 && e[[1]] == e[[2]]),
+       {EdgeForm[color], LightBlue, Disk[coord@First@e, 0.2]},
+       (* Edge. *)
+
+       Length[e] == 2, {Thickness[0.015], color, Line@coord@e},
+       (* Block. *)
+
+       Length[e] > 2, {EdgeForm[color], LightBlue, Polygon@coord@e},
+       (* Unknown--should not happen. *)
+
+       True, {Print["Unknown edge, ", e]; {}}]
+      ]
+     , {part, Tally[edgeList]}];
+   Graphics[{If[OptionValue[Circle], {Black, Circle[{0, 0}, 1]}, {}],
+     graphicObjects, pts, lbls}, ImageSize -> 120]
+];
+
+(*
 Options[CircularGraphPlot]={VertexLabeling->True,Circle->True};
-CircularGraphPlot[CircularGraph[d_Integer,edgeList_List],opts:OptionsPattern[]] := 
-Module[{edgeMultColor,coord, i, rad, pts, lines,smallCircs, lbls},
+CircularGraphPlot[CircularGraph[d_Integer,edgeList_List],opts:OptionsPattern[]] := Module[
+	{edgeMultColor,coord, i, pts, lines,smallCircs, lbls,graphicObjects},
 	
 	coord[i_Integer, rad_:1] := rad {Cos[2 Pi (i - 1)/d], Sin[2 Pi (i - 1)/d]};
-	coord[il_List,rad_:1]:=coord[#,rad]&/@il;
+	coord[il_List, rad_:1]:=coord[#,rad]&/@il;
 	
-	pts = { EdgeForm[Black], White, Table[Disk[coord[i, 1],0.14], {i, Range[d]}]};
+	pts = { EdgeForm[Black], White, Table[Disk[coord[i, 1], 0.14], {i, Range[d]}]};
 	
 	edgeMultColor[e_List]:=Switch[
 		Count[edgeList,e],
@@ -174,7 +267,7 @@ Module[{edgeMultColor,coord, i, rad, pts, lines,smallCircs, lbls},
 		},
 	ImageSize->120]
 ];
-
+*)
 
 CircularGraphShortEdgeSet::usage = 
 "CircularGraphShortEdgeSet[cg] returns the list of vertices v, such that (v,v+1) is an edge.";
@@ -375,7 +468,7 @@ NonCrossingPartitionsHelper[n_Integer] :=
         NonCrossingPartitionsHelper[k],
         k + 1 + NonCrossingPartitionsHelper[n - 1 - k], 1]
       , {k, 0, n - 1}]
-    ];
+];
 
 
 
@@ -573,12 +666,6 @@ DyckAreaLists[n_Integer] := DyckAreaLists[n] =
      , {k, 0, n - 1}], 2];
 
 
-(*
-AreaToDyckPath[area_List] := With[{n=Length@area},
-	1 - Normal[SparseArray[2 Range[n] - 1 - area -> ConstantArray[1, n], 2 n]]
-];
-*)
-
 AreaToDyckPath[area_List] := With[{n=Length@area},
 	DyckPath@Normal[
 		SparseArray[
@@ -587,6 +674,83 @@ AreaToDyckPath[area_List] := With[{n=Length@area},
 			"e"]]
 ];
 
+AreaToIntervalGraph[aa_List]:=With[{n = Length@aa},
+	Graph[Range@n,Join @@ Table[
+		{Mod[k - i - 1, n] + 1, k}
+		,{k, n}, {i, aa[[k]]}]]
+];
+
+
+AreaPeaks::usage = "AreaPeaks[area] returns number of peaks, assuming its a Dyck path.";
+AreaPeaks[aa_List] := 1 + Sum[Boole[aa[[j]] >= aa[[j + 1]]], {j, Length[aa] - 1}];
+
+
+DyckAreaCliqueDecomposition[area_List] := With[{n = Length[area]},
+   (* Look at all peaks of the Dyck path, and construct 
+   the corresponding cliques of the Unit interval graph. *)
+   (* This decomp. can also be used to classify Abelian Dyck paths. *)
+   Table[
+    If[i == n || area[[i]] >= area[[i + 1]], Range[i - area[[i]], i], 
+     Nothing]
+    , {i, Length[area]}]
+];
+
+DyckAreaCliqueNesting[area_List] := 
+  With[{dacd = DyckAreaCliqueDecomposition[area]},
+   Max[0, Last /@ Tally[Join @@ dacd]]
+];
+
+LineGraphAreaQ[area_List] := DyckAreaCliqueNesting[area] <= 2;
+
+AbelianDyckAreaQ[area_List] := With[{dacd = DyckAreaCliqueDecomposition[area]},
+   Or[Length[dacd] == 1, Last[dacd[[1]]] + 1 >= First[dacd[[-1]]]]
+];
+
+
+LineGraphAreaLists::usage = "LineGraphAreaLists[n] returns all area lists where the unit interval graph is a line graph.";
+LineGraphAreaLists[1] := {{0}};
+LineGraphAreaLists[n_Integer] :=
+  LineGraphAreaLists[n] = Module[{aa, j},
+    Reap[
+       Do[
+         Sow[Append[aa, Last[aa] + 1]];
+         Sow[Append[aa, 1]];
+         Sow[Append[aa, 0]]; (* Remove this if we want only connected.*)
+         If[Length[aa] >= 2 && aa[[-1]] - 1 == aa[[-2]],
+          With[{r = Length@Last[Split[Differences[aa]]]},
+           Do[
+            Sow[Append[aa, j]]
+            , {j, r + 1}]
+           ]];
+         , {aa, LineGraphAreaLists[n - 1]}];
+       ][[-1, 1]] // Union
+];
+
+
+ConnectedLineGraphAreaLists[1] := {{0}};
+ConnectedLineGraphAreaLists[2] := {{0, 1}};
+ConnectedLineGraphAreaLists[n_Integer] := 
+  ConnectedLineGraphAreaLists[n] =
+   Module[{aa, j},
+    Reap[
+      Do[
+        Sow[Append[aa, Last[aa] + 1]];
+        Sow[Append[aa, 1]];
+        If[aa[[-2]] + 1 != aa[[-1]],
+         Sow[Join[Most[aa], {aa[[-2]] + 1, aa[[-1]] + 1}]]
+         ];
+        , {aa, ConnectedLineGraphAreaLists[n - 1]}];
+      ][[-1, 1]]];
+
+
+AreaToBracketing::usage = "DyckAreaToBracketing[area] returns a bracketing representation of the Dyck path.";
+AreaToBracketing[{}] := {};
+AreaToBracketing[area_List] := 
+  AreaToBracketing[Rest[#] - 1] & /@ 
+   Split[area, #1 >= 0 && #2 > 0 &];
+
+   
+AreaTo312Avoiding::usage = "AreaTo312Avoiding[area] returns a permutation avoiding 312.";
 AreaTo312Avoiding[area_List] := Module[{isOK, areaC, n = Length@area},
 	areaC = Reverse@AreaTranspose[area];
 	isOK[p_] := And @@ Table[
@@ -736,6 +900,7 @@ FussCatalanPaths[n_Integer, k_Integer : 2] :=
       , {alpha, WeakIntegerCompositions[n - 1, k]}]);
 
 
+DyckPath[binary:{(0 | 1) ...}]:=DyckPath[binary/.{0->"n",1->"e"}];
 DyckPath[neWord_String]:=DyckPath[Characters@neWord];
 
 DyckPath/:Format[DyckPath[ne_List]]:=DyckPlot[DyckPath[ne]];
@@ -1011,7 +1176,7 @@ OrderedRootedTrees[n_Integer] := Reap[Do[Outer[Sow[
 		OrderedRootedTrees[k],
 		OrderedRootedTrees[n - 1 - k], 1]
 		,{k, 0, n - 1}]][[-1, 1]];
-	
+
 OrderedRootedTreeToGraph[{}] := Graph[{1}, {}];
 OrderedRootedTreeToGraph[ot_List] := OrderedRootedTreeToGraph[ot] = Module[
 	{subTrees, sizes, eLists, toAdd, adjustedEdges, newEdges},
@@ -1108,7 +1273,126 @@ Av213[n_Integer] := Reverse[n + 1 - #] & /@ Av132[n];
 Av312[n_Integer] := n + 1 - # & /@ Av132[n];
 Av123[n_Integer] := From132To123Avoiding /@ Av132[n];
 Av321[n_Integer] := Reverse[From132To123Avoiding[#]] & /@ Av132[n];
-		
+
+
+
+CompleteBinaryTrees::usage = "CompleteBinaryTrees[n] returns a list of binary trees.";
+CompleteBinaryTrees[0] := {Graph[{1}, {}]};
+CompleteBinaryTrees[n_Integer] :=
+  CompleteBinaryTrees[n] = Module[{left, right, k, gg},
+    Reap[
+      Do[
+        Do[
+         (* Left tree has 2k+1 vertices *)
+         gg = Graph[Range@n,
+           Join[
+            {DirectedEdge[1, 2]},
+            (EdgeList[left] /. i_Integer :> i + 1),
+            {DirectedEdge[1, 2 k + 3]},
+            (EdgeList[right] /. i_Integer :> i + 2 k + 2)
+            ]
+           ];
+         Sow[gg];
+         , {left, CompleteBinaryTrees[k]}
+         , {right, CompleteBinaryTrees[n - 1 - k]}]
+        , {k, 0, n - 1}];
+      ][[2, 1]]
+];
+
+
+
+(* Fufa's successors and merging blocks. *)
+SPSuccessorsSet[bb_List] := Sort@(Join @@ Table[1 + Intersection[b, b - 1], {b, bb}]);
+SPMergingBlocksSet[bb_List] := Sort@Table[
+    If[bb[[k, -1]] < bb[[k + 1, 1]], bb[[k + 1, 1]], Nothing] , {k, Length[bb] - 1}];
+
+SPSuccessors[bb_List] := Length@SPSuccessorsSet[bb];
+SPMergingBlocks[bb_List] := Length@SPMergingBlocksSet[bb];
+
+
+
+(* Helper function, only keeps track of blocks with positive minimal elem. *)
+TypeBSetPartition0::usage = "TypeBSetPartition0[elems] returns all type B set partitions without 0 block.";
+TypeBSetPartition0[{}] := {{}};
+TypeBSetPartition0[elems_List] := Module[{block1},
+   Join @@ Table[
+     (* Create the block containing the first element of elems *)
+     block1 = Prepend[ss, First[elems]];
+     (* Choose sign of first block, and partition remaining elements.*)
+     Join @@ Table[
+       Prepend[sp, block1*Prepend[signs, 1]]
+       , {sp, TypeBSetPartition0[Complement[elems, block1]]}
+       , {signs, Tuples[{-1, 1}, Length[block1] - 1]}
+       ]
+     , {ss, Subsets[Rest@elems]}]
+];
+
+TypeBSetPartitions::usage = "TypeBSetPartitions[n] returns all type B set partitions of [n].";
+TypeBSetPartitions[n_Integer] := TypeBSetPartitions[n] = (
+    Join @@ Table[
+      Table[
+       If[zb == {}, Join[-sp, sp],
+        Join[{Join[-zb, zb]}, -sp, sp]
+        ]
+       , {sp, TypeBSetPartition0[Complement[Range[n], zb]]}]
+      (* Choice of zero block elems*)
+      , {zb, Subsets[Range@n]}]);
+
+SetPartitionLinePlot::usage = "SetPartitionLinePlot[CircularGraph] returns the vertices-on-a-line version of set partitions.
+Works on both Type A and Type B.";
+SetPartitionLinePlot[CircularGraph[n_, blocks_]] := Module[
+   {arc, slice, d = If[n < 0, -2 n, n], nodes, pts, lbls, arcs},
+
+   arc[{i_, j_}] := Circle[{(i + j)/2, 0}, {j - i, 0.7 (j - i)}/2, {0, Pi}];
+   slice[{i_, j_}] := Disk[{(i + j)/2, 0}, {j - i, 0.7 (j - i)}/2, {0, Pi}];
+   
+   pts = {EdgeForm[Black], White, Table[Disk[{i, 0}, 0.3], {i, d}]};
+   
+   lbls = {{
+     FontSize -> Scaled[0.05]
+     ,
+      Table[
+        With[{j = ToTypeB[Abs@n, i]},
+          Text[If[Negative@j, OverBar[-j], j], {i, 0}]], {i, d}]
+    }};
+   
+   arcs = Join @@ Table[
+      Table[
+       arc[Sort[ss]], {ss, Subsets[FromTypeB[-n, bb], {2}]}]
+      , {bb, blocks}];
+   
+   Graphics[{arcs, pts, lbls}, ImageSize -> 30 d]
+];
+
+SetPartitionForm[bb_List] := Row[Row /@ (bb/.{i_Integer:>If[i<0,OverBar[i],i]}), "|"];
+
+FormatTypeBSetPartition::usage = "FormatTypeBSetPartition[sp] returns a canonicalized version.";
+FormatTypeBSetPartition[sp_List] := SortBy[DeleteDuplicates[
+    Table[
+     Sign[First@#] # &@SortBy[bl, Abs]
+     , {bl, sp}]], First];
+
+
+SeparatedNonCrossingPartitions::usage="SeparatedNonCrossingPartitions[n] returns all Type A non-crossing and separated set partitions. Enumerated by Motzkin numbers.";
+SeparatedNonCrossingPartitions[0] := {{}};
+SeparatedNonCrossingPartitions[1] := {{{1}}};
+SeparatedNonCrossingPartitions[n_Integer] := 
+  SeparatedNonCrossingPartitions[n] = Module[{k},
+    Reap[
+      Do[
+       (* Same recursion as for non-crossing partitions, 
+       but we only insert new element k+1 if allowed.*)
+       If[spB == {},
+        Sow[Join[spL, {{k + 1}}]],
+        If[spB[[-1, 1]] > k + 2,
+         Sow[Join[spL, Most[spB], {Prepend[Last[spB], k + 1]}]]
+         ]
+        ]
+       , {k, 0, n - 1}
+       , {spL, SeparatedNonCrossingPartitions[k]}
+       , {spB, k + 1 + SeparatedNonCrossingPartitions[n - 1 - k]}]
+      ][[-1, 1]]
+    ];
 	
 End[(* End private *)];
 EndPackage[];

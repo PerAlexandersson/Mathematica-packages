@@ -164,7 +164,7 @@ defineBasisFormatting[bb_,symb_String]:=Module[{},
 	{r = If[Max[a]<10, Row[a],Row[a,","]]}, 
 	
 		If[x === None, Subscript[symb, r], 
-			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]
+			Row[{Subscript[symb, r], "(", MakeBoxes[x], ")"}]]
 	];
 	
 	(* Define traditional formatting. *)
@@ -173,7 +173,7 @@ defineBasisFormatting[bb_,symb_String]:=Module[{},
 			If[Max[a] <= 9, RowBox[ToString /@ a], 
 				RowBox[Riffle[ToString /@ a, ","]]]}, 
 		If[x === None, SubscriptBox[symb, r], 
-			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
+			RowBox[{SubscriptBox[symb, r], "(", MakeBoxes[x,TraditionalForm], ")"}]]];
 			
 ];
 
@@ -473,13 +473,15 @@ SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__
 
 SymmetricFunctionDegree::usage = "SymmetricFunctionDegree[expr] returns the degree of the symmetric function.";
 
-SymmetricFunctionDegree[expr_, All] := Max[
-	Table[
-			Cases[mm, (bb:coreBasesList)[mu_List, x_] :> Tr[mu],{0,Infinity}]
-		,{mm,SymmetricMonomialList[expr]}]
-];
-SymmetricFunctionDegree[expr_, yy_:None] := Max[
-	Table[
+SymmetricFunctionDegree[0, ___] := -Infinity;
+SymmetricFunctionDegree[_?NumericQ, ___] := 0;
+SymmetricFunctionDegree[expr_, All] := Max@Table[
+			Cases[mm, (bb:coreBasesList)[mu_List, x_] :> Tr[mu], {0,Infinity}]
+		,{mm,SymmetricMonomialList[expr]}];
+
+SymmetricFunctionDegree[expr_, yy_:None] := If[
+	expr===0, -Infinity,
+	Max@Table[
 			Cases[mm, (bb:coreBasesList)[mu_List, yy] :> Tr[mu],{0,Infinity}]
 		,{mm, SymmetricMonomialList[expr]}]
 ];
@@ -770,7 +772,7 @@ basisInElementary[bb_,lam_List,x_]:=ChangeFunctionAlphabet[basisInElementary[bb,
 
 (* This is used to define the core bases via the transition matrices. *)
 basisInMonomial[bb_,{}]:=1;
-basisInMonomial[bb_,lam_List]:=Module[{n=Tr@lam, transMat, ip, lamFixed},
+basisInMonomial[bb_,lam_List]:=Module[{n=Tr@lam, transMat, ip, vec, j, lamFixed},
 	transMat = symFuncTransMatInternal[bb,MonomialSymmetric,n];
 	ip = IntegerPartitions[n];
 	
@@ -781,7 +783,7 @@ basisInMonomial[bb_,lam_List]:=Module[{n=Tr@lam, transMat, ip, lamFixed},
 	(* Memoize expansion for all partitions of same size. *)
 	Do[
 		basisInMonomial[bb,ip[[j]]] = vec[[ j ]];
-	,{j,Length@ip}];
+	,{j, Length@ip}];
 	
 	(* Return specific. *)
 	basisInMonomial[bb,lam]
@@ -879,9 +881,9 @@ PowerSumSymmetric[lam_?VectorQ, x_] :=
 	If[Min[lam]>=0, basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x],0];
 
 
-ForgottenSymmetric[mu_] := ForgottenSymmetric[mu, None];
+ForgottenSymmetric[mu_?VectorQ] := ForgottenSymmetric[mu, None];
 ForgottenSymmetric[mu_?VectorQ, x_] := 
-	If[Min[lam]>=0, basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x],0];
+	If[Min[mu]>=0, basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x],0];
 
 
 SchurSymmetric[d_Integer,x_]:=SchurSymmetric[{d},x];
@@ -911,7 +913,7 @@ OmegaInvolution[poly_, x_: None] := (
 	poly /. {
 		MonomialSymbol[mu_, x] :> ForgottenSymbol[mu, x],
 		ForgottenSymbol[mu_, x] :> MonomialSymbol[mu, x],
-		PowerSumSymbol[mu_,x] :> (-1)^(Tr[mu] - Length[mu])PowerSumSymbol[mu, x],
+		PowerSumSymbol[mu_,x] :> (-1)^(Tr[mu] - Length[mu]) PowerSumSymbol[mu, x],
 		ElementaryESymbol[mu_,x]:>CompleteHSymbol[mu,x],
 		CompleteHSymbol[mu_,x]:>ElementaryESymbol[mu,x],
 		SchurSymbol[mu_,x]:>SchurSymbol[ConjugatePartition@mu,x]
@@ -936,8 +938,7 @@ SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr,x,[n]
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, 0] := 0;
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] := 
 	If[
-		Length[mu]>n, 0
-		,
+		Length[mu]>n, 0,
 		Sum[ Times @@ ((x /@ Range[n])^p)
 	, {p, Permutations[PadRight[mu, n]]}]
 ];
@@ -952,7 +953,7 @@ SymmetricFunctionToPolynomial[ElementaryESymbol[mu_List, None], x_, n_Integer] :
 		,{m,mu}]
 ];
 
-SymmetricFunctionToPolynomial[expr_, x_] := SymmetricFunctionToPolynomial[expr, x, SymmetricFunctionDegree[expr]];
+SymmetricFunctionToPolynomial[expr_, x_:None] := SymmetricFunctionToPolynomial[expr, x, SymmetricFunctionDegree[expr]];
 
 (* TODO - This can be made more efficient if we replace expressions directly for some bases,
  as we did above. *)
@@ -1121,9 +1122,7 @@ Plethysm[f_, g_, xx_: None] := Module[
 	
 	auxVars = Complement[Variables[{fInP, gInP}], fVars, gVars];
 	
-	PkPlethysmWithG[k_] :=
-		(gInP /. 
-		Table[v -> v^k, {v, auxVars}]) /. {PowerSumSymbol[mu__,x_] :> PowerSumSymbol[k*mu,x]};
+	PkPlethysmWithG[k_] := (gInP /. Table[v -> v^k, {v, auxVars}]) /. {PowerSumSymbol[mu__,x_] :> PowerSumSymbol[k*mu, x]};
 	
 	(* Here, we substitute into ALL alphabets in the f-expression *)
 	(* If only a subset, we should look at Last@vF *)

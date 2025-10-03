@@ -60,6 +60,8 @@ KnuthRepresentative;
 
 BinaryMatrixToBiword;
 
+LongestIncreasingSubsequence;
+
 SYTEvacuation;
 SYTEvacuationDual;
 
@@ -534,7 +536,7 @@ RowLatticePaths[YoungTableau[ssyt_]] := Module[
          Table[
           Append[ConstantArray[{1, 0}, Count[ssyt[[r]], i]], {0, 1}]
           , {i, m}]
-        , {-r + 2 Count[ssyt[[r]], None], 1}]
+        , {-r + Count[ssyt[[r]], None], 1}]
      , {r, rows}];
    Graphics[
     {
@@ -546,7 +548,7 @@ RowLatticePaths[YoungTableau[ssyt_]] := Module[
     GridLines -> {Range[-3 (rows + m), 3 (rows + m)], Range[m]},
     PlotRange -> All
     ]
-   ];
+];
    
 ColumnLatticePaths::usage = "ColumnLatticePaths[ssyt] returns a graphical representation of the ssyt 
 as a set of non-intersecting lattice paths, each path corresponding to a column in the ssyt";
@@ -562,7 +564,7 @@ ColumnLatticePaths[YoungTableau[ssytIn_]] := Module[
 			Table[
 			If[MemberQ[ssyt[[c]], i], {-1, 1}, {1, 1}]
 			, {i, m}]
-			, {2 c - 2 Count[ssyt[[c]], None], 1}]
+			, {2 c - 2 Count[ssyt[[c]], None], 0}]
 		, {c, cols}];
 	labelx = Min[First /@ paths[[1]]];
 	Graphics[
@@ -570,9 +572,9 @@ ColumnLatticePaths[YoungTableau[ssytIn_]] := Module[
 		{Thickness[0.010], Line[#] & /@ paths},
 		Table[
 		Text[Style[i, FontSize -> Scaled[0.03], 
-			Background -> White], {labelx - 1, i + 0.5}], {i, m}]
+			Background -> White], {labelx - 1, i - 0.5}], {i, m}]
 		},
-	GridLines -> {Range[-3 (cols + m), 3 (cols + m)], Range[m + 1]},
+	GridLines -> {Range[-3 (cols + m), 3 (cols + m)], Range[0, m]},
 	PlotRange -> All
 	]
 ];
@@ -916,7 +918,8 @@ BinaryMatrixToBiword[m_List] := Transpose@SortBy[
      MapIndexed[If[#1 == 1, #2, Nothing[]] &, 
       m, {2}], {First, -Last[#] &}];
 
-
+LongestIncreasingSubsequence::usage ="LongestIncreasingSubsequence[w] returns the length of the longest increasing subsequence.";
+LongestIncreasingSubsequence[w_List] := Length[BiwordRSK[w][[1, 1, 1]]];
 	  
 
 SYTEvacuation::usage = "SYTEvacuation[syt] performs the evacuation involution on the SYT. Does not work on skew shapes or SSYTs.";
@@ -1015,7 +1018,7 @@ CrystalEi[w_List, i_Integer,k_Integer:1] := With[
 	If[out === Undefined, out, out[[1, 1]] ]
 ];
 
-CrystalFi::usage = "CrystalFi[ssyt,i] performs the crystal lowering operator fi on the tableau. It also works on lists";
+CrystalFi::usage = "CrystalFi[ssyt,i] performs the crystal lowering operator fi on the tableau. It also works on words.";
 
 CrystalFi[YoungTableau[ssyt_], i_Integer,k_Integer:1] := 
 CrystalOp[YoungTableau@ssyt, i,
@@ -1030,12 +1033,12 @@ CrystalOp[YoungTableau@ssyt, i,
 ];
 
 CrystalFi[w_List, i_Integer,k_Integer:1] := With[
-{out = CrystalFi[YoungTableau[{w}], i,k]},
+	{out = CrystalFi[YoungTableau[{w}], i,k]},
 	If[out === Undefined, out, out[[1, 1]] ]
 ];
 
 CrystalSi::usage = "CrystalSi[ssyt,i] performs the crystal 
-transposition operator si on the tableau. It also works on lists";
+transposition operator si on the tableau. It also works on words.";
 CrystalSi[YoungTableau[ssyt_], i_Integer] := 
   CrystalOp[YoungTableau@ssyt, i, Function[{w}, Reverse[w]/.{i+1->i,i->i+1}]];
 CrystalSi[w_List, i_Integer] := With[

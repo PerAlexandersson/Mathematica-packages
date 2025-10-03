@@ -159,7 +159,7 @@ createQSymBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[
 		True, Null
 	];
 	
-	(* Formatting. *)
+	(* Formatting *)
 	defineBasisFormatting[bb,symb];
 ];
 
@@ -200,7 +200,6 @@ UnitTest[FundamentalQSymmetric] := And[
 			FundamentalQSymmetric[{1, 2, 1}] +
 			FundamentalQSymmetric[{2, 2}] + FundamentalQSymmetric[{1, 1, 2}]
 ];
-
 
 
 PowerSumQSymmetric[alpha_List, x_: None] := PowerSumQSymmetric[alpha, x] = Module[{pi},
