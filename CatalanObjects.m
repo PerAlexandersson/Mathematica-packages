@@ -33,7 +33,6 @@ NCMPeaks;
 NCMFaces;
 
 
-
 (* 
 Todo: implement kreweras complement:
 http://de.arxiv.org/pdf/1904.05573.pdf
@@ -63,10 +62,12 @@ NgonTriangulations;
 
 DyckAreaLists;
 DyckAreaCliqueDecomposition;
+DyckAreaCliqueNestingVector;
 DyckAreaCliqueNesting;
 LineGraphAreaQ;
 AbelianDyckAreaQ;
 
+BounceLikeArea;
 LineGraphAreaLists;
 AreaPeaks;
 AreaToBracketing;
@@ -700,12 +701,17 @@ DyckAreaCliqueNesting[area_List] :=
    Max[0, Last /@ Tally[Join @@ dacd]]
 ];
 
+DyckAreaCliqueNestingVector[aa_List] := Last /@ Sort[Tally[Flatten@DyckAreaCliqueDecomposition[aa]]];
+
 LineGraphAreaQ[area_List] := DyckAreaCliqueNesting[area] <= 2;
 
 AbelianDyckAreaQ[area_List] := With[{dacd = DyckAreaCliqueDecomposition[area]},
    Or[Length[dacd] == 1, Last[dacd[[1]]] + 1 >= First[dacd[[-1]]]]
 ];
 
+
+BounceLikeArea::usage = "BounceLikeArea[alpha] generates a Dyck path with disjoint cliques of specified sizes.";
+BounceLikeArea[alpha_List] := Join @@ Table[Range[0, a - 1], {a, alpha}];
 
 LineGraphAreaLists::usage = "LineGraphAreaLists[n] returns all area lists where the unit interval graph is a line graph.";
 LineGraphAreaLists[1] := {{0}};
@@ -740,7 +746,7 @@ ConnectedLineGraphAreaLists[n_Integer] :=
          Sow[Join[Most[aa], {aa[[-2]] + 1, aa[[-1]] + 1}]]
          ];
         , {aa, ConnectedLineGraphAreaLists[n - 1]}];
-      ][[-1, 1]]];
+][[-1, 1]]];
 
 
 AreaToBracketing::usage = "DyckAreaToBracketing[area] returns a bracketing representation of the Dyck path.";

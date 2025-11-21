@@ -20,12 +20,14 @@ FixedPointsSet;
 FixedPoints;
 DescentSet;
 Descents;
+AscentSet;
 Ascents;
 MajorIndex;
 CoMajorIndex;
 Inversions;
 CoInversions;
 Runs;
+BurrowsWheeler;
 RightToLeftMinima;
 RightToLeftMaxima;
 PermutationPeaks;
@@ -211,6 +213,10 @@ DescentSet[p:iList]:=Table[If[p[[i]]>p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
 SyntaxInformation[Descents] = {"ArgumentsPattern" -> {{_...}}};
 Descents[p:iList] := Sum[Boole[p[[i]] > p[[i + 1]]], {i, Length[p] - 1}];
 
+SyntaxInformation[AscentSet] = {"ArgumentsPattern" -> {{_...}}};
+AscentSet[p:iList]:=Table[If[p[[i]]<p[[i+1]],i,Sequence@@{}],{i,Length[p]-1}];
+
+
 SyntaxInformation[Ascents] = {"ArgumentsPattern" -> {{_...}}};
 Ascents[p:iList] := Sum[Boole[p[[i]] < p[[i + 1]]], {i, Length[p] - 1}];
 
@@ -250,6 +256,11 @@ SyntaxInformation[LeftToRightMaxima] = {"ArgumentsPattern" -> {{_...}}};
 Runs::usage = "Runs[w] partitions the word into increasing subsequences.";
 Runs[{}] := {};
 Runs[lst_List]:=Split[lst, LessEqual];
+
+
+BurrowsWheeler::usage = "BurrowsWheeler[w] applies the Burrows-Wheeler transform on the binary word.";
+BurrowsWheeler[w_List] := Last /@ Sort[Table[RotateRight[w, k], {k, Length@w}]];
+
 
 SyntaxInformation[RunSort] = {"ArgumentsPattern" -> {{_...}}};
 RunSort[pi_List] := Flatten@LexSort@Runs@pi;

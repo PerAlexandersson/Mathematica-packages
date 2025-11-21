@@ -40,10 +40,13 @@ DifferentialDegree;
 RecurrenceLength;
 Homogeneous;
 RulesList;
-Prefactor;
+DenominatorVariableDegree;
+DenominatorIndexDegree;
 
 CompleteHomogeneousPolynomial;
 ElementarySymmetricPolynomial;
+
+HilbertFunctionValues;
 
 Begin["`Private`"];
 
@@ -401,19 +404,18 @@ IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer 
 DifferentialDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 RecurrenceLength::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 Homogeneous::usage = "Option for FindPolynomialRecurrence. True or False.";
-Prefactor::usage = "Option for FindPolynomialRecurrence. Polynomial in t and n as factor for left hand side.";
-
-(* Todo -- add option to have a coefficient for the left hand side of recursion,
-so that we may have rational coefficients. *)
+DenominatorVariableDegree::"Option for FindPolynomialRecurrence. Non-negative integer value.";
+DenominatorIndexDegree::"Option for FindPolynomialRecurrence. Non-negative integer value.";
 
 Options[FindPolynomialRecurrence] = {
-	VariableDegree -> 2,
+	VariableDegree -> 1,
 	IndexDegree -> 1,
-	DifferentialDegree -> 1,
-	RecurrenceLength -> 1,
+	DifferentialDegree -> 0,
+	RecurrenceLength -> 2,
 	RulesList -> False,
 	Homogeneous -> True,
-	Prefactor -> 1
+	DenominatorVariableDegree -> 0,
+	DenominatorIndexDegree -> 0
 };
 
 FindPolynomialRecurrence::usage = "FindPolynomialRecurrence[{p1,p2,...,pk},{t,n}] returns 
@@ -421,12 +423,13 @@ a linear recursion involving the polynomials (in t) and their derivatives, and c
 t and n. Options are used to specify maximal length of recursion, maximal degree of differentiation,
 and maximal degree in t and degree in n.";
 FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol}, 
-	opts : OptionsPattern[]] := Module[{c, coeffSum, vDeg, iDeg, rDeg,
+	opts : OptionsPattern[]] := Module[{c, d, coeffSum, fracCoeffSum, vDeg, iDeg, rDeg,
 	dDeg, eqns, vars,
-	sol, solFormat, formatSingleCoeffString, mm = Length@polys,
+	sol, solFormat,
+	formatSingleCoeffString, mm = Length@polys,
 	ts = ToString@t,
 	ns = ToString@n,
-	homo, ansAsRule, prefac
+	homo, ansAsRule, denvDeg,deniDeg
 	},
 	vDeg = OptionValue[VariableDegree];
 	iDeg = OptionValue[IndexDegree];
@@ -434,18 +437,19 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	rDeg = OptionValue[RecurrenceLength];
 	homo = OptionValue[Homogeneous];
 	ansAsRule = OptionValue[RulesList];
-	prefac = OptionValue[Prefactor];
-	
+	denvDeg = OptionValue[DenominatorVariableDegree];
+	deniDeg = OptionValue[DenominatorIndexDegree];
 
 	(* General coefficient. *)
 	coeffSum[r_Integer, d_Integer] := Sum[ c[r, d, i, j] n^i t^j, {i, 0, iDeg}, {j, 0, vDeg}];
 
+   (* Left hand side coeffs, for rational coeffs. *)
+	fracCoeffSum = Sum[If[i==0 && j==0, 1, d[i, j]] n^i t^j, {i, 0, deniDeg}, {j, 0, denvDeg}];
+
 	formatSingleCoeffString[r_, d_, s_] := Module[
 		{coeff, polyPart},
 		
-		coeff = Sum[
-			(c[r, d, i, j] /. s) n^i t^j
-			, {j, 0, vDeg}, {i, 0, iDeg}];
+		coeff = Sum[ (c[r, d, i, j] /. s) n^i t^j , {j, 0, vDeg}, {i, 0, iDeg}];
 		
 		polyPart = Which[
 			d == 0,
@@ -483,10 +487,9 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 		If[!homo, {{-1,-1}->(Sum[(c[-1, -1, i, j] /. s) n^i t^j, {j, 0, vDeg}, {i, 0, iDeg}])}, {}]
 	];
 
-
 	eqns = Table[
 		(*To be zero*)
-		(prefac/.n->nn) * polys[[nn]] -
+		(fracCoeffSum /. n->nn) * polys[[nn]] -
 		Sum[
 			(coeffSum[r, d] /. n -> nn)*D[polys[[nn - r]], {t, d}]
 			, {d, 0, dDeg}, {r, rDeg}]
@@ -495,16 +498,16 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 		, {nn, rDeg + 1, mm}];
 	
 	(* All unknowns *)
-	vars = Cases[eqns, c[_, _, _, _], Infinity];
+	vars = Cases[eqns, c[_, _, _, _] | d[_,_] , Infinity];
 	sol = Solve[Thread[CoefficientList[eqns, t] == 0], vars];
-	
+
 	If[Length@sol == 0,
 		None,
          If[ansAsRule,
             ruleFormatSolution[sol[[1]]]
             ,
             Row[{
-               If[prefac===1,Nothing, "(" <> ToString[prefac] <> ")" ],
+               If[(fracCoeffSum/.sol[[1]])===1, Nothing,  "(" <> ToString[(fracCoeffSum/.sol[[1]])] <> ")" ],
                Subscript["P", ns], "=",
                solFormat[sol[[1]]]}]
          ]
@@ -532,6 +535,42 @@ ElementarySymmetricPolynomial[d_Integer, {a_Integer, b_Integer}, x_] :=
      x[a] ElementarySymmetricPolynomial[d - 1, {a + 1, b}, x] + ElementarySymmetricPolynomial[d, {a + 1, b}, x]
      ]];
 
+     
+     
+HilbertFunctionValues::usage = "HilbertFunctionValues[polyIdeal,vars, d] returns the Hulbert function values up to degree d.";
+     
+(*Hilbert function values up to a chosen max degree*)
+Clear[HilbertFunctionValues];
+HilbertFunctionValues[polys_List, vars_List, maxdeg_Integer] := Module[
+   {gb, leadMons, monomialDividesQ, standardQ},
+   (*Gröbner basis with degree order so everything stays homogeneous*)
+   gb = GroebnerBasis[polys, vars, 
+     MonomialOrder -> DegreeReverseLexicographic];
+   (*leading monomials of basis elements*)
+   leadMons = 
+    First@MonomialList[#, vars, DegreeReverseLexicographic] & /@ gb;
+   leadMons = DeleteDuplicates[leadMons];
+   (*does lm divide m as a monomial?*)
+   monomialDividesQ[lm_, m_] := 
+    Module[{e1, e2}, e1 = Exponent[lm, vars];
+     e2 = Exponent[m, vars];
+     And @@ Thread[e1 <= e2]
+     ];
+   
+   MonomialsOfDegree[0] := {1};
+   MonomialsOfDegree[1] := vars;
+   MonomialsOfDegree[d_Integer] := 
+    MonomialsOfDegree[d] = 
+     Union @@ Table[MonomialsOfDegree[d - 1]*v, {v, vars}];
+   
+   (*standard monomial=not divisible by any leading monomial*)
+   standardQ[m_] := ! AnyTrue[leadMons, monomialDividesQ[#, m] &];
+   Table[
+    Count[MonomialsOfDegree[d], m_ /; standardQ[m]]
+    , {d, 0, maxdeg}]
+   ];
+     
+     
 End[(* End private *)];
 EndPackage[];
 

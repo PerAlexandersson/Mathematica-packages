@@ -5,7 +5,7 @@
 
 Clear["MacdonaldPolynomials`*"];
 
-BeginPackage["MacdonaldPolynomials`",{"OldYoungTableaux`","CombinatoricTools`"}];
+BeginPackage["MacdonaldPolynomials`",{"OldYoungTableaux`","CombinatoricTools`","PermutationTools`"}];
 
 
 

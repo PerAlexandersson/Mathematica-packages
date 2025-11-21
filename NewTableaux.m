@@ -112,30 +112,10 @@ YoungTableauShape[YoungTableau[syt_]]:=Length/@syt;
 
 YoungTableauShape[syt_YoungTableau, v_Integer]:=YoungTableauShape[syt/.{i_Integer /; i>v :> Nothing}];
 
-(* This code is probably wrong. *)
-(*
-SYTDescentSet::usage = "SYTDescentSet[syt] returns the descent set of the standard Young tableau.";
-SYTDescentSet[YoungTableau[syt_]] := Module[{lookUp, n = SYTMax@YoungTableau@syt },
-    lookUp = Last /@ SortBy[
-            Join @@ MapIndexed[If[IntegerQ[#1], #1 -> #2 ,Nothing] &, syt, {2}]
-        ,
-        First];
-    
-    Select[
-        Range[n-1], 
-        lookUp[[#,1]] < lookUp[[#+1,1]] &]
-];
-*)
 
-(* All i such that i+1 appears south if i *)
-SYTDescentSet[YoungTableau[tt_]] := Module[{rows, ri},
-  rows = Table[Select[rr, IntegerQ], {rr, tt}];
-  (* Encode in which row entries are in. *)
-  ri = SparseArray@
-    Flatten[Table[Table[v -> i, {v, rows[[i]]}], {i, Length@rows}]];
-  (* All i such that i+1 appears south of i *)
-  DescentSet[Normal@ri]
-];
+SYTDescentSet::usage = "SYTDescentSet[syt] returns the descent set of the standard Young tableau.";
+(* All i such that i+1 appears South of i *)
+SYTDescentSet[YoungTableau[tt_]] := DescentSet@Ordering@Cases[Reverse[tt], _Integer?Positive, {2}];
 
 SYTDescents[syt_YoungTableau] := Length@SYTDescentSet[syt];
 
@@ -836,7 +816,7 @@ BiwordRSK[{a_Integer, b_Integer}, {YoungTableau[pTab_], YoungTableau[qTab_]}] :=
 	
 	(* Tries to insert element i in row r. If fail, continue with next row. *)
 	
-	insertInRow[r_, i_] := Which[
+	insertInRow[r_Integer, i_Integer] := Which[
 		(* There is no row r, create row *)
 		Length[pTabOut] < r,
 			pTabOut = Append[pTabOut, {i}];
@@ -962,7 +942,7 @@ UnitTest[SYTEvacuation] :=
 (****************************************************************************************************)
 (****************************************************************************************************)
 
-
+CrystalOp[Undefined,_,_]:=Undefined;
 
 CrystalOp[YoungTableau[ssyt_], i_Integer, f_Function] := Module[
 	{newWord, word, subWord, coord},
@@ -1013,6 +993,8 @@ CrystalOp[YoungTableau@ssyt, i,
 		]
 	]
 ];
+CrystalEi[Undefined,_]:=Undefined;
+CrystalEi[Undefined,_,_]:=Undefined;
 CrystalEi[w_List, i_Integer,k_Integer:1] := With[
 {out = CrystalEi[YoungTableau[{w}], i,k]},
 	If[out === Undefined, out, out[[1, 1]] ]
@@ -1031,12 +1013,15 @@ CrystalOp[YoungTableau@ssyt, i,
 		]
 	]
 ];
-
+CrystalFi[Undefined,_]:=Undefined;
+CrystalFi[Undefined,_,_]:=Undefined;
 CrystalFi[w_List, i_Integer,k_Integer:1] := With[
 	{out = CrystalFi[YoungTableau[{w}], i,k]},
 	If[out === Undefined, out, out[[1, 1]] ]
 ];
 
+CrystalSi[Undefined,_]:=Undefined;
+CrystalSi[Undefined,_,_]:=Undefined;
 CrystalSi::usage = "CrystalSi[ssyt,i] performs the crystal 
 transposition operator si on the tableau. It also works on words.";
 CrystalSi[YoungTableau[ssyt_], i_Integer] := 

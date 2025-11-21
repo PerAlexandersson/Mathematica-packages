@@ -44,6 +44,12 @@ WeakLowerOrderIdeal;
 BruhatLowerOrderIdeal; (* Same as StrongOrderDownSet, but more efficient. *)
 
 
+PermutationSum;
+PermutationSkewSum;
+SplitSeparablePermutation;
+SeparablePermutationQ;
+
+
 (* Subsets of permutations *)
 GrassmannPermutations;
 SimsunPermutations;
@@ -355,6 +361,51 @@ BruhatLowerOrderIdeal[pi_List] := Module[{n = Length@pi,
     ];
    Normal[interval]
 ];
+
+
+
+
+
+
+
+
+PermutationSum::usage = "PermutationSum[p1,p2,...] returns the direct sum of the permutations (places the permutation matrices along the main diagonal of a block matrix).";
+
+SetAttributes[PermutationSum, {Flat, OneIdentity}];
+PermutationSum[pi_List, tau_List] := Join[pi, tau + Length[pi]];
+
+
+PermutationSkewSum::usage = "PermutationSkewSum[p1,p2,...] returns the skew sum of the permutations (places the permutation matrices along the anti-diagonal of a block matrix).";
+SetAttributes[PermutationSkewSum, {Flat, OneIdentity}];
+PermutationSkewSum[pi_List, tau_List] := Join[pi + Length[tau], tau];
+
+SplitSeparablePermutation::usage = "SplitSeparablePermutation[pi] splits the permutation into smaller blocks. The original permutation is then a sum or skew sum of these blocks. Use option 'False' to only consider direct sum.";
+
+SplitSeparablePermutation[{i_Integer}, skew_ : True] := {{i}};
+SplitSeparablePermutation[pi_List, skew_ : True] := Module[
+   {n = Length@pi, splits},
+   splits = Select[Range[n - 1],
+     Or[
+       Max[pi[[;; #]]] < Min[pi[[# + 1 ;;]]]
+       ,
+       (skew && Min[pi[[;; #]]] > Max[pi[[# + 1 ;;]]])
+       ] &];
+   If[Length[splits] == 0,
+    {pi}
+    ,
+    Join @@ Table[
+      SplitSeparablePermutation[
+       pi[[ii[[1]] + 1 ;; ii[[2]]]]
+       ]
+      , {ii, Partition[Join[{0}, splits, {n}], 2, 1]}]
+    ]
+   ];
+
+SeparablePermutationQ::usage = "SeparablePermutationQ[pi] returns true if the permutation is separable.";
+SeparablePermutationQ[pi_List] :=(Length[SplitSeparablePermutation[pi]] > 1);
+
+
+
 
 
 GrassmannPermutations::usage = "GrassmannPermutations[n] returns all permutations with at most one descent. See A000325.";
