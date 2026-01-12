@@ -37,6 +37,7 @@ ClearAll["`*"]
 LRCoefficient;
 LRExpand;
 MExpand;
+SkewKostkaCoefficient;
 
 PositiveCoefficientsQ;
 
@@ -458,6 +459,20 @@ LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 ];
 
 (********************************************************************)
+
+SkewKostkaCoefficient::usage = "SkewKostkaCoefficient[lam,mu,nu] returns the skew Kostka coefficient associated with shape lam/mu and type nu.";
+SkewKostkaCoefficient[lam_List, mu_List, w_List] :=
+  Module[{inM, n = Tr[lam] - Tr[mu]},
+   inM = ToMonomialBasis[SkewSchurSymmetric[{lam, mu}]];
+   Do[
+    SkewKostkaCoefficient[lam, mu, nu] =
+      Coefficient[inM, MonomialSymbol[nu, None]];
+    , {nu, IntegerPartitions[n]}];
+   SkewKostkaCoefficient[lam, mu, w]
+   ];
+
+(********************************************************************)
+
 
 FunctionAlphabets[expr_]:=Cases[expr, (bb:coreBasesList)[mu__, x_] :> x, {0, Infinity}];
 

@@ -5,7 +5,7 @@ ClearAll["PosetData`*"];
 BeginPackage["PosetData`",{"CombinatoricTools`"}];
 
 
-(* Need to do much more, say, complete edges to transitive closure *)
+(* TODO: Need to do much more, say, complete edges to transitive closure *)
 
 SkewShapePoset;
 StembridgePoset;
@@ -29,8 +29,6 @@ EqualEdges;
 ColorWeight;
 
 PosetMinimalElements;
-
-
 
 (*
 
@@ -332,9 +330,9 @@ WeightedPosetFunction[weak_List, weights_List, x_] :=
 *)
 
 
-
 (* This assumes minimal elements in the bottom, and edges are increasing relations. *)
 (* LINEAR EXTENSIONS ARE OFC ORDER-PRESERVING MAPS (think of Young diagrams *)
+(* IS THIS CORRECT OR NOT?? *)
 PosetLinearExtensions::usage = "PosetLinearExtensions[poset] returns all order-preserving labelings of the edges.";
 PosetLinearExtensions[Poset[n_,edges_]] := PosetColorings[Poset[n,edges],ColorWeight->ConstantArray[1,n]];
 
@@ -376,7 +374,7 @@ toPosetObject[poset_List] := Module[{n = Length[poset], nn},
 
 
 (*****************************************************************************)
-(* http://www.unc.edu/~rap/Posets/accdata.html#conpos *)
+(* From http://www.unc.edu/~rap/Posets/accdata.html#conpos *)
 posets[1]={
 {{}}
 };

@@ -1,0 +1,499 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     18981,        491]
+NotebookOptionsPosition[     18086,        468]
+NotebookOutlinePosition[     18479,        484]
+CellTagsIndexPosition[     18436,        481]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"Load", " ", 
+    RowBox[{"package", ".", " ", "You"}], " ", "can", " ", "also", " ", 
+    "load", " ", "by", " ", "specifying", " ", "file", " ", 
+    RowBox[{"path", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Needs", "[", "\"\<PolynomialTools`\>\"", "]"}], ";"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.977212283233574*^9, 3.977212315302307*^9}},
+ CellLabel->"In[9]:=",ExpressionUUID->"85437b70-da9e-4192-8841-f5464606cc3a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{"(*", " ", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+    "The", " ", "function", " ", "FindPolynomialRecurrence", " ", "is", " ", 
+     "used", " ", "to", " ", "guess", " ", "recursions", " ", "from", " ", 
+     RowBox[{"data", ".", "  ", "The"}], " ", "syntax", " ", "is", " ", "\[IndentingNewLine]", 
+     RowBox[{"FindPolynomialRecurrence", "[", 
+      RowBox[{"listOfPolynomials", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"t", ",", "n"}], "}"}], ",", " ", 
+       RowBox[{"opts", "..."}]}], "]"}], "\[IndentingNewLine]", "where", " ", 
+     "t", " ", "is", " ", "the", " ", "variable", " ", "used", " ", "in", " ",
+      "the", " ", "polynomials"}], ",", " ", 
+    RowBox[{
+     RowBox[{
+     "and", " ", "n", " ", "is", " ", "the", " ", "indexing", " ", "variable",
+       " ", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"used", " ", "only", " ", "in", " ", "outout"}], ")"}], ".", 
+       "\[IndentingNewLine]", "We"}], " ", "have", " ", "the", " ", 
+      "following", " ", "options"}], ";", "\[IndentingNewLine]", 
+     "\[IndentingNewLine]", 
+     RowBox[{"VariableDegree", ":", " ", 
+      RowBox[{
+      "Maximal", " ", "degree", " ", "of", " ", "the", " ", "variable", " ", 
+       RowBox[{"(", "t", ")"}], " ", "in", " ", "the", " ", 
+       RowBox[{"coefficients", "."}]}]}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"IndexDegree", ":", " ", 
+     RowBox[{"Maximal", " ", "degree", " ", "of", " ", "the", " ", "index", " ", 
+      RowBox[{
+       RowBox[{"(", "n", ")"}], "."}]}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"DifferentialDegree", ":", " ", 
+     RowBox[{"Maximal", " ", "derivative", " ", "to", " ", 
+      RowBox[{"use", "."}]}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"RecurrenceLength", ":", " ", 
+     RowBox[{"Length", " ", "of", " ", "the", " ", 
+      RowBox[{"recursion", "."}]}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"Homogeneous", ":", " ", 
+     RowBox[{
+      RowBox[{"True", "/", 
+       RowBox[{"False", ".", " ", "If"}]}], " ", "the", " ", "recursion", " ",
+       "is", " ", "homogeneous", " ", "or", " ", 
+      RowBox[{"not", "."}]}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+    "DenominatorVariableDegree", " ", "and", " ", "DenominatorIndexDegree", " ",
+      "are", " ", "used", " ", "for", " ", "recursions", " ", "where", " ", 
+     "coefficients", " ", "are", " ", "rational", " ", 
+     RowBox[{
+     "functions", ".", "\[IndentingNewLine]", "\[IndentingNewLine]", "If"}], " ",
+      "you", " ", "get", " ", "a", " ", "warning", " ", "about", " ", 
+     "multiple", " ", "solutions"}], ",", " ", 
+    RowBox[{
+    "this", " ", "means", " ", "that", " ", "you", " ", "have", " ", "too", " ",
+      "little", " ", "data"}], ",", " ", 
+    RowBox[{
+    "or", " ", "that", " ", "\[IndentingNewLine]", "that", " ", "you", " ", 
+     "should", " ", "reduce", " ", 
+     RowBox[{"RecurrenceLength", ".", "\[IndentingNewLine]", "If"}], " ", 
+     "you", " ", "get", " ", "None", " ", "as", " ", "output"}], ",", " ", 
+    RowBox[{
+    "this", " ", "means", " ", "that", " ", "there", " ", "is", " ", "no", " ",
+      "recursion", " ", "with", " ", "specified", " ", 
+     RowBox[{"parameters", "."}]}]}], "\[IndentingNewLine]", "*)"}], 
+  "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{
+    "Here", " ", "are", " ", "the", " ", "generating", " ", "polynomials", " ",
+      "for", " ", "peaks", " ", "among", " ", "permutations", " ", "of", " ", 
+     
+     RowBox[{"{", 
+      RowBox[{"1", ",", "2", ",", "...", ",", "n"}], "}"}]}], ",", " ", 
+    RowBox[{
+     RowBox[{"for", " ", "n"}], "=", "1"}], ",", "2", ",", 
+    RowBox[{"...", "12."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"peakPolynomials", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", "2", ",", 
+       RowBox[{"4", "+", 
+        RowBox[{"2", " ", "t"}]}], ",", 
+       RowBox[{"8", "+", 
+        RowBox[{"16", " ", "t"}]}], ",", 
+       RowBox[{"16", "+", 
+        RowBox[{"88", " ", "t"}], "+", 
+        RowBox[{"16", " ", 
+         SuperscriptBox["t", "2"]}]}], ",", 
+       RowBox[{"32", "+", 
+        RowBox[{"416", " ", "t"}], "+", 
+        RowBox[{"272", " ", 
+         SuperscriptBox["t", "2"]}]}], ",", 
+       RowBox[{"64", "+", 
+        RowBox[{"1824", " ", "t"}], "+", 
+        RowBox[{"2880", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"272", " ", 
+         SuperscriptBox["t", "3"]}]}], ",", 
+       RowBox[{"128", "+", 
+        RowBox[{"7680", " ", "t"}], "+", 
+        RowBox[{"24576", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"7936", " ", 
+         SuperscriptBox["t", "3"]}]}], ",", 
+       RowBox[{"256", "+", 
+        RowBox[{"31616", " ", "t"}], "+", 
+        RowBox[{"185856", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"137216", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"7936", " ", 
+         SuperscriptBox["t", "4"]}]}], ",", 
+       RowBox[{"512", "+", 
+        RowBox[{"128512", " ", "t"}], "+", 
+        RowBox[{"1304832", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"1841152", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"353792", " ", 
+         SuperscriptBox["t", "4"]}]}], ",", 
+       RowBox[{"1024", "+", 
+        RowBox[{"518656", " ", "t"}], "+", 
+        RowBox[{"8728576", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"21253376", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"9061376", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"353792", " ", 
+         SuperscriptBox["t", "5"]}]}], ",", 
+       RowBox[{"2048", "+", 
+        RowBox[{"2084864", " ", "t"}], "+", 
+        RowBox[{"56520704", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"222398464", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"175627264", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"22368256", " ", 
+         SuperscriptBox["t", "5"]}]}]}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Look", " ", "for", " ", "a", " ", "recursion", " ", "where", " ", 
+     RowBox[{"p", "[", "n", "]"}], " ", "depends", " ", "on", " ", 
+     RowBox[{"p", "[", 
+      RowBox[{"n", "-", "1"}], "]"}], " ", "and", " ", 
+     RowBox[{
+      RowBox[{"p", "'"}], "[", 
+      RowBox[{"n", "-", "1"}], "]"}], " ", "and", " ", "coefficients", " ", 
+     "are", " ", "at", " ", "most", " ", "degree", " ", "2", " ", "in", " ", 
+     RowBox[{"t", ".", "\[IndentingNewLine]", "The"}], " ", "degree", " ", 
+     "for", " ", "n", " ", "is", " ", "1", " ", "by", " ", 
+     RowBox[{"default", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"FindPolynomialRecurrence", "[", 
+    RowBox[{"peakPolynomials", ",", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", "n"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"RecurrenceLength", "->", "1"}], ",", 
+     RowBox[{"DifferentialDegree", "->", "1"}], ",", 
+     RowBox[{"VariableDegree", "->", "2"}]}], "]"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.977212332128491*^9, 3.977212364447604*^9}, {
+   3.9772124546425056`*^9, 3.977212668050907*^9}, {3.977212776700124*^9, 
+   3.977213008852173*^9}, {3.977213930416656*^9, 3.9772139686582127`*^9}, 
+   3.977214154816392*^9, {3.9772143052535686`*^9, 
+   3.9772143855072403`*^9}},ExpressionUUID->"b0d6f675-a058-447f-b4cf-\
+c6595a84a39a"],
+
+Cell[BoxData[
+ TemplateBox[{
+   SubscriptBox["\"P\"", "\"n\""], "\"=\"", 
+   RowBox[{
+     RowBox[{
+       RowBox[{"(", 
+         RowBox[{"2", "-", 
+           RowBox[{"2", " ", "t"}], "+", 
+           RowBox[{"n", " ", "t"}]}], ")"}], " ", 
+       SubscriptBox["\"P\"", "\"n-1\""]}], "-", 
+     RowBox[{"2", " ", 
+       RowBox[{"(", 
+         RowBox[{
+           RowBox[{"-", "1"}], "+", "t"}], ")"}], " ", "t", " ", 
+       TemplateBox[{"\"P\"", "\"n-1\"", "\"(1)\""}, "Subsuperscript", 
+        SyntaxForm -> SubsuperscriptBox]}]}]},
+  "RowDefault"]], "Output",
+ CellChangeTimes->{{3.977212532855661*^9, 3.977212567888649*^9}, 
+   3.977212837027536*^9, 3.977213941983303*^9, 3.977214156595626*^9},
+ CellLabel->"Out[36]=",ExpressionUUID->"2b997949-4801-4209-9f88-f3e3adc480d7"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "This", " ", "output", " ", "corresponds", " ", "to", " ", "this", " ", 
+    RowBox[{"recursion", ":"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Clear", "[", "p", "]"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"p", "[", "1", "]"}], ":=", "1"}], ";"}], "\[IndentingNewLine]", 
+   
+   RowBox[{
+    RowBox[{
+     RowBox[{"p", "[", "n_", "]"}], ":=", 
+     RowBox[{
+      RowBox[{"p", "[", "n", "]"}], "=", 
+      RowBox[{"Expand", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"2", "-", 
+           RowBox[{"2", "t"}], " ", "+", " ", 
+           RowBox[{"n", " ", "t"}]}], ")"}], 
+         RowBox[{"p", "[", 
+          RowBox[{"n", "-", "1"}], "]"}]}], "+", 
+        RowBox[{"2", "t", 
+         RowBox[{"(", 
+          RowBox[{"1", "-", "t"}], ")"}], 
+         RowBox[{"D", "[", 
+          RowBox[{
+           RowBox[{"p", "[", 
+            RowBox[{"n", "-", "1"}], "]"}], ",", "t"}], "]"}]}]}], "]"}]}]}], 
+    ";"}], "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.97721268487473*^9, 3.9772127147467957`*^9}, {
+  3.97721275423208*^9, 3.977212761793857*^9}},
+ CellLabel->"In[18]:=",ExpressionUUID->"3064d2d5-e400-4fe4-8b32-44a51beb754c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"Example", " ", "2"}], ":", " ", 
+    RowBox[{"Narayana", " ", 
+     RowBox[{"polynomials", ".", " ", "Generating"}], " ", "function", " ", 
+     "of", " ", "peaks", " ", "in", " ", "Dyck", " ", 
+     RowBox[{"paths", "."}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"narayanaPolynomials", "=", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", 
+       RowBox[{"t", " ", 
+        RowBox[{"(", 
+         RowBox[{"1", "+", "t"}], ")"}]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"3", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        SuperscriptBox["t", "3"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"6", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"6", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        SuperscriptBox["t", "4"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"10", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"20", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"10", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        SuperscriptBox["t", "5"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"15", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"50", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"50", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"15", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        SuperscriptBox["t", "6"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"21", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"105", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"175", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"105", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"21", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        SuperscriptBox["t", "7"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"28", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"196", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"490", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"490", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"196", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        RowBox[{"28", " ", 
+         SuperscriptBox["t", "7"]}], "+", 
+        SuperscriptBox["t", "8"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"36", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"336", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"1176", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"1764", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"1176", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        RowBox[{"336", " ", 
+         SuperscriptBox["t", "7"]}], "+", 
+        RowBox[{"36", " ", 
+         SuperscriptBox["t", "8"]}], "+", 
+        SuperscriptBox["t", "9"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"45", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"540", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"2520", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"5292", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"5292", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        RowBox[{"2520", " ", 
+         SuperscriptBox["t", "7"]}], "+", 
+        RowBox[{"540", " ", 
+         SuperscriptBox["t", "8"]}], "+", 
+        RowBox[{"45", " ", 
+         SuperscriptBox["t", "9"]}], "+", 
+        SuperscriptBox["t", "10"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"55", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"825", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"4950", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"13860", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"19404", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        RowBox[{"13860", " ", 
+         SuperscriptBox["t", "7"]}], "+", 
+        RowBox[{"4950", " ", 
+         SuperscriptBox["t", "8"]}], "+", 
+        RowBox[{"825", " ", 
+         SuperscriptBox["t", "9"]}], "+", 
+        RowBox[{"55", " ", 
+         SuperscriptBox["t", "10"]}], "+", 
+        SuperscriptBox["t", "11"]}], ",", 
+       RowBox[{"t", "+", 
+        RowBox[{"66", " ", 
+         SuperscriptBox["t", "2"]}], "+", 
+        RowBox[{"1210", " ", 
+         SuperscriptBox["t", "3"]}], "+", 
+        RowBox[{"9075", " ", 
+         SuperscriptBox["t", "4"]}], "+", 
+        RowBox[{"32670", " ", 
+         SuperscriptBox["t", "5"]}], "+", 
+        RowBox[{"60984", " ", 
+         SuperscriptBox["t", "6"]}], "+", 
+        RowBox[{"60984", " ", 
+         SuperscriptBox["t", "7"]}], "+", 
+        RowBox[{"32670", " ", 
+         SuperscriptBox["t", "8"]}], "+", 
+        RowBox[{"9075", " ", 
+         SuperscriptBox["t", "9"]}], "+", 
+        RowBox[{"1210", " ", 
+         SuperscriptBox["t", "10"]}], "+", 
+        RowBox[{"66", " ", 
+         SuperscriptBox["t", "11"]}], "+", 
+        SuperscriptBox["t", "12"]}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+      "We", " ", "need", " ", "to", " ", "use", " ", 
+       "DenominatorIndexDegree"}], "->", 
+      RowBox[{
+      "1", " ", "in", " ", "order", " ", "to", " ", "find", " ", "the", " ", 
+       "coefficient", " ", "in", " ", "the", " ", "right", " ", "hand", " ", 
+       "side"}]}], ",", " ", 
+     RowBox[{
+      RowBox[{"which", " ", "is", " ", "non"}], "-", 
+      RowBox[{"constant", "."}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"FindPolynomialRecurrence", "[", 
+    RowBox[{"narayanaPolynomials", ",", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", "n"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"RecurrenceLength", "->", "1"}], ",", 
+     RowBox[{"DifferentialDegree", "->", "1"}], ",", 
+     RowBox[{"VariableDegree", "->", "2"}], ",", 
+     RowBox[{"DenominatorIndexDegree", "->", "1"}]}], "]"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.977212769562199*^9, 3.9772127698931932`*^9}, {
+  3.977214025513982*^9, 
+  3.977214193544011*^9}},ExpressionUUID->"039257d9-8239-4fd9-810d-\
+d5661227f573"],
+
+Cell[BoxData[
+ TemplateBox[{"\"(1 + n)\"", 
+   SubscriptBox["\"P\"", "\"n\""], "\"=\"", 
+   RowBox[{
+     RowBox[{
+       RowBox[{"(", 
+         RowBox[{
+           RowBox[{"-", "1"}], "+", "n", "-", "t", "+", 
+           RowBox[{"3", " ", "n", " ", "t"}]}], ")"}], " ", 
+       SubscriptBox["\"P\"", "\"n-1\""]}], "-", 
+     RowBox[{"2", " ", 
+       RowBox[{"(", 
+         RowBox[{
+           RowBox[{"-", "1"}], "+", "t"}], ")"}], " ", "t", " ", 
+       TemplateBox[{"\"P\"", "\"n-1\"", "\"(1)\""}, "Subsuperscript", 
+        SyntaxForm -> SubsuperscriptBox]}]}]},
+  "RowDefault"]], "Output",
+ CellChangeTimes->{{3.9772140843023252`*^9, 3.977214097968995*^9}, {
+  3.977214140622375*^9, 3.977214162722167*^9}},
+ CellLabel->"Out[38]=",ExpressionUUID->"7c8087ce-406b-4d5e-bc86-e905a1abaa2c"]
+}, Open  ]]
+},
+WindowSize->{1440, 789},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.2 for Linux x86 (64-bit) (December 26, 2024)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"28b7964f-be33-4429-ad9e-b1ef420a6b7c"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 546, 12, 88, "Input",ExpressionUUID->"85437b70-da9e-4192-8841-f5464606cc3a"],
+Cell[CellGroupData[{
+Cell[1125, 36, 7548, 169, 801, "Input",ExpressionUUID->"b0d6f675-a058-447f-b4cf-c6595a84a39a"],
+Cell[8676, 207, 780, 19, 44, "Output",ExpressionUUID->"2b997949-4801-4209-9f88-f3e3adc480d7"]
+}, Open  ]],
+Cell[9471, 229, 1328, 37, 169, "Input",ExpressionUUID->"3064d2d5-e400-4fe4-8b32-44a51beb754c"],
+Cell[CellGroupData[{
+Cell[10824, 270, 6452, 174, 405, "Input",ExpressionUUID->"039257d9-8239-4fd9-810d-d5661227f573"],
+Cell[17279, 446, 791, 19, 44, "Output",ExpressionUUID->"7c8087ce-406b-4d5e-bc86-e905a1abaa2c"]
+}, Open  ]]
+}
+]
+*)
+

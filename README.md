@@ -73,6 +73,8 @@ There are also functions for converting `ytableau` syntax to HTML.
 
 This is a file which mainly contains non-isomorphic posets.
 
+There are also plot functions, and functions for computing linear extensions or the Jordan-Hölder set.
+
 
 ## TreesData.m
 
