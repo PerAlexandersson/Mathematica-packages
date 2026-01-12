@@ -14,13 +14,13 @@ The function `FindPolynomialRecurrence` is used to guess recursions from data.
 The data is a list of polynomials $P_1(t), P_2(t),\dotsc, P_m(t)$,
 and we are looking for a recursion of the form 
 
-$$P_n(t) = \sum_{d=0}^k \sum_{j=1}^\ell  c_{d,j}(t,n) P^{(d)}_{n-j}(t)$$
+$$P_n(t) =  \sum_{j=1}^\ell \sum_{d=0}^k c_{d,j}(t,n) P^{(d)}_{n-j}(t)$$
 
-or 
+or, in more generality,
 
-$$c_{0,0}(t,n)  P_n(t) =  \sum_{d=0}^k \sum_{j=1}^\ell  c_{d,j}(t,n) P^{(d)}_{n-j}(t)$$
+$$c_{0,0}(t,n)  P_n(t) =  \sum_{j=1}^\ell \sum_{d=0}^k  c_{d,j}(t,n) P^{(d)}_{n-j}(t), $$
 
-where $c_{d,j}(t,n) \in \mathbb{Q}[t,n]$, and the degrees of $c_{d,j}(t,n)$ are bounded.
+where $c_{d,j}(t,n) \in \mathbb{Q}[t,n]$ and the degrees of $c_{d,j}(t,n)$ are bounded.
 
 
 ### Syntax
