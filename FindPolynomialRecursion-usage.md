@@ -37,7 +37,7 @@ where:
 
 ## Example 1: Peak Polynomials for Permutations
 
-Generating polynomials for peaks among permutations of {1, 2, ..., n}, for n = 1, 2, ..., 12:
+Generating polynomials for peaks among permutations of $\{1, 2, ..., n\}$, for $n = 1, 2, \dotsc, 12$:
 
 ```mathematica
 peakPolynomials = {1, 2, 4 + 2 t, 8 + 16 t, 16 + 88 t + 16 t^2, 
@@ -49,7 +49,7 @@ peakPolynomials = {1, 2, 4 + 2 t, 8 + 16 t, 16 + 88 t + 16 t^2,
    2048 + 2084864 t + 56520704 t^2 + 222398464 t^3 + 175627264 t^4 + 22368256 t^5};
 ```
 
-Looking for a recursion where P_n depends on P_{n-1} and P'_{n-1}, with coefficients at most degree 2 in t (degree for n is 1 by default):
+Looking for a recursion where $P_n$ depends on $P_{n-1}$ and $P'_{n-1}$, with coefficients at most degree 2 in $t$ (degree for $n$ is 1 by default):
 
 ```mathematica
 FindPolynomialRecurrence[peakPolynomials, {t, n},
