@@ -49,7 +49,7 @@ peakPolynomials = {1, 2, 4 + 2 t, 8 + 16 t, 16 + 88 t + 16 t^2,
    2048 + 2084864 t + 56520704 t^2 + 222398464 t^3 + 175627264 t^4 + 22368256 t^5};
 ```
 
-Looking for a recursion where $P_n$ depends on $P_{n-1}$ and $P'_{n-1}$, with coefficients at most degree 2 in $t$ (degree for $n$ is 1 by default):
+Looking for a recursion where $P_n$ depends on $P_{n-1}(t)$ and $P'_{n-1}(t)$, with coefficients at most degree 2 in $t$ (degree for $n$ is 1 by default):
 
 ```mathematica
 FindPolynomialRecurrence[peakPolynomials, {t, n},
@@ -59,7 +59,7 @@ FindPolynomialRecurrence[peakPolynomials, {t, n},
 **Output:**
 $$P_n = (2 - 2t + nt) P_{n-1} - 2(-1 + t)t P'_{n-1}$$
 
-### Implementing the Recursion
+This output corresponds to the following Mathematica implementation:
 
 ```mathematica
 Clear[p];
@@ -83,7 +83,7 @@ narayanaPolynomials = {t, t (1 + t), t + 3 t^2 + t^3,
    t + 66 t^2 + 1210 t^3 + 9075 t^4 + 32670 t^5 + 60984 t^6 + 60984 t^7 + 32670 t^8 + 9075 t^9 + 1210 t^10 + 66 t^11 + t^12};
 ```
 
-We need to use `DenominatorIndexDegree -> 1` to find the coefficient in the right-hand side, which is non-constant:
+We need to use `DenominatorIndexDegree -> 1` to find the coefficient in the right-hand side since this is not 1 for this particular recursion.
 
 ```mathematica
 FindPolynomialRecurrence[narayanaPolynomials, {t, n},
