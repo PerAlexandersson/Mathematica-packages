@@ -57,8 +57,9 @@ FindPolynomialRecurrence[peakPolynomials, {t, n},
 ```
 
 **Output:**
-
+$$
 P_n = (2 - 2t + nt) P_{n-1} - 2(-1 + t)t P'_{n-1}
+$$
 
 ### Implementing the Recursion
 
@@ -93,5 +94,6 @@ FindPolynomialRecurrence[narayanaPolynomials, {t, n},
 ```
 
 **Output:**
-
+$$
 (1 + n) P_n = (-1 + n - t + 3nt) P_{n-1} - 2(-1 + t)t P'_{n-1}
+$$
