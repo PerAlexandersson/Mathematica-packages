@@ -44,6 +44,7 @@ PlanePartitions;
 BorderStrips;
 BorderStripTableaux;
 BSTHeightVector;
+SpecialRimHookTableaux;
 
 TableauShortTeX;
 YTableauTeX;
@@ -72,6 +73,9 @@ CrystalSi;
 
 
 Begin["Private`"];
+
+(* Pattern for list of integers *)
+iList = {RepeatedNull[_Integer]};
 
 SYTSize::usage = "SYTSize[tab] returns the number of boxes in the tableau.";
 SYTSize[syt_YoungTableau]:=Length@SYTReadingWord[syt];
@@ -153,7 +157,7 @@ StandardYoungTableaux[{{sh__Integer}, {sh__Integer}}] := {
 StandardYoungTableaux[{}]:={YoungTableau@{{}}};
 StandardYoungTableaux[{{}, {}}]:={YoungTableau@{{}}};
 
-StandardYoungTableaux[{sh_List, sh2_List}] := StandardYoungTableaux[{sh, sh2}] = Module[
+StandardYoungTableaux[{sh:iList, sh2:iList}] := StandardYoungTableaux[{sh, sh2}] = Module[
 	{rows = Length@sh, addIdx, sh22, n = Tr@sh - Tr@sh2},
 	
 	sh22 = PadRight[sh2, rows];
@@ -179,7 +183,8 @@ StandardYoungTableaux[{sh_List, sh2_List}] := StandardYoungTableaux[{sh, sh2}] =
 
 
 SuperStandardTableau::usage = "SuperStandardTableau[{lam,mu}] returns the SYT with 1,2,.. in first row and so on.";
-SuperStandardTableau[{lam_List, mu_List}] := Module[
+SuperStandardTableau[lam:iList]:=SuperStandardTableau[{lam,{}}];
+SuperStandardTableau[{lam:iList, mu:iList}] := Module[
    {n = Tr[lam] - Tr[mu], l = Max[Length@lam, Length@mu], rows},
    rows = PartitionList[Range[n], PadRight[lam, l] - PadRight[mu, l]];
    YoungTableau@MapThread[Join,
@@ -189,7 +194,7 @@ SuperStandardTableau[{lam_List, mu_List}] := Module[
 
 
 
-(* TODO: THERE IS ALSO Shutzenberger's promotion *)
+(* TODO: THERE IS ALSO Shutzenbergers promotion *)
 
 SYTPromotion::usage = "SYTPromotion[syt,[k]] performes the promotion operator k times. Default is 1 time.";
 SYTPromotion[t_YoungTableau, k_Integer: 1] :=SYTPromotion[t,k]=Nest[SYTPromotion[#, 1] &, t, k];
@@ -314,7 +319,7 @@ a list of all SSYT with given shape and weight.";
 
 (* If only max-box is provided,
  then produce all with partition weight *)
-SemiStandardYoungTableaux[{lam_List, mu_List}, max_Integer]:=Module[{weights},
+SemiStandardYoungTableaux[{lam:iList, mu:iList}, max_Integer]:=Module[{weights},
 	
 	weights = IntegerPartitions[Tr[lam]-Tr[mu], max ];
 	
@@ -324,12 +329,12 @@ SemiStandardYoungTableaux[{lam_List, mu_List}, max_Integer]:=Module[{weights},
 ];
 
 (* The default max-entry ensures that all SYTs of the shape appears *)
-SemiStandardYoungTableaux[{lam_List, mu_List}]:=SemiStandardYoungTableaux[{lam,mu},Tr[lam]-Tr[mu]];
+SemiStandardYoungTableaux[{lam:iList, mu:iList}]:=SemiStandardYoungTableaux[{lam,mu},Tr[lam]-Tr[mu]];
 
 (* Weight must match up, otherwise empty set *)
-SemiStandardYoungTableaux[{lambdaIn_List, muIn_List}, w_List]/;(Tr[lambdaIn]-Tr[muIn]-Tr[w]!=0):={};
+SemiStandardYoungTableaux[{lambdaIn:iList, muIn:iList}, w:iList]/;(Tr[lambdaIn]-Tr[muIn]-Tr[w]!=0):={};
 
-SemiStandardYoungTableaux[{lambdaIn_List, muIn_List}, w_List] := Module[{isEdgeQ,
+SemiStandardYoungTableaux[{lambdaIn:iList, muIn:iList}, w:iList] := Module[{isEdgeQ,
 	partitionLevels, directedEdges, mid,lam,mu,wAcc,ssytPaths,q},
 	
 	lam = lambdaIn;
@@ -458,9 +463,9 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 ];
 
 Options[YoungDiagramForm]={ItemSize->1, DescentSet->False};
-YoungDiagramForm[lam:{Repeated[_Integer]}, opts:OptionsPattern[]]:=YoungDiagramForm[{lam,{}},opts];
+YoungDiagramForm[lam:iList, opts:OptionsPattern[]]:=YoungDiagramForm[{lam,{}},opts];
 
-YoungDiagramForm[{lam_List,mu_List}, opts:OptionsPattern[]]:= Module[{is,tab,r},
+YoungDiagramForm[{lam:iList,mu:iList}, opts:OptionsPattern[]]:= Module[{is,tab,r},
 	is = OptionValue[ItemSize];
 	tab=Table[
 		Join[
@@ -564,9 +569,9 @@ CylindricTableaux::usage = "CylindricTableaux[{lam,mu},k]
 produces all cylindric tableaux with partition weight and shifted up k steps from minimal possible shift.";
 
 
-CylindricTableaux[lam_List,k_Integer:0]:=CylindricTableaux[{lam,{}},k];
+CylindricTableaux[lam:iList,k_Integer:0]:=CylindricTableaux[{lam,{}},k];
 
-CylindricTableaux[{lam_List, mu_List}, k_Integer: 0] := Module[{
+CylindricTableaux[{lam:iList, mu:iList}, k_Integer: 0] := Module[{
     isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes,
     minShift
     },
@@ -594,8 +599,8 @@ CylindricTableaux[{lam_List, mu_List}, k_Integer: 0] := Module[{
    Select[SemiStandardYoungTableaux[{lam, mu}], isValidQ]
 ];
 
-CylindricSYT[lam_List, k_Integer: 0] := CylindricSYT[{lam, {}}, k];
-CylindricSYT[{lam_List, mu_List}, k_Integer: 0] :=  Module[{isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes, 
+CylindricSYT[lam:iList, k_Integer: 0] := CylindricSYT[{lam, {}}, k];
+CylindricSYT[{lam:iList, mu:iList}, k_Integer: 0] :=  Module[{isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes, 
     minShift},
    firstSkew = Length[DeleteCases[mu, 0]];
    firstTot = Length[DeleteCases[lam, 0]];
@@ -620,7 +625,7 @@ CylindricSYT[{lam_List, mu_List}, k_Integer: 0] :=  Module[{isValidQ, firstSkew,
 PlanePartitions::usage = "PlanePartitions[shape,max] returns all plane partitions of given shape, with entries <= max.
 PlanePartitions[a,b,c] returns all a x b plane partitions with entries bounded by c.";
 PlanePartitions[{1, 0 ...}, max_Integer] := YoungTableau[{{#}}] & /@ Range[0, max];
-PlanePartitions[sh_List, max_Integer] := PlanePartitions[sh, max] = 
+PlanePartitions[sh:iList, max_Integer] := PlanePartitions[sh, max] = 
    Module[{r = Length@sh, ri, pp, ppList, shRec},
     ri = Select[Range[r, 0, -1], sh[[#]] > 0 &, 1][[1]];
     shRec = MapAt[# - 1 &, sh, ri];
@@ -654,9 +659,9 @@ PlanePartitions[a_Integer, b_Integer, c_Integer] :=  PlanePartitions[ConstantArr
 BorderStrips::usage = "BorderStrips[shape,size] returns a list of pairs 
 {new-shape,strip} of possible border-strips to remove.";
 
-BorderStrips[shape_List, size_Integer] := BorderStrips[{shape, {}}, size];
+BorderStrips[shape:iList, size_Integer] := BorderStrips[{shape, {}}, size];
 
-BorderStrips[{lam_List, mu_List}, size_Integer] := Module[
+BorderStrips[{lam:iList, mu:iList}, size_Integer] := Module[
    {rows = Length@lam, sh = Append[lam, 0], diffs, span, end, pre, 
     rem, nsh, strip, shSkew},
    shSkew = PadRight[mu, rows + 1];
@@ -707,16 +712,16 @@ BorderStripTableaux::usage = "BorderStripTableaux[shape, type] returns a list of
    
 BorderStripTableaux[{}, 0] = {{}};
 BorderStripTableaux[{}, size_Integer] = {};
-BorderStripTableaux[sh_List, size_Integer] := 
+BorderStripTableaux[sh:iList, size_Integer] := 
   BorderStripTableaux[{sh, {}}, size];
-BorderStripTableaux[sh_List, type_List] := 
+BorderStripTableaux[sh:iList, type:iList] := 
   BorderStripTableaux[{sh, {}}, type];
 
-BorderStripTableaux[{sh1_List, sh2_List}, size_Integer] :=
+BorderStripTableaux[{sh1:iList, sh2:iList}, size_Integer] :=
 BorderStripTableaux[{sh1, sh2}, 
    ConstantArray[size, Floor[(Tr[sh1] - Tr[sh2])/size]]];
 
-BorderStripTableaux[{sh1_List, sh2_List}, type_List] := Module[{res},
+BorderStripTableaux[{sh1:iList, sh2:iList}, type:iList] := Module[{res},
    Which[
     Tr[sh1] - Tr[sh2] =!= Tr[type], {},
     Tr[sh1] - Tr[sh2] == 0, {{}},
@@ -729,10 +734,49 @@ BorderStripTableaux[{sh1_List, sh2_List}, type_List] := Module[{res},
    ];
 
 BSTHeightVector::usage = "BSTHeightVector[bst] returns a vector where vi is the height of strip i.";
-BSTHeightVector[strips_List] := Table[
+BSTHeightVector[strips:iList] := Table[
 	Sort[(First /@ s)][[{-1, 1}]].{1, -1}
 , {s, strips}]
 
+
+
+
+SpecialRimHookTableaux::usage= "SpecialRimHookTableaux[shape,type] returns all special rim-hook tableaux of given shape and type.";
+
+SpecialRimHookTableaux[shape:iList, type:iList] := Module[{srhtRec},
+   
+   (* Hook. *)
+   srhtRec[sh_List, {w_Integer}] := List@Join[
+      {ConstantArray[1, sh[[1]]]},
+      ConstantArray[{1}, Total[Rest@sh]]];
+   
+   srhtRec[sh_List, t_List] := srhtRec[sh, t] = With[
+      {bs =
+        Select[BorderStrips[sh, t[[1]]],
+         Length[#[[1, 1]]] < Length[sh] &, 1], m = Length@t},
+      
+      If[Length@bs == 0, {},
+       
+       Table[
+        (* Add last borderstrip to smaller srht. *)
+        Table[
+         PadRight[If[j <= Length[tab], tab[[j]], {}], sh[[j]], m]
+         , {j, Length@sh}]
+        
+        , {tab, srhtRec[bs[[1, 1, 1]], Rest@t]}]
+       ]
+      ];
+   
+   
+   Which[
+    Total[shape] != Total[type], {},
+    Length[type] == 1 && Max[Rest@shape] > 1, {},
+    Length[type] == 1, srhtRec[shape, type],(* Hook shape. *)
+    True,
+    (* All orderings of size of strips.*)
+    Join @@ Table[srhtRec[shape, tt], {tt, Permutations@type}]
+    ]
+   ];
 
 (****************************************************************************************************)
 (****************************************************************************************************)
