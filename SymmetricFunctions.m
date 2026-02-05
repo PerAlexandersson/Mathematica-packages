@@ -40,6 +40,7 @@ MExpand;
 SkewKostkaCoefficient;
 
 PositiveCoefficientsQ;
+CoefficientsSum;
 
 (* Symbols for denoting the common bases. *)
 ElementaryESymbol;
@@ -89,7 +90,7 @@ Plethysm;
 KroneckerCoefficient;
 InternalProduct;
 
-(* This expands into e's *)
+(* This expands into e:s *)
 SkewSchurSymmetric;
 
 JackPSymmetric;
@@ -527,6 +528,11 @@ PositiveCoefficientsQ[expr_, basisSymbol_:MonomialSymbol, extraSymbols_:{}] :=
 				Join[{DUMMY}, Cases[exp, basisSymbol[__,_], {0,Infinity}], extraSymbols] ]
 			]
 ];
+
+
+
+CoefficientsSum::usage = "CoefficientsSum[expr] returns the sum of coefficients.";
+CoefficientsSum[expr_] := ReplaceAll[Expand@expr, coreBasesList[__,_]:>1];
 
 
 (**********************************************************)
@@ -1908,10 +1914,24 @@ SnModuleCharacters[polysBasisIn_List, varList_List] := Module[
 
 End[(* End private *)];
 
-(*
-Protect @ Evaluate @ Names[
-	"SymmetricFunctions`" ~~ Except["$"] ~~ Except["`"]...
-]
-*)
+
+(* Automatically expose all capitalized symbols from Private context *)
+Evaluate[
+  Block[{$ContextPath},
+    Select[
+      Names["SymmetricFunctions`Private`*"],
+      StringMatchQ[#, ___ ~~ "`" ~~ LetterCharacter?UpperCaseQ ~~ ___] &
+    ] /. 
+    (name : ("SymmetricFunctions`Private`" ~~ rest__)) :> 
+      (ToExpression["SymmetricFunctions`" <> rest] = ToExpression[name])
+  ]
+];
+
+
+
+Protect @@ Select[
+  Names["SymmetricFunctions`*"],
+  !StringMatchQ[#, ___ ~~ "$" ~~ ___] &
+];
 
 EndPackage[];
