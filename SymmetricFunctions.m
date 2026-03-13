@@ -134,6 +134,8 @@ DeltaOperator;
 NablaOperator;
 DeltaPrimOperator;
 
+HookFilterMap;
+
 
 PrecomputeBasisMatrices;
 LoadBasisMatrices;
@@ -1414,7 +1416,7 @@ MacdonaldJSymmetric[lam_List,q_,t_,x_:None]:=(
 		Product[1-q^PartitionArm[lam,s]*t^(1+PartitionLeg[lam,s])
 			, {s,DiagramBoxes[lam]}]]);
 	
-(* 7.13' p. 346 in Macdonald's book. *)
+(* 7.13 p. 346 in Macdonald`s book. *)
 MacdonaldPSymmetricHelper[mu_List, q_, t_]:=MacdonaldPSymmetricHelper[mu,q,t]=
 Together@Sum[
    MonomialSymbol[YoungTableauWeight[ssyt]]
@@ -1908,6 +1910,35 @@ SnModuleCharacters[polysBasisIn_List, varList_List] := Module[
 		, {bb, polysBasis}];
 		character*PowerSumSymbol[mu]/ZCoefficient[mu]
 		, {mu, IntegerPartitions@n}]
+];
+
+
+
+HookFilterMap::usage = "HookFilterMap[f, t, [x]] applies the hook filter map to a symmetric \
+function f, returning a polynomial in t. The map sends SchurSymbol[lam] to t*(t-1)^(lam[[1]]-1) \
+if lam is a hook shape (first part arbitrary, all remaining parts equal to 1), and to 0 otherwise.";
+
+HookFilterMap[f_, t_, x_: None] := Module[{inSchur, vars, rules, lam, rF},
+	inSchur = ToSchurBasis[f, x];
+	vars = Cases[Variables[inSchur], SchurSymbol[__, x], {0, Infinity}];
+	rules = CoefficientRules[inSchur, vars];
+	Expand @ Sum[
+		If[Tr@First[rF] == 0,
+			lam = {},
+			lam = Pick[vars, First[rF], 1][[1, 1]]
+		];
+		If[Length[lam] >= 1 && (Length[lam] == 1 || Max[lam[[2 ;;]]] == 1),
+			Last[rF] * t * (t - 1)^(lam[[1]] - 1),
+			0
+		]
+	, {rF, rules}]
+];
+
+UnitTest[HookFilterMap] := And[
+	HookFilterMap[SchurSymmetric[{3, 1, 1}], t] === t (t - 1)^2,
+	HookFilterMap[SchurSymmetric[{2, 2}], t] === 0,
+	HookFilterMap[SchurSymmetric[{4}], t] === t (t - 1)^3,
+	HookFilterMap[SchurSymmetric[{1, 1, 1}], t] === t
 ];
 
 

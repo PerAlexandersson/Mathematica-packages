@@ -99,7 +99,8 @@ AreaLists[n_Integer, opts:OptionsPattern[]] := AreaLists[n, opts] =
 
 
 UnitIntervalEdges::usage = "UnitIntervalEdges[area] returns the edges of the unit interval graph.";
-UnitIntervalEdges[area_List] :=With[{n = Length@area},
+UnitIntervalEdges[area_List] :=With[
+	{n = Length@area},
 	Join @@ Table[
 		{Mod[k - i - 1, n] + 1, k}
 		,{k, n}, {i, area[[k]]}]

@@ -28,7 +28,7 @@ GTPattern[YoungTableau[tabIn_]]:=Module[{n,tab},
 			Count[ row , b_/;b <= k ]
 		, {k, 0, n}
 		, {row, tab}]
-		]
+	]
 ];
 
 GTPattern/:YoungTableau[GTPattern[gtp_]]:=
