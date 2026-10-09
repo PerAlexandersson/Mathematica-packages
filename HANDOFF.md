@@ -9,23 +9,20 @@
   files. Recovery is tracked in issue #1.
 - The repository-refresh plan is tracked by milestone `Repository refresh` and the
   umbrella issue #11.
-- Active branch: `refactor/recover-local-changes`.
-- Host supervisor owns `GTPatterns.m`, `SymmetricFunctions.m`,
-  `MacdonaldPolynomials.m`, `PolynomialTools.m`, and the initial recovery tests
-  for issue #1. No worker owns overlapping files.
-- Issue #1 implementation is complete pending review/merge: the four local
+- Issue #1 is complete and merged through PR #12 at `bb8eb67`: the four local
   differences are preserved in separate cosmetic and semantic commits, row-flag
   endpoint handling is corrected, `RowFlags` is public, and focused regression
   tests pass.
+- No worker currently owns source files. The next planned work is the supported
+  context and public-API inventory in issue #2.
 
 ## Planned sequence
 
-1. Recover and test the meaningful unpublished changes (#1).
-2. Define supported contexts and public symbols (#2).
-3. Add the test baseline (#6), then repair context isolation and known defects
+1. Define supported contexts and public symbols (#2).
+2. Add the test baseline (#6), then repair context isolation and known defects
    (#3--#5).
-4. Introduce the paclet layout and portable datasets (#7--#8).
-5. Archive or split unsupported material and finish documentation (#9--#10).
+3. Introduce the paclet layout and portable datasets (#7--#8).
+4. Archive or split unsupported material and finish documentation (#9--#10).
 
 ## Review evidence
 
