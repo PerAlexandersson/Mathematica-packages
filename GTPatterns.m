@@ -13,6 +13,7 @@ GTPatternForm;
 
 GTShape;
 GTPatterns;
+RowFlags;
 
 
 Begin["Private`"];
@@ -133,10 +134,18 @@ GTShape[GTPattern[gtp_]]:=With[
 GTPatterns::usage = "GTPatterns[lam,mu,w] returns a list of all GT-patterns with outer shape lam, inner shape mu (default {}), and weight vector w (default {}), corresponding to SSYT of skew shape lam/mu with content w.
 Optional argument cylindricShift (default Infinity) restricts to cylindric GT-patterns with the given column shift.
 Option RowFlags->{{a1,b1},{a2,b2},...} constrains entries in SSYT row r to the range [ar,br] (default {1,Infinity} = no constraint).";
+RowFlags::usage = "RowFlags is an option for GTPatterns that restricts the entries in tableau row r to a specified inclusive interval {ar,br}.";
 
 Options[GTPatterns] = {RowFlags -> Automatic};
 
-GTPatterns[lam_List, mu_List:{}, w_List:{}, cylindricShift_:Infinity, opts:OptionsPattern[]] :=
+GTPatterns[lam_List, opts:OptionsPattern[]] :=
+	GTPatterns[lam, {}, {}, Infinity, opts];
+GTPatterns[lam_List, mu_List, opts:OptionsPattern[]] :=
+	GTPatterns[lam, mu, {}, Infinity, opts];
+GTPatterns[lam_List, mu_List, w_List, opts:OptionsPattern[]] :=
+	GTPatterns[lam, mu, w, Infinity, opts];
+GTPatterns[lam_List, mu_List, w_List,
+		cylindricShift:(Infinity | _Integer), opts:OptionsPattern[]] :=
 	With[{lamMu = PadRight[{lam, mu}]},
 		Module[{flags, n = Length[lamMu[[1]]]},
 			flags = With[{rf = OptionValue[RowFlags]},
@@ -147,6 +156,10 @@ GTPatterns[lam_List, mu_List:{}, w_List:{}, cylindricShift_:Infinity, opts:Optio
 			];
 			Which[
 				!(Tr[lamMu[[1]]] - Tr[lamMu[[2]]] == Tr[w]), {},
+				lamMu[[1]] === {},
+					If[lamMu[[2]] === {} && AllTrue[w, IntegerQ[#] && # >= 0 &],
+						{GTPattern[ConstantArray[{}, Length[w] + 1]]},
+						{}],
 				(* Check that first and last row are compatible w shift. *)
 				lamMu[[1,1]] > lamMu[[1,-1]] + cylindricShift, {},
 				lamMu[[2,1]] > lamMu[[2,-1]] + cylindricShift, {},
@@ -182,34 +195,32 @@ quickGTPatterns[l_List, mu_List, w_List, cylindricShift_:Infinity, rowFlags_:{}]
 	(* First and last level consist of a single vertex. *)
 	levels = Join[{{{0, mu}}}, mid, {{{m, l}}}];
 
-	(* Apply row-flag constraints to intermediate levels (before cylindric transform).
+	(* Apply row-flag constraints before the cylindric transform.
 	   Flag [ar,br] on SSYT row r forces all entries in that row into [ar,br]:
-	     - at levels-index ar   (= GT level ar-1): shape[[r]] must equal mu[[r]]  (lower bound)
-	     - at levels-index br+1 (= GT level br):   shape[[r]] must equal l[[r]]   (upper bound)
-	   Boundary indices 1 and m+1 are fixed and are skipped. *)
+	     - below level ar, shape[[r]] must still equal mu[[r]];
+	     - at and above level br, shape[[r]] must equal l[[r]].
+	   Checking every level also enforces impossible endpoint flags. *)
 	levels = MapIndexed[
 		Function[{levelShapes, idx},
-			With[{li = idx[[1]]},
-				If[li == 1 || li == m + 1,
-					levelShapes,
-					Select[levelShapes, Function[{vert},
-						With[{shape = vert[[2]]},
-							And @@ Table[
-								With[{ar = flags[[r, 1]], br = flags[[r, 2]]},
-									And[
-										If[li == ar,     shape[[r]] == mu[[r]], True],
-										If[li == br + 1, shape[[r]] == l[[r]],  True]
-									]
-								],
-								{r, n}
-							]
+			With[{k = idx[[1]] - 1},
+				Select[levelShapes, Function[{vert},
+					With[{shape = vert[[2]]},
+						And @@ Table[
+							With[{ar = flags[[r, 1]], br = flags[[r, 2]]},
+								And[
+									If[k < ar, shape[[r]] == mu[[r]], True],
+									If[k >= br, shape[[r]] == l[[r]], True]
+								]
+							],
+							{r, n}
 						]
-					]]
-				]
+					]
+				]]
 			]
 		],
 		levels
 	];
+	If[AnyTrue[levels, # === {} &], Return[{}]];
 
 	If[cylindricShift < Infinity,
 		levels = Map[
@@ -224,6 +235,7 @@ quickGTPatterns[l_List, mu_List, w_List, cylindricShift_:Infinity, rowFlags_:{}]
 			] &,
 			levels, {2}]
 	];
+	If[AnyTrue[levels, # === {} &], Return[{}]];
 
 	(* Extract start and end vertex for pathfinding *)
 	startVert = levels[[1,1]];

@@ -13,6 +13,10 @@
 - Host supervisor owns `GTPatterns.m`, `SymmetricFunctions.m`,
   `MacdonaldPolynomials.m`, `PolynomialTools.m`, and the initial recovery tests
   for issue #1. No worker owns overlapping files.
+- Issue #1 implementation is complete pending review/merge: the four local
+  differences are preserved in separate cosmetic and semantic commits, row-flag
+  endpoint handling is corrected, `RowFlags` is public, and focused regression
+  tests pass.
 
 ## Planned sequence
 
@@ -36,3 +40,7 @@
 
 - Fresh clone matches `origin/master` at `664f6d2` before this planning update.
 - GitHub issues #1--#11 are assigned to milestone `Repository refresh`.
+- `wolframscript -file Tests/RunTests.wls`: 12 succeeded, 0 failed.
+- Representative unflagged `GTPatterns` calls match the pre-recovery GitHub
+  implementation; new tests cover zero content, empty shapes, row flags, and the
+  recovered cylindric-Schur behavior.
