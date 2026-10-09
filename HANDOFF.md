@@ -13,7 +13,9 @@
   differences are preserved in separate cosmetic and semantic commits, row-flag
   endpoint handling is corrected, `RowFlags` is public, and focused regression
   tests pass.
-- No worker currently owns source files. The next planned work is the supported
+- Claude Opus 5.5 session `agent-mathematica-mathem-c-eaac064b` is conducting
+  a read-only deep audit of the full repository. It owns no files and must not
+  mutate GitHub state. The next implementation work remains the supported
   context and public-API inventory in issue #2.
 
 ## Planned sequence
