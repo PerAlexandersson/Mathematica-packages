@@ -9,7 +9,10 @@
   files. Recovery is tracked in issue #1.
 - The repository-refresh plan is tracked by milestone `Repository refresh` and the
   umbrella issue #11.
-- No source refactoring has started and no worker owns source files.
+- Active branch: `refactor/recover-local-changes`.
+- Host supervisor owns `GTPatterns.m`, `SymmetricFunctions.m`,
+  `MacdonaldPolynomials.m`, `PolynomialTools.m`, and the initial recovery tests
+  for issue #1. No worker owns overlapping files.
 
 ## Planned sequence
 
