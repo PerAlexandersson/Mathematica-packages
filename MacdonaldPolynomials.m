@@ -1279,8 +1279,7 @@ Do[
 
 
 
-SSYTToAtom[ssyt_List] := 
-  Module[{n = Max[ssyt], atom, cols = 1, rWord, insertElement},
+SSYTToAtom[ssyt_List] :=   Module[{n = Max[ssyt], atom, cols = 1, rWord, insertElement},
    (* Start with empty basement. *)
    atom = List /@ Range[n];
    
@@ -1976,5 +1975,4 @@ RefineSubsetsRelations[subsetRelations_List] := Module[{i, j, ii, s1, s2, m1, m2
 
 End[(* End private *)];
 EndPackage[];
-
 

@@ -258,7 +258,7 @@ SturmSequenceQ[polys_List, x_] := Catch[
 ];
 
 
-
+(* THIS HAS SOME ISSUES! *)
 Interleaving2x2MinorQ::usage = "Interleaving2x2MinorQ[m,t] returns true if the 2x2-matrix m (in t) preserves interlacing. See Bränden's work.";
 Interleaving2x2MinorQ[m_, t_] := Module[
    {pp, qq, aa, dd, checkDiscr, negPt, \[Lambda], \[Mu], a, b},
@@ -266,6 +266,7 @@ Interleaving2x2MinorQ[m_, t_] := Module[
 
    pp = (\[Lambda] t + \[Mu]) m[[1, 2]] + m[[2, 2]];
    qq = (\[Lambda] t + \[Mu]) m[[1, 1]] + m[[2, 1]];
+
    Catch[
     If[pp === 0 || qq === 0, Throw[True],
      {pp, qq} = Together[{pp, qq}/PolynomialGCD[pp, qq]]
@@ -276,8 +277,8 @@ Interleaving2x2MinorQ[m_, t_] := Module[
 
     If[Not[0 <= Exponent[qq, t] - Exponent[pp, t] <= 1], Throw[False]];
 
-    (* In order to interlace, (a t + b)pp+qq must be real-
-    rooted for all a,b>0 *)
+    (* In order to interlace,
+    (a t + b)pp+qq must be real-rooted for all a,b>0. *)
 
     dd = Discriminant[(a t + b) pp + qq, t];
     If[NumberQ[dd] && dd >= 0, Throw[True]];
@@ -573,6 +574,4 @@ HilbertFunctionValues[polys_List, vars_List, maxdeg_Integer] := Module[
      
 End[(* End private *)];
 EndPackage[];
-
-
 

@@ -1688,7 +1688,7 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 
 (* Use F-expansion formula instead, if possible. *)
 CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
-CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:=CylindricSchurSymmetric[{lam, mu}, d,x] = Sum[
+CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:= Sum[
 	MonomialSymbol[YoungTableauWeight@ssyt,x]
 ,
 {ssyt, CylindricTableaux[{lam, mu}, d]}];
