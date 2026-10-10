@@ -288,3 +288,34 @@ VerificationTest[
   True,
   TestID -> "SymmetricFunctions-SkewMacdonaldESymmetric-skew-fully-evaluated"
 ]
+
+(* #35: MacdonaldHSymmetric follows Haglund's convention. The reference values come
+   from the independent identity H_mu = t^n(mu) J_mu[X/(1 - 1/t); q, 1/t]. *)
+VerificationTest[
+  {ToSchurBasis[MacdonaldHSymmetric[{2}, q, t]], ToSchurBasis[MacdonaldHSymmetric[{1, 1}, q, t]],
+   Expand@ToSchurBasis[MacdonaldHSymmetric[{3}, q, t]]},
+  {SchurSymbol[{2}] + q SchurSymbol[{1, 1}], SchurSymbol[{2}] + t SchurSymbol[{1, 1}],
+   Expand[SchurSymbol[{3}] + (q + q^2) SchurSymbol[{2, 1}] + q^3 SchurSymbol[{1, 1, 1}]]},
+  TestID -> "SymmetricFunctions-MacdonaldHSymmetric-Haglund-convention"
+]
+
+VerificationTest[
+  And @@ Table[
+    Module[{tt},
+      Expand[Together[ToSchurBasis[MacdonaldHSymmetric[mu, q, t]] -
+        (ToSchurBasis[tt^PartitionN[mu] Plethysm[MacdonaldJSymmetric[mu, q, 1/tt],
+          PowerSumSymbol[{1}]/(1 - 1/tt)]] /. tt -> t)]] === 0],
+    {mu, {{2}, {1, 1}, {3}, {2, 1}, {1, 1, 1}}}],
+  True,
+  TestID -> "SymmetricFunctions-MacdonaldHSymmetric-J-plethysm-identity"
+]
+
+VerificationTest[
+  (* B_{2} = 1 + q and B_{1,1} = 1 + t in Haglund's convention. *)
+  {Expand[ToSchurBasis[DeltaOperator[ElementaryESymmetric[1], MacdonaldHSymmetric[{2}, q, t], q, t]
+     - (1 + q) MacdonaldHSymmetric[{2}, q, t]]],
+   Expand[ToSchurBasis[DeltaOperator[ElementaryESymmetric[1], MacdonaldHSymmetric[{1, 1}, q, t], q, t]
+     - (1 + t) MacdonaldHSymmetric[{1, 1}, q, t]]]},
+  {0, 0},
+  TestID -> "SymmetricFunctions-DeltaOperator-Haglund-B"
+]

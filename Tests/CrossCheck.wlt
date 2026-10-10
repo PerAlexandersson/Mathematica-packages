@@ -65,10 +65,7 @@ macdonaldRecordQ[record_] := Module[{mu, b, nabla},
     Lookup[record, "B_terms"]];
   nabla = Total[Function[term, term[[3]]/term[[4]] q^term[[1]] t^term[[2]]] /@
     Lookup[record, "nabla_terms"]];
-  (* The Rust library labels the diagram statistics with q=a' and t=l',
-     whereas this Mathematica package uses the opposite q/t naming here. *)
-  b = b /. {q -> t, t -> q};
-  nabla = nabla /. {q -> t, t -> q};
+  (* Both sides use Haglund's convention B_mu = sum q^a'(c) t^l'(c) (issue #35). *)
   sameExpressionQ[
     ToMacdonaldHBasis[
       DeltaOperator[ElementaryESymmetric[1], MacdonaldHSymmetric[mu, q, t], q, t], q, t],
