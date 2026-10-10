@@ -282,7 +282,7 @@ VerificationTest[
    its usage string. *)
 VerificationTest[
   {Names["UnicellularChromatics`Weights"],
-   StringContainsQ[System`Weights::usage, "GraphChromatic"]},
+   StringContainsQ[ToString[System`Weights::usage], "GraphChromatic"]},
   {{}, False},
   TestID -> "UnicellularChromatics-Weights-is-System-symbol"
 ]
