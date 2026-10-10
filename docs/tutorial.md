@@ -3,6 +3,7 @@ title: Tutorial
 nav_order: 2
 ---
 
+{% raw %}
 # Tutorial
 
 A tour of the packages, from tableaux to symmetric, quasisymmetric and nonsymmetric
@@ -187,3 +188,4 @@ PolynomialToSymmetricFunction[chrom, x, ElementaryESymbol, 3]  (* => 3 Elementar
 - [`Examples/`](https://github.com/PerAlexandersson/Mathematica-packages/tree/master/Examples): runnable example scripts for each package.
 - [`Legacy/MIGRATION.md`](migration.html): from the legacy packages to the current ones.
 - Usage messages: `?KeyPolynomial`, `?NonsymmetricPolynomials`*`.
+{% endraw %}

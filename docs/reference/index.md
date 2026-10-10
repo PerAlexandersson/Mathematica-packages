@@ -4,6 +4,7 @@ nav_order: 3
 has_children: true
 ---
 
+{% raw %}
 # Reference
 
 Generated from the usage messages of each package. Each page links to the corresponding background pages on [symmetricfunctions.com](https://www.symmetricfunctions.com/).
@@ -24,3 +25,5 @@ Generated from the usage messages of each package. Each page links to the corres
 | [MatroidTools](MatroidTools.html) | Matroids from bases: rank, duality, deletion/contraction, Tutte polynomials, transversal, lattice path and rook matroids |
 | [NonsymmetricPolynomials](NonsymmetricPolynomials.html) | Divided difference, Demazure and Demazure–Lusztig operators (also K-theoretic); key, atom, t-key, t-atom, Schubert, Grothendieck, Lascoux, fundamental slide, lock and dual Grothendieck polynomials; nonsymmetric Macdonald polynomials (also with permuted basements) and nonsymmetric Jack polynomials; basis symbols with conversions |
 | [LegacyConversions](LegacyConversions.html) | Converters from the data of the legacy packages (GT patterns, tableaux, area lists, key indices) to the supported conventions |
+
+{% endraw %}

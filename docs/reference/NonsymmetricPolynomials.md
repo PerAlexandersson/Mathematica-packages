@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 13
 ---
 
+{% raw %}
 # NonsymmetricPolynomials
 
 Divided difference, Demazure and Demazure–Lusztig operators (also K-theoretic); key, atom, t-key, t-atom, Schubert, Grothendieck, Lascoux, fundamental slide, lock and dual Grothendieck polynomials; nonsymmetric Macdonald polynomials (also with permuted basements) and nonsymmetric Jack polynomials; basis symbols with conversions.
@@ -250,3 +251,5 @@ Background: [Schubert polynomials](https://www.symmetricfunctions.com/schubert.h
 
 VariableTransposition\[f, x, i\] interchanges x\[i\] and x\[i+1\] in f.
 
+
+{% endraw %}

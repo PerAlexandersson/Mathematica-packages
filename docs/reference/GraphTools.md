@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 11
 ---
 
+{% raw %}
 # GraphTools
 
 Graph polynomials, orientations, and datasets of connected graphs (n <= 9), trees (n <= 20) and rooted trees (n <= 10).
@@ -122,3 +123,5 @@ and edges are overlaps of tiles.
 
 TreeGraphs\[n\] returns a list of all non-isomorphic unlabeled trees on n vertices, for 1 &lt;= n &lt;= 20 (OEIS A000055); other n give Missing\["NotAvailable", n\]. The data for n &gt;= 5 are read from Data/trees, taken from https://houseofgraphs.org/meta-directory/trees
 
+
+{% endraw %}

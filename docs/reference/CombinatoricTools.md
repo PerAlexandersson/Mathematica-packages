@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 3
 ---
 
+{% raw %}
 # CombinatoricTools
 
 Partitions, compositions, set partitions, permutation statistics, q-analogs, characters of the symmetric group, Kostka numbers.
@@ -548,3 +549,5 @@ YoungLatticePaths\[mu, nu\] returns all saturated chains from mu to nu in Young'
 
 ZCoefficient\[lam\] returns the Z-coefficient, as p. 299, Enumerative Combinatorics II, Stanley
 
+
+{% endraw %}

@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 8
 ---
 
+{% raw %}
 # PermutationTools
 
 Pattern avoidance, Foata and related maps, Bruhat and weak order, families of permutations.
@@ -242,3 +243,5 @@ WeakLowerOrderIdeal\[pi\] returns all permutations below pi in the weak order
 WeakOrderGreaterQ\[p1,p2\] returns true iff p1 is greater <br>
 than p2 in weak order. The identity is smaller than all other, and w0 is largest.
 
+
+{% endraw %}

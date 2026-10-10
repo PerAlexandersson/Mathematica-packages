@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 5
 ---
 
+{% raw %}
 # GTPatterns
 
 Gelfand–Tsetlin patterns (skew, row-flagged, cylindric), BZ patterns, Gog and Magog patterns, tiles and snakes, lattice paths, stretched Kostka (Ehrhart) data, TikZ output.
@@ -181,3 +182,5 @@ WeightRange is an option for ShapeTriplets specifying the minimum and maximum nu
 
 Background: [Gelfand–Tsetlin patterns and polytopes](https://www.symmetricfunctions.com/gtpatterns.htm)
 
+
+{% endraw %}

@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 12
 ---
 
+{% raw %}
 # MatroidTools
 
 Matroids from bases: rank, duality, deletion/contraction, Tutte polynomials, transversal, lattice path and rook matroids.
@@ -189,3 +190,5 @@ VamosBases\[\] returns the list of bases of the non-realizable Vamos matroid.
 
 Background: [Matroids](https://www.symmetricfunctions.com/matroids.htm)
 
+
+{% endraw %}

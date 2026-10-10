@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 4
 ---
 
+{% raw %}
 # NewTableaux
 
 Standard and semistandard (skew) Young tableaux, RSK, promotion, evacuation, crystal operators, border strips, TeX output; semistandard augmented fillings (`SSAF`) with statistics, crystals and Mason insertion.
@@ -360,3 +361,5 @@ YoungTableauWeight\[tab\] returns the weight vector counting entries 1 through t
 
 YTableauTeX\[tab, options\] returns a TeX string for tab. LineBreaks defaults to True and UseArray selects the legacy \\young representation when False.
 
+
+{% endraw %}

@@ -3,6 +3,7 @@ title: Changelog
 nav_order: 6
 ---
 
+{% raw %}
 # Changelog
 
 All notable changes to this repository are documented here. The format follows
@@ -206,3 +207,4 @@ Core utilities
   remains available in the `pre-refresh-2026-10` tag.
 
 [0.1.0]: https://github.com/PerAlexandersson/Mathematica-packages/releases/tag/v0.1.0
+{% endraw %}

@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 6
 ---
 
+{% raw %}
 # QuasiSymmetricFunctions
 
 Monomial, fundamental and power-sum quasisymmetric functions, quasisymmetric Schur functions, and bridges to polynomials and to symmetric functions.
@@ -128,3 +129,5 @@ ZPowerSumQSymmetric\[alpha, x\] returns the z-normalized quasisymmetric power-su
 
 Background: [Quasisymmetric functions](https://www.symmetricfunctions.com/standardQuasiSymmetricFunctions.htm)
 
+
+{% endraw %}

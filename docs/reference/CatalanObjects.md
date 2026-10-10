@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 9
 ---
 
+{% raw %}
 # CatalanObjects
 
 Dyck paths, non-crossing partitions and matchings, parking functions, trees and other Catalan families, with plots.
@@ -443,3 +444,5 @@ TypeBSetPartitions\[n\] returns all type B set partitions of \[n\].
 
 TypeBSortInterval\[interval\] sorts an interval in the type B cyclic order, starting after -1 when -1 is present and otherwise starting after 1.
 
+
+{% endraw %}

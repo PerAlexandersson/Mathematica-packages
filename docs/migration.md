@@ -3,6 +3,7 @@ title: Migrating from the legacy packages
 nav_order: 5
 ---
 
+{% raw %}
 # Migrating from the legacy packages
 
 The legacy packages `OldYoungTableaux`, `MacdonaldPolynomials` and `ChromaticFunctions` are
@@ -131,3 +132,4 @@ differ in meaning. When a legacy package is loaded too, use full names such as
 | `ColorPlot`, `DyckDiagramPlot` | use `OrientationPlot`, `UnitIntervalPlot`, `AreaListPlot` |
 
 If something you used is missing here or behaves differently, please open an issue.
+{% endraw %}
