@@ -49,26 +49,34 @@ Begin["`Private`"];
 KnGraph::usage = "KnGraph[n] gives the complete graph on n vertices.";
 KnGraph[n_Integer] := Join @@ Table[{i, j}, {i, n}, {j, i + 1, n}];
 
-ConnectedSimpleGraphs::usage = "ConnectedSimpleGraphs[n] returns a list of all simple connected graphs on n vertices.";
+(* Datasets live in Data/ next to this file; the location is fixed when the package loads. *)
+graphToolsDataDirectory = FileNameJoin[{DirectoryName[$InputFileName], "Data"}];
+
+ConnectedSimpleGraphs::nodata = "Data file `1` was not found.";
+TreeGraphs::nodata = "Data file `1` was not found.";
+importGraphData[caller_Symbol, subdirectory_String, name_String] := With[
+	{file = FileNameJoin[{graphToolsDataDirectory, subdirectory, name}]},
+	If[FileExistsQ[file],
+		Import[file, "Graph6"],
+		Message[MessageName[caller, "nodata"], file]; $Failed]
+];
+
+ConnectedSimpleGraphs::usage = "ConnectedSimpleGraphs[n] returns a list of all non-isomorphic simple connected graphs on n vertices, for 1 <= n <= 9 (OEIS A001349); other n give Missing[\"NotAvailable\", n]. The data are read from Data/graphs.";
 
 ConnectedSimpleGraphs[n_Integer] := Which[
    n == 1,
    {Graph[{1}, {}]},
-   n == 2,
-   List@Import[
-     "~/Dropbox/mathematica-packages/graph" <>
-      ToString[n] <> "c.g6"],
-   3 <= n <= 9,
-   Import["~/Dropbox/mathematica-packages/graph" <>
-     ToString[n] <> "c.g6"]
+   2 <= n <= 9,
+   With[{result = importGraphData[ConnectedSimpleGraphs, "graphs", "graph" <> ToString[n] <> "c.g6"]},
+      (* A file with a single graph imports as a Graph rather than a list. *)
+      If[GraphQ[result], {result}, result]]
    ,
    True, Missing["NotAvailable", n]
 ];
 
-TreeGraphs::usage = "TreeGraphs[n] returns a list of all non-isomorphic unlabeled trees on n vertices. 
-Taken from https://houseofgraphs.org/meta-directory/trees";
+TreeGraphs::usage = "TreeGraphs[n] returns a list of all non-isomorphic unlabeled trees on n vertices, for 1 <= n <= 20 (OEIS A000055); other n give Missing[\"NotAvailable\", n]. The data for n >= 5 are read from Data/trees, taken from https://houseofgraphs.org/meta-directory/trees";
 
-TreeGraphs[1] := {Graph[{1}]};
+TreeGraphs[1] := {Graph[{1}, {}]};
 TreeGraphs[2] := {Graph[{1,2},{UndirectedEdge[1,2]}]};
 TreeGraphs[3] := {Graph[{1,2,3},{UndirectedEdge[1,2],UndirectedEdge[2,3]}]};
 TreeGraphs[4] := {
@@ -78,8 +86,7 @@ TreeGraphs[4] := {
 
 TreeGraphs[n_Integer] := With[{result = Which[
    5 <= n <= 20,
-   Import["~/Dropbox/mathematica-packages/trees" <>
-     ToString[n] <> ".g6"]
+   importGraphData[TreeGraphs, "trees", "trees" <> ToString[n] <> ".g6"]
    ,
    True, Missing["NotAvailable", n]
    ]},
