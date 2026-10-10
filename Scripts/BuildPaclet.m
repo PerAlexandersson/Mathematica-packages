@@ -1,11 +1,13 @@
 #!/usr/bin/env wolframscript
-(* Builds build/<Name>-<Version>.paclet from PacletInfo.wl, Kernel/, Legacy/ and Data/,
+(* Builds <Name>-<Version>.paclet from PacletInfo.wl, Kernel/, Legacy/ and Data/,
    then verifies the archive: it is extracted to a temporary directory and every context
    registered in PacletInfo.wl is loaded in a fresh kernel. Exits non-zero on failure.
-   Usage: wolframscript -file Scripts/BuildPaclet.m *)
+   Usage: wolframscript -file Scripts/BuildPaclet.m [outputDirectory]   (default: build/;
+   pass a directory elsewhere when the checkout is in a synced folder such as Dropbox) *)
 
 root = ParentDirectory[DirectoryName[$InputFileName]];
-build = FileNameJoin[{root, "build"}];
+build = If[Length[$ScriptCommandLine] >= 2, ExpandFileName[$ScriptCommandLine[[2]]],
+  FileNameJoin[{root, "build"}]];
 staging = FileNameJoin[{build, "staging"}];
 Quiet[DeleteDirectory[staging, DeleteContents -> True]];
 CreateDirectory[staging, CreateIntermediateDirectories -> True];

@@ -34,6 +34,7 @@
   guide; `Scripts/*.m` could become `.wls` (standard for scripts).
 - Verification: `wolframscript -file Tests/RunTests.wls` (403 tests, about 4 minutes; a test
   over 120 s fails) and `wolframscript -file Scripts/BuildPaclet.m` (all 22 contexts load
-  from the archive). Keep the whole check under ten minutes.
+  from the archive). Keep the whole check under ten minutes. This checkout is in Dropbox:
+  build the paclet outside it (`BuildPaclet.m <directory>`), not into `build/`.
 
 Older notes (refresh plan, audit evidence): [`HANDOFF-archive.md`](HANDOFF-archive.md).
