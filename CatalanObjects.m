@@ -85,6 +85,7 @@ AreaToPartition;
 DyckPath;
 DyckPaths;
 FussCatalanPaths;
+RationalDyckPaths;
 DyckCoordinates;
 DyckPlot;
 DyckPathToTikz;
@@ -169,7 +170,7 @@ CircularGraphPlot::usage="CircularGraphPlot[circularGraph] gives a graphical rep
 Options[CircularGraphPlot] = {VertexLabeling -> True, Circle -> True};
 CircularGraphPlot[CircularGraph[n_Integer, edgeList_List],
    opts : OptionsPattern[]] := Module[
-   {typeB, d, edgeMultColor, coord, i, pts, lbls = {}, graphicObjects},
+   {typeB, d, edgeMultColor, coord, fromTypeB, toTypeB, i, pts, lbls = {}, graphicObjects},
 
    (* Negative n indicate a type B object so adjust number of vertices (d) accordingly. *)
 
@@ -327,9 +328,9 @@ PerfectMatchings[n_Integer] := PerfectMatchings[n] =
        With[{a = pairs[[k, 1]], b = pairs[[k, 2]]},
         {
          CircularGraph[2 n, 
-          Join[Drop[pairs, k], {{a, 2 n - 1}, {b, 2 n}}]],
+          Join[Drop[pairs, {k}], {{a, 2 n - 1}, {b, 2 n}}]],
          CircularGraph[2 n, 
-          Join[Drop[pairs, k], {{b, 2 n - 1}, {a, 2 n}}]]
+          Join[Drop[pairs, {k}], {{b, 2 n - 1}, {a, 2 n}}]]
          }]]]
      , {k, n}, {pm, PerfectMatchings[n - 1]}]
 ];
@@ -564,6 +565,7 @@ These must be non-intersecting, even at the end-points.
 Example: CircularGraph[4,{{1,2},{3,3}}] is a configuraton on 4 vertices,
 with an edge, a self-loop.";
 
+StanleyCatalan60[n_Integer?Negative] := {};
 StanleyCatalan60[0] = {CircularGraph[-1,{}]};
 StanleyCatalan60[1] = {CircularGraph[0,{}]};
 StanleyCatalan60[2] = {CircularGraph[1,{{1,1}}],CircularGraph[1,{}]};
@@ -714,6 +716,7 @@ BounceLikeArea::usage = "BounceLikeArea[alpha] generates a Dyck path with disjoi
 BounceLikeArea[alpha_List] := Join @@ Table[Range[0, a - 1], {a, alpha}];
 
 LineGraphAreaLists::usage = "LineGraphAreaLists[n] returns all area lists where the unit interval graph is a line graph.";
+LineGraphAreaLists[0] := {{}};
 LineGraphAreaLists[1] := {{0}};
 LineGraphAreaLists[n_Integer] :=
   LineGraphAreaLists[n] = Module[{aa, j},
@@ -887,26 +890,25 @@ DyckPaths[n_Integer] := DyckPaths[n] = Flatten[
 			DyckPaths[n - 1 - k], DyckPaths[k], 1]
 , {k, 0, n - 1}], 2];
 
-FussCatalanPaths::usage = "FussCatalanPaths[n,k] returns all Fuss-Catalan paths in the n by kn rectangle.";
+FussCatalanPaths::usage = "FussCatalanPaths[n,k] returns all Fuss-Catalan paths in the n by (k - 1)n rectangle.";
 FussCatalanPaths[0, k_Integer : 2] := {DyckPath@{}};
-FussCatalanPaths[1, k_Integer : 2] := {DyckPath[{"n", "e"}]};
 FussCatalanPaths[n_Integer, k_Integer : 2] := 
-  FussCatalanPaths[n, k] = (Join @@ Table[
-      Flatten@
-       Outer[
-        DyckPath[
-          Join[
-           #1[[1]],
-           Sequence @@ (Prepend[First[#], "n"] & /@ Rest[{##}]),
-           {"e"}]
-          ] &
-        ,
-        Sequence @@ Table[FussCatalanPaths[a, k], {a, alpha}], 1
-        ]
-      , {alpha, WeakIntegerCompositions[n - 1, k]}]);
+  FussCatalanPaths[n, k] = Module[{paths, eastTotal = (k - 1) n},
+    paths[up_, right_, height_] := paths[up, right, height] =
+      If[up == n && right == eastTotal,
+        {{}},
+        Join[
+          If[up < n,
+            Prepend[#, "n"] & /@ paths[up + 1, right, height + k - 1],
+            {}],
+          If[right < eastTotal && height > 0,
+            Prepend[#, "e"] & /@ paths[up, right + 1, height - 1],
+            {}]]];
+    DyckPath /@ paths[0, 0, 0]
+    ];
 
 
-DyckPath[binary:{(0 | 1) ...}]:=DyckPath[binary/.{0->"n",1->"e"}];
+DyckPath[binary:{(0 | 1) ..}]:=DyckPath[binary/.{0->"n",1->"e"}];
 DyckPath[neWord_String]:=DyckPath[Characters@neWord];
 
 DyckPath/:Format[DyckPath[ne_List]]:=DyckPlot[DyckPath[ne]];
@@ -919,7 +921,7 @@ DyckCoordinates[dp_List] := Accumulate@Prepend[ReplaceAll[dp,
      {"n" -> {0, 1}, "e" -> {1, 0}, "d" -> {1, 1}}], {0, 0}];
 
 
-DyckPlot[path_String] := DyckPlot[Characters@path];
+DyckPlot[path_String] := DyckPlot[DyckPath[path]];
 
 DyckPlot[DyckPath[path_List]] := Module[
    {coords = DyckCoordinates[path], nx,ny},
@@ -1003,7 +1005,7 @@ Module[{ns, es, nni, eei, nn = Length[dp]},
 	nni = SchroederPathUpSteps[dp];
 	eei = Complement[Range[nn], nni];
 	{ns, es} = {nni[[v]], eei[[v]]};
-	Drop[Drop[dp, {es}], {ns}]
+	DyckPath[Drop[Drop[dp, {es}], {ns}]]
 ];
 
 RationalDyckPaths::usage = "RationalDyckPaths[{m,n}] returns all n/e paths from {0,0} to {m,n} staying weakly above the diagonal.";
@@ -1033,6 +1035,7 @@ IncreasingParkingFunctions::usage = "IncreasingParkingFunctions[n] returns all p
 
 (*This is a Catalan family. *)
 Clear[IncreasingParkingFunctions];
+IncreasingParkingFunctions[0] := {{}};
 IncreasingParkingFunctions[1] := {{1}};
 IncreasingParkingFunctions[n_Integer] := 
   IncreasingParkingFunctions[n] = Join @@ Table[
@@ -1041,6 +1044,7 @@ IncreasingParkingFunctions[n_Integer] :=
 
 	 
 ParkingFunctions::usage = "ParkingFunctions[n] returns all parking functions of length n.";
+ParkingFunctions[0] := {{}};
 ParkingFunctions[n_Integer] := ParkingFunctions[n] = Join @@ Map[
      Permutations, IncreasingParkingFunctions[n]];
 	
@@ -1051,6 +1055,7 @@ NCFVertexDegree::usage = "NCFVertexDegree[forest] returns a list {d1,...,dn} suc
 NCFVertexDegree[CircularGraph[n_,edges_]] := VertexDegree@Graph[Range@n, UndirectedEdge @@@ edges];
 
 NonCrossingForests::usage = "NonCrossingForests[n] returns all non-crossing forests on n vertices.";
+NonCrossingForests[0] := {CircularGraph[0, {}]};
 NonCrossingForests[1] := { CircularGraph[1, {}] };
 NonCrossingForests[n_Integer] := NonCrossingForests[n] = Module[
 	{isNonCrossingQ, admissibleEdges, edges, components},
@@ -1183,6 +1188,8 @@ OrderedRootedTrees[n_Integer] := Reap[Do[Outer[Sow[
 		OrderedRootedTrees[n - 1 - k], 1]
 		,{k, 0, n - 1}]][[-1, 1]];
 
+OrderedRootedTreeSize[ot_List] := 1 + Total[OrderedRootedTreeSize /@ ot];
+
 OrderedRootedTreeToGraph[{}] := Graph[{1}, {}];
 OrderedRootedTreeToGraph[ot_List] := OrderedRootedTreeToGraph[ot] = Module[
 	{subTrees, sizes, eLists, toAdd, adjustedEdges, newEdges},
@@ -1215,7 +1222,7 @@ result is 231-avoiding.
 ORTTo231Perm[{}] := {};
 ORTTo231Perm[ot_List] := ORTTo231Perm[ot] = Module[
     {pi, adjPi, n},
-    pi = (ORTToPerm /@ ot);
+    pi = (ORTTo231Perm /@ ot);
     adjPi = 
      Table[pi[[j]] + Length[Join @@ pi[[1 ;; j - 1]]], {j, Length@pi}];
     n = Max[adjPi, 0] + Length[adjPi];
@@ -1370,7 +1377,7 @@ SetPartitionLinePlot[CircularGraph[n_, blocks_]] := Module[
    Graphics[{arcs, pts, lbls}, ImageSize -> 30 d]
 ];
 
-SetPartitionForm[bb_List] := Row[Row /@ (bb/.{i_Integer:>If[i<0,OverBar[i],i]}), "|"];
+SetPartitionForm[bb_List] := Row[Row /@ (bb/.{i_Integer:>If[i<0,OverBar[-i],i]}), "|"];
 
 FormatTypeBSetPartition::usage = "FormatTypeBSetPartition[sp] returns a canonicalized version.";
 FormatTypeBSetPartition[sp_List] := SortBy[DeleteDuplicates[
