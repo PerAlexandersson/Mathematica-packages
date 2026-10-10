@@ -38,7 +38,7 @@ results = Table[
       Join[scriptCommand, {runner, file, ToString[testTimeLimit]}]] <> " 2>&1", String]];
     lines = If[ListQ[proc], proc, {}];
     summary = Select[lines, StringStartsQ[#, "RESULT "] &];
-    Print[FileNameTake[file], ": ", Round[seconds, 0.1], " s"];
+    Print[FileNameTake[file], ": ", N[Round[10 seconds]/10], " s"];
     Scan[Print[FileNameTake[file], ": ", #] &,
       Select[lines, StringStartsQ[#, "FAILED: "] &]];
     If[summary === {},
