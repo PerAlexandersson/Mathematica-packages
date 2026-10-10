@@ -52,6 +52,11 @@ this refactoring is tagged `pre-refresh-2026-10`.
   Locks are indexed as by Assaf-Searles (Kohnert polynomials of right-justified diagrams);
   legacy `MacdonaldPolynomials`LockPolynomial[alpha]` is the new `LockPolynomial[Reverse[alpha]]`
   (#51).
+- `NonsymmetricPolynomials`: nonsymmetric Macdonald polynomials `MacdonaldEPolynomial[alpha, x,
+  q, t]`, generated from 1 by the Knop-Sahi affine shift and intertwiners (they agree with the
+  Haglund-Haiman-Loehr filling formula, the legacy package and sym-poly), permuted basements
+  `MacdonaldEPolynomial[alpha, sigma, x, q, t]`, `NonsymmetricJackPolynomial` and
+  `IntegralMacdonaldE` (#51).
 - `AlgebraicBases` supports permutation-indexed bases.
 - Polynomial bridges: `PolynomialToSymmetricFunction` (to any core basis, validating
   symmetry), `QuasiSymmetricFunctionToPolynomial`, `PolynomialToQuasiSymmetricFunction`,

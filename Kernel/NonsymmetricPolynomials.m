@@ -27,6 +27,9 @@ GrothendieckPolynomial;
 LascouxPolynomial;
 FundamentalSlidePolynomial;
 LockPolynomial;
+MacdonaldEPolynomial;
+NonsymmetricJackPolynomial;
+IntegralMacdonaldE;
 PermutationToCode;
 CodeToPermutation;
 
@@ -210,6 +213,189 @@ lockMonomial[tab_, x_] := Times @@ (x[#[[1]]]^#[[2]] & /@ Tally[Join @@ (Rest /@
 LockPolynomial::usage = "LockPolynomial[alpha, x] returns the lock polynomial of the weak composition alpha (Assaf-Searles): the Kohnert polynomial of the right-justified diagram with alpha[[i]] cells in row i. Trailing zeros of alpha do not matter, and a lock with one nonzero row is a key polynomial.";
 LockPolynomial[alpha_?weakCompositionQ, x_] := cached[{LockPolynomial, alpha, x},
 	Total[lockMonomial[#, xx] & /@ lockFillings[Reverse[alpha]]] /. xx -> x];
+
+
+(* ::Section:: *)
+(* Nonsymmetric Macdonald polynomials *)
+
+(* The filling convention used here is the HHL/Alexandersson convention with
+   identity basement {1,...,n}.  It is also the convention used by the Rust
+   sym-poly-multipoly implementation.  The operator recursion below is used
+   after the weakly increasing base composition has been evaluated by the
+   non-attacking formula. *)
+
+macdonaldClockwiseQ[a_, b_, c_] := Or[a < b < c, b < c < a, c < a < b];
+macdonaldTypeAQ[a_Integer, b_Integer, c_Integer] :=
+	macdonaldClockwiseQ[a + 1/10, c + 3/10, b + 2/10];
+macdonaldTypeBQ[a_Integer, b_Integer, c_Integer] :=
+	macdonaldClockwiseQ[a + 2/10, c + 1/10, b + 3/10];
+
+macdonaldNonAttackingQ[tab_, r_Integer, c_Integer] := And @@ Flatten@Table[
+	Not[(Length[tab[[i]]] >= c && tab[[i, c]] == tab[[r, c]]) ||
+		(Length[tab[[i]]] >= c - 1 && tab[[i, c - 1]] == tab[[r, c]])],
+	{i, r - 1}];
+
+macdonaldFillings[alpha_List, basement_List] := cached[{"macdonaldFillings", alpha, basement},
+	Module[{n = Length[alpha], rowSequence, recurse, initial},
+		rowSequence = Join @@ Table[ConstantArray[i, alpha[[i]]], {i, n}];
+		recurse[tab_List, {}] := {tab};
+		recurse[tab_List, remaining_List] := Module[{r = First[remaining], newTab},
+			Join @@ Table[
+				newTab = ReplacePart[tab, r -> Append[tab[[r]], b]];
+				If[macdonaldNonAttackingQ[newTab, r, Length[newTab[[r]]]],
+					recurse[newTab, Rest[remaining]], {}],
+				{b, n}]];
+		initial = Table[{basement[[i]]}, {i, n}];
+		recurse[initial, rowSequence]]];
+
+macdonaldWeightMonomial[tab_, x_] :=
+	Times @@ (x[#[[1]]]^#[[2]] & /@ Tally[Join @@ (Rest /@ tab)]);
+
+macdonaldCoinversions[tab_] := Module[{rows = Length[tab], shape = Length /@ tab},
+	Sum[Boole[Or[
+			(shape[[i]] >= shape[[r]] && shape[[i]] >= c &&
+				macdonaldTypeAQ[tab[[i, c]], tab[[r, c]], tab[[i, c - 1]]] === False),
+			(shape[[i]] < shape[[r]] && shape[[i]] >= c - 1 &&
+				macdonaldTypeBQ[tab[[i, c - 1]], tab[[r, c - 1]], tab[[r, c]]] === False)]],
+		{r, rows}, {c, 2, Length[tab[[r]]]}, {i, r - 1}]];
+
+macdonaldMajorIndex[tab_] := Module[{shape = Length /@ tab},
+	Sum[Boole[tab[[r, c]] > tab[[r, c - 1]]] (1 + shape[[r]] - c),
+		{r, Length[tab]}, {c, 2, Length[tab[[r]]]}]];
+
+macdonaldSafePower[base_, exponent_Integer] := If[exponent == 0, 1, base^exponent];
+
+macdonaldArm[shape_List, r_Integer, c_Integer] :=
+	Sum[Boole[c <= shape[[i]] <= shape[[r]]], {i, r + 1, Length[shape]}] +
+		Sum[Boole[c - 1 <= shape[[i]] < shape[[r]]], {i, 1, r - 1}];
+
+macdonaldFillingCoefficient[tab_, q_, t_] := Module[{shape = Length /@ tab, arm, leg},
+	macdonaldSafePower[q, macdonaldMajorIndex[tab]] *
+		macdonaldSafePower[t, macdonaldCoinversions[tab]] *
+		Product[
+			If[tab[[r, c]] == tab[[r, c - 1]], 1,
+				leg = shape[[r]] - c;
+				arm = macdonaldArm[shape, r, c];
+				(1 - t)/(1 - q^(leg + 1) t^(arm + 1))],
+			{r, Length[tab]}, {c, 2, Length[tab[[r]]]}]];
+
+macdonaldFillingPolynomial[alpha_List, basement_List, x_, q_, t_] :=
+	Together[Total[macdonaldFillingCoefficient[#, q, t] macdonaldWeightMonomial[#, x] & /@
+		macdonaldFillings[alpha, basement]]];
+
+macdonaldLPrime[alpha_List, i_Integer] :=
+		If[i > 1, Count[alpha[[1 ;; i - 1]], v_ /; v >= alpha[[i]]], 0] +
+		If[i < Length[alpha], Count[alpha[[i + 1 ;;]], v_ /; v > alpha[[i]]], 0];
+
+macdonaldSpectralRatio[alpha_List, i_Integer, q_, t_] :=
+	q^(alpha[[i + 1]] - alpha[[i]]) t^(macdonaldLPrime[alpha, i] -
+		macdonaldLPrime[alpha, i + 1]);
+
+macdonaldSwap[alpha_List, i_Integer] :=
+	ReplacePart[alpha, {i -> alpha[[i + 1]], i + 1 -> alpha[[i]]}];
+
+(* For beta_i < beta_{i+1}, the normalized intertwiner is
+   E_{s_i beta} = t^-1 (T_i + (1-t) r/(1-r)) E_beta, where
+   r = q^(beta_(i+1)-beta_i) t^(l'_i-l'_(i+1)-1). *)
+macdonaldIntertwiner[f_, beta_List, x_, q_, t_, i_Integer] := Module[{r},
+	r = macdonaldSpectralRatio[beta, i, q, t];
+	Together[TDemazureOperator[f, x, t, i]/t +
+		(1 - t) r/(t (1 - r)) f]];
+
+(* E_alpha is generated from E_0 = 1 by two operators (Knop-Sahi), with generic parameters
+   qq, tt and variables xx, and cached per alpha:
+   - the affine shift: E_(alpha_2, ..., alpha_n, alpha_1 + 1) =
+     q^(-alpha_1) x_n E_alpha(q x_n, x_1, ..., x_(n-1));
+   - the intertwiner above, which sorts a descent alpha_i > alpha_(i+1).
+   A weakly increasing alpha /= 0 is the affine shift of (alpha_n - 1, alpha_1, ..., alpha_(n-1)).
+   This reproduces the Haglund-Haiman-Loehr non-attacking filling formula (identity basement),
+   which is used only as a test oracle and for basements not reachable by operators. *)
+macdonaldAffineShift[f_, n_Integer, q_] :=
+	xx[n] (f /. Thread[xx /@ Range[n] -> Prepend[xx /@ Range[n - 1], q xx[n]]]);
+
+(* The recursion with parameters q, t: the generic symbols qq, tt, or nonzero exact numbers
+   (a faster path that avoids large rational functions). *)
+macdonaldE[alpha_List, q_, t_] := cached[{"macdonaldE", alpha, q, t},
+	Module[{n = Length[alpha], i, beta},
+		i = SelectFirst[Range[n - 1], alpha[[#]] > alpha[[# + 1]] &];
+		Which[
+			AllTrue[alpha, # == 0 &], 1,
+			!MissingQ[i],
+				beta = macdonaldSwap[alpha, i];
+				macdonaldIntertwiner[macdonaldE[beta, q, t], beta, xx, q, t, i],
+			True,
+				beta = Prepend[Most[alpha], Last[alpha] - 1];
+				Together[q^(-First[beta]) macdonaldAffineShift[macdonaldE[beta, q, t], n, q]]]]];
+
+macdonaldEGeneric[alpha_List] := macdonaldE[alpha, qq, tt];
+
+macdonaldNumericParametersQ[q_, t_] :=
+	ExactNumberQ[q] && ExactNumberQ[t] && q != 0 && t != 0;
+
+(* Permuted basements. With p and p' the rows of the basement entries i and i + 1,
+   E^(s_i sigma)_alpha = T_i E^sigma_alpha if p < p' and alpha_p >= alpha_p', and
+   E^(s_i sigma)_alpha = T_i^(-1) E^sigma_alpha if p > p' and alpha_p <= alpha_p', where s_i sigma
+   swaps the values i and i + 1 in sigma, T_i = TDemazureOperator[., x, t, i] and
+   T_i^(-1) = (T_i + t - 1)/t. Basements reachable from the identity by these moves are
+   computed by operators; the others by the non-attacking filling formula. *)
+macdonaldBasementMoves[alpha_List, sigma_List] := Module[{p, pp},
+	Join @@ Table[
+		p = First@FirstPosition[sigma, i]; pp = First@FirstPosition[sigma, i + 1];
+		Which[
+			p < pp && alpha[[p]] >= alpha[[pp]], {{sigma /. {i -> i + 1, i + 1 -> i}, i, 1}},
+			p > pp && alpha[[p]] <= alpha[[pp]], {{sigma /. {i -> i + 1, i + 1 -> i}, i, -1}},
+			True, {}],
+		{i, Length[sigma] - 1}]];
+
+(* Breadth-first search from the identity; returns the list of moves {i, +1 or -1} or $Failed. *)
+macdonaldBasementPath[alpha_List, sigma_List] := cached[{"macdonaldBasementPath", alpha, sigma},
+	Module[{start = Range[Length[sigma]], parent = <||>, queue, cur, path = {}, node},
+		parent[start] = None; queue = {start};
+		While[queue =!= {} && !KeyExistsQ[parent, sigma],
+			cur = First[queue]; queue = Rest[queue];
+			Do[If[!KeyExistsQ[parent, m[[1]]],
+					parent[m[[1]]] = {cur, m[[2]], m[[3]]}; AppendTo[queue, m[[1]]]],
+				{m, macdonaldBasementMoves[alpha, cur]}]];
+		If[!KeyExistsQ[parent, sigma], Return[$Failed, Module]];
+		node = sigma;
+		While[parent[node] =!= None,
+			PrependTo[path, parent[node][[2 ;; 3]]]; node = parent[node][[1]]];
+		path]];
+
+macdonaldEBasementGeneric[alpha_List, sigma_List] := cached[{"macdonaldEBasement", alpha, sigma},
+	Module[{path = macdonaldBasementPath[alpha, sigma]},
+		If[path === $Failed,
+			macdonaldFillingPolynomial[alpha, sigma, xx, qq, tt],
+			Fold[Function[{f, step}, With[{g = TDemazureOperator[f, xx, tt, step[[1]]]},
+					Together[If[step[[2]] == 1, g, (g + (tt - 1) f)/tt]]]],
+				macdonaldEGeneric[alpha], path]]]];
+
+MacdonaldEPolynomial::usage = "MacdonaldEPolynomial[alpha, x, q, t] returns the nonsymmetric Macdonald polynomial E_alpha in Length[alpha] variables, with leading monomial x^alpha and identity basement. MacdonaldEPolynomial[alpha, sigma, x, q, t] uses the permutation basement sigma. It is generated from 1 by the Knop-Sahi affine shift and intertwiners (Demazure-Lusztig operators) and agrees with the Haglund-Haiman-Loehr non-attacking filling formula; q = 0 gives TAtomPolynomial[alpha, x, t].";
+MacdonaldEPolynomial[alpha_?weakCompositionQ, x_, q_, t_] := Together[If[
+	macdonaldNumericParametersQ[q, t],
+	Quiet[Check[macdonaldE[alpha, q, t], macdonaldEGeneric[alpha] /. {qq -> q, tt -> t},
+		{Power::infy, Infinity::indet}], {Power::infy, Infinity::indet}] /. xx -> x,
+	macdonaldEGeneric[alpha] /. {xx -> x, qq -> q, tt -> t}]];
+MacdonaldEPolynomial[alpha_?weakCompositionQ, sigma_?permutationQ, x_, q_, t_] /;
+		Length[sigma] == Length[alpha] :=
+	Together[macdonaldEBasementGeneric[alpha, sigma] /. {xx -> x, qq -> q, tt -> t}];
+
+NonsymmetricJackPolynomial::usage = "NonsymmetricJackPolynomial[alpha, x, a] returns the nonsymmetric Jack polynomial obtained as Limit[MacdonaldEPolynomial[alpha, x, t^a, t], t -> 1].";
+NonsymmetricJackPolynomial[alpha_?weakCompositionQ, x_, a_] :=
+	cached[{NonsymmetricJackPolynomial, alpha, x, a},
+		Limit[Together[MacdonaldEPolynomial[alpha, x, tt^a, tt]], tt -> 1]];
+
+macdonaldIntegralFormFactor[alpha_List, q_, t_] := Module[{shape = alpha, arm, leg},
+	Product[
+		arm = macdonaldArm[shape, r, c];
+		leg = shape[[r]] - c;
+		1 - q^(leg + 1) t^(arm + 1),
+		{r, Length[shape]}, {c, 1, shape[[r]]}]];
+
+IntegralMacdonaldE::usage = "IntegralMacdonaldE[alpha, x, q, t] returns the integral-form nonsymmetric Macdonald polynomial, normalized as IntegralFormFactor[alpha, q, t] times MacdonaldEPolynomial[alpha, x, q, t].";
+IntegralMacdonaldE[alpha_?weakCompositionQ, x_, q_, t_] :=
+	cached[{IntegralMacdonaldE, alpha, x, q, t},
+		Together[macdonaldIntegralFormFactor[alpha, q, t] MacdonaldEPolynomial[alpha, x, q, t]]];
 
 
 (* ::Section:: *)

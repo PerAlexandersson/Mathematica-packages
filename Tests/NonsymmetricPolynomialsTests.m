@@ -243,3 +243,165 @@ VerificationTest[
   True,
   TestID -> "NonsymmetricPolynomials-P3b-keys-and-locks-from-Kohnert"
 ]
+
+(* GitHub issue #51, P4: operator-generated nonsymmetric Macdonald E polynomials. *)
+VerificationTest[
+  And @@ (Together[#[[1]] - #[[2]]] === 0 & /@
+    {{NonsymmetricPolynomials`MacdonaldEPolynomial[{0, 1}, x, q, t], x[2]},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 0}, x, q, t], x[1] + q (1 - t) x[2]/(1 - q t)},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{0, 2}, x, q, t], x[2]^2 + (1 - t) x[1] x[2]/(1 - q t)},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 1}, x, q, t], x[1] x[2]}}),
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-operator-small-values"
+]
+
+(* Issue #51 (P4): E_alpha is generated from 1 by operators; it agrees with the
+   Haglund-Haiman-Loehr non-attacking filling formula on all weak compositions with at most
+   4 parts and size at most 4, and satisfies the Knop-Sahi affine relation
+   E_(alpha_2, ..., alpha_n, alpha_1 + 1) = q^(-alpha_1) x_n E_alpha(q x_n, x_1, ..., x_(n-1)).
+   Numeric parameters use a separate fast path that must agree with substitution. *)
+VerificationTest[
+  Module[{comps = Flatten[Table[Select[Tuples[Range[0, 4], n], Total[#] <= 4 &],
+      {n, 1, 4}], 1], fill, shift},
+    fill[a_] := NonsymmetricPolynomials`Private`macdonaldFillingPolynomial[a,
+      Range[Length[a]], x, q, t];
+    shift[f_, n_] := x[n] (f /. Thread[x /@ Range[n] -> Prepend[x /@ Range[n - 1], q x[n]]]);
+    And[
+      And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, q, t] - fill[#]] === 0 & /@
+        comps),
+      And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[Append[Rest[#], First[#] + 1], x, q, t] -
+          q^(-First[#]) shift[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, q, t], Length[#]]] === 0 & /@
+        Select[comps, Total[#] <= 3 &]),
+      And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, 2, 1/3] -
+          (NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, q, t] /. {q -> 2, t -> 1/3})] === 0 & /@
+        comps)]],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-operator-recursion"
+]
+
+(* Issue #51 (P4): permuted basements. With p, p' the rows of the basement entries i, i + 1:
+   E^(s_i sigma) = T_i E^sigma if p < p' and alpha_p >= alpha_p', and T_i^(-1) E^sigma if p > p' and
+   alpha_p <= alpha_p' (s_i sigma swaps the values i, i + 1). All basements of S_3 and S_4 for
+   small alpha agree with the filling formula, whether reached by operators or not, and the
+   rule is checked directly on S_3. *)
+VerificationTest[
+  Module[{fill, T, comps, swap},
+    fill[a_, s_] := NonsymmetricPolynomials`Private`macdonaldFillingPolynomial[a, s, x, q, t];
+    T[f_, i_] := TDemazureOperator[f, x, t, i];
+    swap[s_, i_] := s /. {i -> i + 1, i + 1 -> i};
+    comps = Select[Flatten[Table[Tuples[Range[0, 2], n], {n, 3, 4}], 1], 0 < Total[#] <= 3 &];
+    And[
+      And @@ Flatten@Table[Together[
+          NonsymmetricPolynomials`MacdonaldEPolynomial[a, s, x, q, t] - fill[a, s]] === 0,
+        {a, comps}, {s, Permutations[Range[Length[a]]]}],
+      And @@ Flatten@Table[
+        With[{p = First@FirstPosition[s, i], pp = First@FirstPosition[s, i + 1],
+            e = fill[a, s], e2 = fill[a, swap[s, i]]},
+          Which[
+            p < pp && a[[p]] >= a[[pp]], Together[T[e, i] - e2] === 0,
+            p > pp && a[[p]] <= a[[pp]], Together[(T[e, i] + (t - 1) e)/t - e2] === 0,
+            True, True]],
+        {a, Select[comps, Length[#] == 3 &]}, {s, Permutations[Range[3]]}, {i, 2}]]],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-basement-relations"
+]
+
+VerificationTest[
+  Module[{comps = Flatten[Table[Select[Tuples[Range[0, 4], n], 0 < Total[#] <= 4 &],
+      {n, 1, 3}], 1]},
+    And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, 0, t] - TAtomPolynomial[#, x, t]] === 0 & /@ comps)],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-q0-tAtom"
+]
+
+VerificationTest[
+  Module[{comps = Flatten[Table[Select[Tuples[Range[0, 3], n], 0 < Total[#] <= 3 &],
+      {n, 1, 3}], 1]},
+    And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, 0, 0] - AtomPolynomial[#, x]] === 0 & /@ comps)],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-q0-t0-atom"
+]
+
+(* HHL non-attacking filling oracle: legacy uses the same identity basement
+   convention when passed Range[n].  Legacy shapes and Rust alpha indices are
+   therefore unchanged; only the old default descending basement is different. *)
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"], General::shdw];
+  Module[{comps = Flatten[Table[Select[Tuples[Range[0, 4], n], 0 < Total[#] <= 4 &],
+      {n, 1, 3}], 1]},
+    And @@ (Together[NonsymmetricPolynomials`MacdonaldEPolynomial[#, x, q, t] -
+        MacdonaldPolynomials`MacdonaldEPolynomial[#, Range[Length[#]], x, q, t]] === 0 & /@ comps)],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-HHL-legacy-oracle"
+]
+
+(* Rust sym-poly/multipoly/src/nonsymmetric_macdonald.rs, function
+   nonsymmetric_macdonald_filling_formula, specialized at q=0,t=2.  Its
+   exponent vectors are the package's x[1],...,x[n] exponents directly. *)
+VerificationTest[
+  And @@ (Expand[Together[#[[1]] - #[[2]]]] === 0 & /@
+    {{NonsymmetricPolynomials`MacdonaldEPolynomial[{0, 1}, x, 0, 2], x[2]},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 0}, x, 0, 2], x[1]},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{0, 2}, x, 0, 2], x[2]^2 - x[1] x[2]},
+     {NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 0, 1}, x, 0, 2], x[1] x[3]}}),
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-Rust-q0-table"
+]
+
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"], General::shdw];
+  Together[NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 1, 0, 1}, {2, 4, 1, 3}, x, q, t] -
+      MacdonaldPolynomials`MacdonaldEPolynomial[{1, 1, 0, 1}, {2, 4, 1, 3}, x, q, t]] === 0,
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-permuted-basement-oracle"
+]
+
+(* For the package's T convention, swapping adjacent identity-basement labels
+   is the direct T_i action; this is the equivalent inverse relation after the
+   opposite Hecke-generator convention used in Alexandersson. *)
+VerificationTest[
+  Together[NonsymmetricPolynomials`TDemazureOperator[NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 1, 0, 1}, x, q, t], x, t, 1] -
+      NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 1, 0, 1}, {2, 1, 3, 4}, x, q, t]] === 0,
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-basement-intertwiner"
+]
+
+(* The t-symmetrizer for n=2 is t id + T_1 on the anti-dominant E; the scalar
+   is t for one-row partitions and 1+t for (1,1). *)
+VerificationTest[
+  Needs["SymmetricFunctions`"];
+  And @@ (Module[{n = 2, e, p, scalar, lam = #},
+        e = NonsymmetricPolynomials`MacdonaldEPolynomial[Reverse[PadRight[lam, n]], x, q, t];
+        p = SymmetricFunctionToPolynomial[MacdonaldPSymmetric[lam, q, t], x, n];
+        scalar = If[lam === {1, 1}, 1 + t, t];
+        Together[NonsymmetricPolynomials`TDemazureOperator[e, x, t, 1] + t e - scalar p] === 0] & /@
+      {{1}, {2}, {3}, {1, 1}, {2, 1}}),
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-symmetric-t-symmetrization"
+]
+
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"], General::shdw];
+  {Together[NonsymmetricPolynomials`NonsymmetricJackPolynomial[{1, 0}, x, a] - ((1 + a) x[1] + x[2])/(1 + a)],
+   Expand[NonsymmetricPolynomials`IntegralMacdonaldE[{1, 0}, x, q, t] - ((1 - q t) x[1] + q (1 - t) x[2])],
+   Together[NonsymmetricPolynomials`Private`macdonaldIntegralFormFactor[{2, 0, 1}, q, t] -
+      MacdonaldPolynomials`IntegralFormFactor[{2, 0, 1}, q, t]]},
+  {0, 0, 0},
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-Jack-and-integral-form"
+]
+
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"], General::shdw];
+  And @@ (StringLength[ToString[MessageName[#, "usage"]]] > 0 & /@
+    {NonsymmetricPolynomials`MacdonaldEPolynomial, NonsymmetricPolynomials`NonsymmetricJackPolynomial,
+     NonsymmetricPolynomials`IntegralMacdonaldE}),
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-usage-strings"
+]
+
+VerificationTest[
+  Module[{before = NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 0, 1}, x, q, t], after},
+    NonsymmetricPolynomials`ClearNonsymmetricPolynomialsCache[];
+    after = NonsymmetricPolynomials`MacdonaldEPolynomial[{1, 0, 1}, x, q, t];
+    before === after],
+  True,
+  TestID -> "NonsymmetricPolynomials-MacdonaldE-cache-clears"
+]

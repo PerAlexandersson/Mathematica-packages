@@ -26,7 +26,10 @@ first in `$ContextPath` wins for newly typed input; use full names
   `PermutationType`.
   `ConjugatePartition`, `UnimodalQ` and `ZCoefficient` are no longer duplicated: the
   package uses the CombinatoricTools versions.
-- `MacdonaldPolynomials`: `KeyPolynomial`, `AtomPolynomial`, `SchubertPolynomial` (NonsymmetricPolynomials; keys reversed in the legacy package).
+- `MacdonaldPolynomials`: `KeyPolynomial`, `AtomPolynomial`, `SchubertPolynomial`, `LockPolynomial`,
+  `FundamentalSlide`-related names and `MacdonaldEPolynomial` (NonsymmetricPolynomials; keys and
+  locks are reversed in the legacy package, and its four-argument `MacdonaldEPolynomial` uses the
+  basement n, ..., 1). `LegacyConversions` converts indices.
 - `ChromaticFunctions`: its functions that now live in `UnicellularChromatics` (with the
   opposite area-list convention), `AreaBounce`, `AreaListPlot`, `AreaToBounceShape`,
   `Labels` (CatalanObjects), and `GraphOrientations`, `GraphAcyclicOrientations`

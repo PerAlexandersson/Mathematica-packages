@@ -27,6 +27,9 @@ a function needs a different representation internally, it converts at its bound
   κ_(0,1) = x[1] + x[2] (as in the literature and the Rust `sym-poly` library). Lascoux
   polynomials use the same index; locks are Kohnert polynomials of right-justified diagrams
   (Assaf–Searles), so the lock of (2, 0) is x[1]^2.
+- Nonsymmetric Macdonald polynomials follow Haglund-Haiman-Loehr (identity basement): E_alpha =
+  x^alpha + lower terms, E_alpha(x; 0, t) is the t-atom and E_alpha(x; 0, 0) the atom, and
+  E_(alpha_2, ..., alpha_n, alpha_1 + 1) = q^(-alpha_1) x_n E_alpha(q x_n, x_1, ..., x_(n-1)).
 - K-theoretic families use the divided difference of (1 + beta x[i+1]) f, with beta = -1 by
   default; beta = 0 gives Schubert and key polynomials.
 - Modified Macdonald functions follow Haglund: H~_(2) = s_2 + q s_11, and
