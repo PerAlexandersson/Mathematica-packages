@@ -15,8 +15,8 @@ The first attempted manifest used pinned Git dependencies:
 `https://github.com/PerAlexandersson/polytool` at the commit above. The
 environment could not fetch that revision, so the checked-in manifest uses
 read-only path dependencies under `/workspace/rust`; to reproduce from a
-network-enabled checkout, replace those six path entries with the pinned Git
-entries documented in the task brief.
+network-enabled checkout, replace the path entries with the pinned Git entries
+documented in the task brief.
 
 All JSON files have a top-level `family`, `rust_function`, `convention`, and
 family-specific records. Partition and composition vectors are written in the
@@ -39,10 +39,21 @@ The generated families are:
   product;
 - small key, atom, and Schubert polynomials;
 - Eulerian polynomials and exact real-rootedness/interlacing decisions; and
-- Lah and Petrie symmetric functions.
+- Lah and Petrie symmetric functions;
+- partitions, compositions, set partitions, and their enumeration/refinement
+  data;
+- permutation statistics, cycle types, Foata maps, and classical pattern
+  avoidance counts;
+- graph independence, matching, and chromatic polynomials;
+- poset linear-extension counts, order-polynomial values, and P-Eulerian
+  polynomials;
+- basis-list matroid operations, Tutte polynomials, and independent sets;
+- lattice-path matroid bases from Dyck area sequences; and
+- Schur plethysms.
 
 The Mathematica consumer is `../../CrossCheck.wlt`, which imports each file
-relative to the test file and records one verification per family. Plethysm,
-ordinary Hall--Littlewood/Kostka--Foulkes expansions, and full modified
-Macdonald Schur expansions are omitted because this Rust revision has no
-matching public API for those objects.
+relative to the test file and records one verification per family. Ordinary
+Hall--Littlewood/Kostka--Foulkes expansions and full modified Macdonald Schur
+expansions remain omitted because this Rust revision exposes only
+nonsymmetric Hall--Littlewood and modified-Macdonald-basis operator data, not
+the corresponding ordinary/full public expansions.

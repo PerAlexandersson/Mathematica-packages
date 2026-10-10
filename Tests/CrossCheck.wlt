@@ -32,6 +32,36 @@ VerificationTest[
   TestID -> "PolynomialTools-loads-cleanly"
 ]
 
+VerificationTest[
+  Needs["CombinatoricTools`"],
+  Null,
+  TestID -> "CombinatoricTools-loads-cleanly"
+]
+
+VerificationTest[
+  Needs["PermutationTools`"],
+  Null,
+  TestID -> "PermutationTools-loads-cleanly"
+]
+
+VerificationTest[
+  Quiet[Needs["PosetData`"]],
+  Null,
+  TestID -> "PosetData-loads-cleanly"
+]
+
+VerificationTest[
+  Needs["GraphTools`"],
+  Null,
+  TestID -> "GraphTools-loads-cleanly"
+]
+
+VerificationTest[
+  Needs["MatroidTools`"],
+  Null,
+  TestID -> "MatroidTools-loads-cleanly"
+]
+
 fixture[name_String] := Import[
   FileNameJoin[{DirectoryName[$InputFileName], "fixtures", "rust", name}],
   "RawJSON"
@@ -131,6 +161,123 @@ petrieRecordQ[record_] := Module[{k, n},
   n = Lookup[record, "n"];
   sameExpressionQ[PetrieSymmetric[k, n],
     termsExpression[Lookup[record, "monomial_terms"], MonomialSymbol]]
+];
+
+partitionRecordQ[record_] := Module[{partition, add, remove},
+  partition = Lookup[record, "partition"];
+  add = Sort[Lookup[record, "add_box"]];
+  remove = Sort[Lookup[record, "remove_box"]];
+  ConjugatePartition[partition] === Lookup[record, "conjugate"] &&
+   HookLengths[partition] === Lookup[record, "hook_lengths"] &&
+   Sort[PartitionAddBox[partition]] === add &&
+   Sort[PartitionRemoveBox[partition]] === remove
+];
+
+compositionRecordQ[record_] := Module[{composition},
+  composition = Lookup[record, "composition"];
+  composition =!= {} &&
+   CompositionToDescentSet[composition] === Lookup[record, "descent_set"] &&
+   Sort[(Flatten[#, 1] &) /@ CompositionRefinements[composition]] ===
+    Sort[Lookup[record, "refinements"]] &&
+   CompositionWord[composition] === Lookup[record, "word"] &&
+   Sort[composition] === Sort[Lookup[record, "partition"]]
+];
+
+setPartitionRecordQ[record_] := Module[{n, expected, actual},
+  n = Lookup[record, "n"];
+  expected = Sort[Sort /@ (Lookup[#, "blocks"] & /@ Lookup[record, "records"])];
+  actual = Sort[Sort /@ SetPartitions[n]];
+  expected === actual
+];
+
+permutationRecordQ[record_] := Module[{permutation, stats, sets},
+  permutation = Lookup[record, "permutation"];
+  stats = Lookup[record, "stats"];
+  sets = Lookup[record, "sets"];
+  And[
+    PermutationType[permutation] === Lookup[record, "cycle_type"],
+    Descents[permutation] === Lookup[stats, "descents"],
+    MajorIndex[permutation] === Lookup[stats, "major_index"],
+    Inversions[permutation] === Lookup[stats, "inversions"],
+    Excedances[permutation] === Lookup[stats, "excedances"],
+    PermutationPeaks[permutation] === Lookup[stats, "peaks"],
+    PermutationValleys[permutation] === Lookup[stats, "valleys"],
+    FixedPoints[permutation] === Lookup[stats, "fixed_points"],
+    Length[PermutationAllCycles[permutation]] === Lookup[stats, "cycles"],
+    DescentSet[permutation] === Lookup[sets, "descent_set"],
+    PermutationPeaksSet[permutation] === Lookup[sets, "peak_set"],
+    FoataMap[permutation] === Lookup[record, "foata"],
+    PermutationCycleMap[permutation] === Lookup[record, "foata_cycle_word"]
+  ]
+];
+
+avoidanceRecordQ[record_] := With[{pattern = Lookup[record, "pattern"]},
+  Lookup[record, "counts"] ===
+   Table[Length@Select[Permutations[Range[n]],
+      IsPermutationAvoidingQ[pattern, #] &], {n, 0, 5}]
+];
+
+graphFromRecord[record_] := Graph[
+  Range[Lookup[record, "vertices"]],
+  UndirectedEdge @@@ (Lookup[record, "edges"] + 1)
+];
+
+posetFromRecord[record_] := Poset[
+  Lookup[record, "vertices"],
+  (# + 1) & /@ Lookup[record, "covers"]
+];
+
+normalizeBases[bases_] := Sort[Sort /@ bases];
+
+matroidRecordQ[record_] := Module[
+  {ground, bases, x, y, rankTerms, rankPolynomial, recordName},
+  ground = Lookup[record, "ground"];
+  bases = Lookup[record, "bases"];
+  x = Unique["x"]; y = Unique["y"];
+  rankTerms = Lookup[record, "tutte_terms"];
+  rankPolynomial = Total[(#[[3]] (x - 1)^#[[1]] (y - 1)^#[[2]]) & /@ rankTerms];
+  recordName = Lookup[record, "name"];
+  And[
+    IsMatroidQ[bases] === Lookup[record, "is_matroid"],
+    MatroidLoops[ground, bases] === Lookup[record, "loops"],
+    MatroidColoops[ground, bases] === Lookup[record, "coloops"],
+    normalizeBases[MatroidDual[ground, bases]] === normalizeBases[Lookup[record, "dual_bases"]],
+    normalizeBases[IndependentSets[bases]] === normalizeBases[Lookup[record, "independent_sets"]],
+    And @@ ((MatroidSetRank[bases, First[#]] === Last[#]) & /@ Lookup[record, "rank_queries"]),
+    normalizeBases[MatroidDeletion[bases, Lookup[record, "delete_label"]]] ===
+      normalizeBases[Lookup[record, "delete_bases"]],
+    normalizeBases[MatroidContraction[bases, Lookup[record, "contract_label"]]] ===
+      normalizeBases[Lookup[record, "contract_bases"]],
+    Expand[MatroidTuttePolynomial[{ground, bases}, {x, y}] - rankPolynomial] === 0,
+    Switch[recordName,
+      "uniform_U24", normalizeBases[bases] === normalizeBases[UniformBases[2, 4]],
+      "transversal_12_23_34", normalizeBases[bases] ===
+        normalizeBases[TransversalBases[{{1, 2}, {2, 3}, {3, 4}}]],
+      "graphic_triangle_with_loop", normalizeBases[bases] === {{1, 2}, {1, 3}, {2, 3}},
+      True, True]
+  ]
+];
+
+latticePathRecordQ[record_] := Module[
+  {lambda, mu, intervals, bases, pathSystem},
+  lambda = Lookup[record, "lambda"];
+  mu = Lookup[record, "mu"];
+  intervals = Lookup[record, "intervals"];
+  bases = Lookup[record, "bases"];
+  pathSystem = ({First[#], Last[#]} &) /@ PathSetSystem[lambda, mu];
+  Sort[pathSystem] === Sort[intervals] &&
+   normalizeBases[PathBases[lambda, mu]] === normalizeBases[bases] &&
+   normalizeBases[TransversalBases[(Range[First[#], Last[#]] &) /@ intervals]] ===
+    normalizeBases[bases] &&
+   Length[bases] === ToExpression[Lookup[record, "num_bases"]]
+];
+
+plethysmRecordQ[record_] := sameExpressionQ[
+  ToSchurBasis[Plethysm[
+    SchurSymbol[Lookup[record, "outer"]],
+    SchurSymbol[Lookup[record, "inner"]]
+  ]],
+  termsExpression[Lookup[record, "schur_terms"], SchurSymbol]
 ];
 
 VerificationTest[
@@ -239,4 +386,83 @@ VerificationTest[
      And @@ (petrieRecordQ /@ Lookup[data, "petrie"])],
   True,
   TestID -> "CrossCheck-LahAndPetrie"
+]
+
+VerificationTest[
+  With[{data = fixture["combinatorics.json"]},
+    And @@ (partitionRecordQ /@ Lookup[data, "partitions"]) &&
+     And @@ (Function[record,
+          PartitionLessEqualQ[Lookup[record, "left"], Lookup[record, "right"]] ===
+            Lookup[record, "contained"] &&
+           PartitionDominatesQ[Lookup[record, "left"], Lookup[record, "right"]] ===
+            Lookup[record, "right_dominates_left"]] /@
+        Lookup[data, "partition_relations"]) &&
+     And @@ (compositionRecordQ /@ Lookup[data, "compositions"]) &&
+     Lookup[data, "bell_counts"] === Table[Length[SetPartitions[n]], {n, 0, 4}] &&
+     Lookup[data, "ordered_set_partition_counts"] ===
+      Table[Length[OrderedSetPartitions[n]], {n, 0, 4}] &&
+     And @@ (Function[record,
+          With[{n = Lookup[record, "n"], blocks = Lookup[record, "records"]},
+           setPartitionRecordQ[record] &&
+            Sort[Lookup[data, "stirling_counts"][[n + 1]]] ===
+             Sort[Table[{k, Count[Length /@ SetPartitions[n], k]}, {k, 0, n}]]]] /@
+        Lookup[data, "set_partitions"])],
+  True,
+  TestID -> "CrossCheck-Combinatorics"
+]
+
+VerificationTest[
+  With[{data = fixture["permutations.json"]},
+    And @@ (permutationRecordQ /@ Lookup[data, "records"]) &&
+     And @@ (avoidanceRecordQ /@ Lookup[data, "avoidance_counts"])],
+  True,
+  TestID -> "CrossCheck-Permutations"
+]
+
+VerificationTest[
+  With[{records = Lookup[fixture["graphs.json"], "records"]},
+    And @@ (Function[record,
+          With[{graph = graphFromRecord[record], t = Unique["t"]},
+           CoefficientList[GraphIndependencePolynomial[graph, t], t] ===
+              Lookup[record, "independence"] &&
+            CoefficientList[GraphMatchingPolynomial[graph, t], t] ===
+              Lookup[record, "matching"] &&
+            CoefficientList[ChromaticPolynomial[graph, t], t] ===
+              Lookup[record, "chromatic"]]] /@ records)],
+  True,
+  TestID -> "CrossCheck-GraphPolynomials"
+]
+
+VerificationTest[
+  With[{records = Lookup[fixture["posets.json"], "records"]},
+    And @@ (Function[record,
+          With[{poset = posetFromRecord[record], t = Unique["t"], n = Lookup[record, "vertices"]},
+           Length[JordanHolderSet[poset]] === Lookup[record, "linear_extensions"] &&
+            Table[OrderPolynomial[poset, t] /. t -> k, {k, 0, n}] ===
+             Lookup[record, "order_values"] &&
+            Rest[CoefficientList[PEulerianPolynomial[poset, t], t]] ===
+             Lookup[record, "p_eulerian"]]] /@ records)],
+  True,
+  TestID -> "CrossCheck-Posets"
+]
+
+VerificationTest[
+  With[{records = Lookup[fixture["matroids.json"], "records"]},
+    And @@ (matroidRecordQ /@ records)],
+  True,
+  TestID -> "CrossCheck-Matroids"
+]
+
+VerificationTest[
+  With[{records = Lookup[fixture["lattice-path-matroids.json"], "records"]},
+    And @@ (latticePathRecordQ /@ records)],
+  True,
+  TestID -> "CrossCheck-LatticePathMatroids"
+]
+
+VerificationTest[
+  With[{records = Lookup[fixture["plethysm.json"], "records"]},
+    And @@ (plethysmRecordQ /@ records)],
+  True,
+  TestID -> "CrossCheck-Plethysm"
 ]

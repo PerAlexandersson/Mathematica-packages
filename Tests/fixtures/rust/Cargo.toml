@@ -6,6 +6,8 @@ publish = false
 
 [dependencies]
 combinatoric-core = { path = "/workspace/rust/combinatoric-core" }
+combpoly = { path = "/workspace/rust/combpoly" }
+experiments = { path = "/workspace/rust/experiments" }
 polytool = { path = "/workspace/rust/polytool" }
 sym-poly-core = { path = "/workspace/rust/sym-poly/core" }
 sym-poly-multipoly = { path = "/workspace/rust/sym-poly/multipoly" }

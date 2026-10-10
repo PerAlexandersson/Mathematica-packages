@@ -1,0 +1,209 @@
+{
+  "convention": "Graph vertices and edges are zero-based in the fixture; the Mathematica consumer shifts them by one. Polynomial coefficient lists are ascending powers.",
+  "family": "graph independence, matching, and chromatic polynomials",
+  "records": [
+    {
+      "chromatic": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "edges": [],
+      "independence": [
+        1,
+        4,
+        6,
+        4,
+        1
+      ],
+      "matching": [
+        1
+      ],
+      "name": "empty4",
+      "vertices": 4
+    },
+    {
+      "chromatic": [
+        0,
+        -1,
+        3,
+        -3,
+        1
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "independence": [
+        1,
+        4,
+        3
+      ],
+      "matching": [
+        1,
+        3,
+        1
+      ],
+      "name": "path4",
+      "vertices": 4
+    },
+    {
+      "chromatic": [
+        0,
+        -3,
+        6,
+        -4,
+        1
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "independence": [
+        1,
+        4,
+        2
+      ],
+      "matching": [
+        1,
+        4,
+        2
+      ],
+      "name": "cycle4",
+      "vertices": 4
+    },
+    {
+      "chromatic": [
+        0,
+        2,
+        -3,
+        1
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "independence": [
+        1,
+        3
+      ],
+      "matching": [
+        1,
+        3
+      ],
+      "name": "complete3",
+      "vertices": 3
+    },
+    {
+      "chromatic": [
+        0,
+        -1,
+        3,
+        -3,
+        1
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "independence": [
+        1,
+        4,
+        3,
+        1
+      ],
+      "matching": [
+        1,
+        3
+      ],
+      "name": "star3",
+      "vertices": 4
+    },
+    {
+      "chromatic": [
+        0,
+        -3,
+        6,
+        -4,
+        1
+      ],
+      "edges": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "independence": [
+        1,
+        4,
+        2
+      ],
+      "matching": [
+        1,
+        4,
+        2
+      ],
+      "name": "complete_bipartite_2_2",
+      "vertices": 4
+    }
+  ],
+  "rust_function": "combinatoric_core::Graph::{independence_polynomial,matching_polynomial,chromatic_polynomial}"
+}
