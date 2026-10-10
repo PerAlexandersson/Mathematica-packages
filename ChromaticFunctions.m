@@ -121,7 +121,6 @@ GraphOrientationHalfSources::usage="GraphOrientationHalfSources[edges,ao, nverts
 
 LLTOrientationVertexPartition::usage="LLTOrientationVertexPartition[area,or] gives the set partition defined by the vertiece.";
 LLTOrientationLowestReachableVertex::usage="LLTOrientationLowestReachableVertex[area,or] ";
-LLTOrientationComposition::usage="LLTOrientationComposition[area,or] returns the composition associated to orientation in order to get the e-exp.";
 LLTOrientationShape::usage="LLTOrientationShape[area,or] returns the shape associated to orientation in order to get the e-exp.";
 LLTOrientationForest::usage="LLTOrientationForest[area,or] ";
 
@@ -131,7 +130,6 @@ OuterCorners::usage = "OuterCorners[area]";
 
 HomogeneousGraphChromaticSymmetricPolynomial::usage="HomogeneousGraphChromaticSymmetricPolynomial[edges,n,x,q,t]";
 GraphChromaticSymmetricPolynomial::usage="GraphChromaticSymmetricPolynomial[edges,n,x,q]";
-Weights::usage="Option for GraphChromaticSymmetricPolynomial";
 GraphChromaticLLTPolynomial::usage="GraphChromaticLLTPolynomial[edges,n,x,q,StrictEdges->{},WeakEdges->{}]";
 HomogeneousGraphLLTPolynomial::usage="HomogeneousGraphLLTPolynomial[edges,n,x,q,t]";
 
@@ -139,7 +137,7 @@ HomogeneousGraphLLTPolynomial::usage="HomogeneousGraphLLTPolynomial[edges,n,x,q,
 WeakEdges::usage = "Option for GraphChromaticLLTPolynomial.";
 StrictEdges::usage = "Option for GraphChromaticLLTPolynomial.";
 
-StripSizesToEdges::usage = "StripSizesToEdges[list] returns two lists, {attacking, strict}, of edges that encode a vertical-strip LLT polynomial";
+StripSizesToEdges::usage = "StripSizesToEdges[list] returns {area, strict}, where area and strict encode a vertical-strip LLT polynomial";
 
 VerticalStripLLTColorings::usage = "VerticalStripLLTColorings[stripSizes] returns the colorings.";
 
@@ -214,8 +212,9 @@ AttackingVertices[lam_List, col_List] :=
 
 
 (* Returns all valid colorings *)
-ChromaticSymmetricColorings[lam_List,allowAttacking_:False]:=ChromaticSymmetricColorings[lam,allowAttacking,Length@lam];
-ChromaticSymmetricColorings[lam_List,allowAttacking_:False,maxCol_Integer]:=ChromaticSymmetricColorings[lam,allowAttacking,maxCol]=Select[
+ChromaticSymmetricColorings[lam_List,allowAttacking:(_?BooleanQ):False]:=ChromaticSymmetricColorings[lam,allowAttacking,Length@lam];
+ChromaticSymmetricColorings[lam_List,maxCol_Integer]:=ChromaticSymmetricColorings[lam,False,maxCol];
+ChromaticSymmetricColorings[lam_List,allowAttacking:(_?BooleanQ):False,maxCol_Integer]:=ChromaticSymmetricColorings[lam,allowAttacking,maxCol]=Select[
 	Tuples[Range@maxCol,Length@lam], allowAttacking || (Length[AttackingVertices[lam,#]]==0)&];
 
 (* Returns the P-array associated to the coloring: Row i are all vertices with color i. *)
@@ -399,7 +398,7 @@ DyckDiagramPlot[attackingEdges_List, strictEdges_List: {}, n_Integer:1] := Modul
 	nn = Max[attackingEdges, strictEdges,n]
 	 , colors, values,r,c},
 	
-	DyckDiagramPlot::deprecated = "The function DyckDiagramPlot is deprecated. Rewrite using AreaListPlot."
+	DyckDiagramPlot::deprecated = "The function DyckDiagramPlot is deprecated. Rewrite using AreaListPlot.";
 	Message[DyckDiagramPlot::deprecated];
 
 	
@@ -424,7 +423,7 @@ DyckDiagramPlot[attackingEdges_List, strictEdges_List: {}, n_Integer:1] := Modul
 ColorPlot[lam_List, col_List, ao_: Automatic, test_:(False&)] := Module[{colors, nn = Length@lam, fs, values, aorient},
 	aorient = If[ao === Automatic, ColorOrientation[lam, col], ao];
 	
-	ColorPlot::deprecated = "The function ColorPlot is deprecated. Rewrite using AreaListPlot."
+	ColorPlot::deprecated = "The function ColorPlot is deprecated. Rewrite using AreaListPlot.";
 	Message[ColorPlot::deprecated];
 	
 	colors = Join @@ Table[
@@ -565,13 +564,13 @@ AreaConjugate[area_List] := Module[{n = Length@area, cg, k},
 	cg - Table[Count[cg - area, i_ /; i >= k], {k, n}]
 ];
 
-AreaRowPermutaton[area_List] := With[{lbl = Range@Length@area}, AreaRowPermutaton[area, lbl, lbl]];
-AreaRowPermutaton[area_List, {}, {}] := {};
-AreaRowPermutaton[area_List, rl_List, cl_List] := 
+AreaRowPermutation[area_List] := With[{lbl = Range@Length@area}, AreaRowPermutation[area, lbl, lbl]];
+AreaRowPermutation[area_List, {}, {}] := {};
+AreaRowPermutation[area_List, rl_List, cl_List] := 
   Module[{n = Length@area, pair, cln, rln},
    pair = cl[[ n - area[[1]] ]];
    Prepend[
-    AreaRowPermutaton[Rest@area, Rest[rl], Drop[cl, {n - area[[1]]}]]
+    AreaRowPermutation[Rest@area, Rest[rl], Drop[cl, {n - area[[1]]}]]
     , pair]
 ];
 
@@ -589,7 +588,7 @@ And@@Table[perm = AreaRowPermutaton[a];
 
 
 (* Only makes sense for catalan area seqs. *)
-DinvFromAreaSeq[aseq_List] := Module[{r = Reverse@aseq},
+DinvFromAreaSeq[aseq_List] := Module[{r = Reverse@aseq, n = Length@aseq},
 	Sum[Boole[r[[i]] == r[[j]]], {i, n}, {j, i + 1, n}] +
 	Sum[Boole[r[[i]] == r[[j]] + 1], {i, n}, {j, i + 1, n}]
 ];
@@ -913,7 +912,7 @@ GraphChromaticSymmetricPolynomial[area:{_Integer ..}, x_, q_: 1, opts:OptionsPat
 GraphChromaticSymmetricPolynomial[AreaToEdges@area, Length@area,x,q,opts];
 
 GraphChromaticSymmetricPolynomial[edges_List, n_Integer, x_, q_: 1,opts:OptionsPattern[]] :=
-	GraphChromaticSymmetricPolynomial[edges, n, x, q] = Module[{w,nn},
+	Module[{w,nn},
     w = OptionValue[Weights];
     
     nn = If[w==={}, n, Tr@w];
@@ -1067,7 +1066,9 @@ VerticalStripLLTColorings[sizes_List] := Module[{n, maxCol, colorings, strict},
 VerticalStripLLTPolynomial[sizes_List, x_, q_:1] := VerticalStripLLTPolynomial[sizes, x, q] = 
 	Module[{colorings, attacking},
 		colorings = VerticalStripLLTColorings[sizes];
-		attacking = First@StripSizesToEdges[sizes];
+		With[{data = StripSizesToEdges[sizes]},
+			attacking = Complement[AreaToEdges[First[data]], Last[data]];
+		];
 		Sum[
 		(Times @@ (x /@ c)) (q^GraphColoringAscents[attacking, c]), {c, colorings}]
 ];
