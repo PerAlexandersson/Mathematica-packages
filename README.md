@@ -8,8 +8,15 @@ are offered to those who prefer Mathematica over Sage; see also
 
 ## Installation
 
-The repository is one paclet, `PerAlexandersson/MathematicaPackages`. Load it from a
-checkout,
+The repository is one paclet, `PerAlexandersson/MathematicaPackages`. Install the latest
+release directly from GitHub,
+
+```wolfram
+PacletInstall["https://github.com/PerAlexandersson/Mathematica-packages/releases/download/v0.1.0/PerAlexandersson__MathematicaPackages-0.1.0.paclet"];
+Needs["SymmetricFunctions`"]
+```
+
+or load it from a checkout,
 
 ```wolfram
 PacletDirectoryLoad["/path/to/Mathematica-packages"];
@@ -32,8 +39,10 @@ earlier versions may work but are untested).
 
 ## Getting started
 
-The [tutorial](TUTORIAL.md) is a tour of the packages and how they fit together; its code is
-checked by the test suite. Shared conventions are in [`CONVENTIONS.md`](CONVENTIONS.md), and
+Documentation: <https://peralexandersson.github.io/Mathematica-packages/> (tutorial, reference
+for every package with links to symmetricfunctions.com, conventions, migration guide). In the
+repository, the [tutorial](TUTORIAL.md) is a tour of the packages and how they fit together; its
+code is checked by the test suite. Shared conventions are in [`CONVENTIONS.md`](CONVENTIONS.md), and
 [`Examples/`](Examples/) has runnable scripts.
 
 ## Packages
