@@ -16,7 +16,7 @@ SortFunction;
 Begin["`Private`"];
 
 CreateBasis::usage = "CreateBasis[bb, label, opts] sets up the symbol bb as a basis symbol bb[index, x] with alphabet x (default None): index normalization, formatting as label subscripted by the index, and optional automatic products and powers. Options: IndexType (\"Partition\", \"Composition\" or \"WeakComposition\"), SortFunction, MultiplicationFunction and PowerFunction. Intended for package authors.";
-IndexType::usage = "IndexType is an option for CreateBasis: \"Partition\" (index sorted decreasingly, zeros removed, any negative part gives 0), \"Composition\" (zero parts removed) or \"WeakComposition\" (zeros kept, trailing zeros removed).";
+IndexType::usage = "IndexType is an option for CreateBasis: \"Partition\" (index sorted decreasingly, zeros removed, any negative part gives 0), \"Composition\" (zero parts removed), \"WeakComposition\" (zeros kept, trailing zeros removed) or \"Permutation\" (one-line notation, trailing fixed points removed).";
 MultiplicationFunction::usage = "MultiplicationFunction is an option for CreateBasis. If it is a function f, a product bb[a, x] bb[b, x] is replaced by f[a, b, x]; None leaves products unevaluated.";
 PowerFunction::usage = "PowerFunction is an option for CreateBasis. \"Mult\" computes integer powers by repeated squaring with the multiplication function, a function f replaces bb[a, x]^n by f[a, n, x], and None leaves powers unevaluated.";
 SortFunction::usage = "SortFunction is an option for CreateBasis. \"Standard\" normalizes indices according to IndexType; a function f is called as f[index, x] for a partition-type index that is not weakly decreasing (used by SchurSymbol for the slinky rule); None performs no reordering.";
@@ -83,6 +83,9 @@ CreateBasis[bb_Symbol, symb_String, opts:OptionsPattern[]] := Module[{type, sort
 		"WeakComposition",
 			bb[{0 ..}, x_: None] := 1;
 			bb[{lam__, 0..}, x_: None] := bb[{lam}, x],
+		"Permutation",
+			(* Trailing fixed points are removed: w and w x 1 index the same element. *)
+			bb[w_List, x_: None] := bb[Most[w], x] /; Length[w] > 0 && Last[w] == Length[w],
 		_,
 			Message[CreateBasis::type, type]
 	];
@@ -113,7 +116,7 @@ CreateBasis[bb_Symbol, symb_String, opts:OptionsPattern[]] := Module[{type, sort
 	defineBasisFormatting[bb, symb];
 ];
 
-CreateBasis::type = "Unknown IndexType `1`; use \"Partition\", \"Composition\" or \"WeakComposition\".";
+CreateBasis::type = "Unknown IndexType `1`; use \"Partition\", \"Composition\", \"WeakComposition\" or \"Permutation\".";
 
 End[];
 

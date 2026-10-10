@@ -20,9 +20,9 @@ VerificationTest[
 ]
 
 VerificationTest[
-  Needs["MacdonaldPolynomials`"],
+  Needs["NonsymmetricPolynomials`"],
   Null,
-  TestID -> "MacdonaldPolynomials-loads-cleanly"
+  TestID -> "NonsymmetricPolynomials-loads-cleanly"
 ]
 
 VerificationTest[
@@ -135,11 +135,17 @@ coefficientPolynomial[coefficients_List, x_] := Total[
   MapIndexed[#1 x^(First[#2] - 1) &, coefficients]
 ];
 
-keyRecordQ[record_, data_, x_] := Module[{alpha, terms},
-  alpha = Lookup[record, "alpha"];
-  terms = Lookup[First@Select[Lookup[data, "key_atom"],
-      Function[item, Lookup[item, "alpha"] === alpha]], "key_terms"];
-  Expand[KeyPolynomial[Reverse[alpha], x] - multiTermsExpression[terms, x]] === 0
+(* Both sides use the standard key indexing (CONVENTIONS.md), so no conversion is needed. *)
+keyRecordQ[record_, x_] := Module[{alpha = Lookup[record, "alpha"]},
+  And[
+    Expand[KeyPolynomial[alpha, x] - multiTermsExpression[Lookup[record, "key_terms"], x]] === 0,
+    Expand[AtomPolynomial[alpha, x] - multiTermsExpression[Lookup[record, "atom_terms"], x]] === 0,
+    And @@ (Function[spec,
+        Expand[(TKeyPolynomial[alpha, x, tt] /. tt -> Lookup[spec, "t"]) -
+          multiTermsExpression[Lookup[spec, "t_key_terms"], x]] === 0 &&
+        Expand[(TAtomPolynomial[alpha, x, tt] /. tt -> Lookup[spec, "t"]) -
+          multiTermsExpression[Lookup[spec, "t_atom_terms"], x]] === 0] /@
+      Lookup[record, "t_specializations"])]
 ];
 
 schubertRecordQ[record_, x_] :=
@@ -353,9 +359,9 @@ VerificationTest[
 
 VerificationTest[
   With[{data = fixture["nonsymmetric.json"], x = Unique["x"]},
-    And @@ (keyRecordQ[#, data, x] & /@ Lookup[data, "key_atom"])],
+    And @@ (keyRecordQ[#, x] & /@ Lookup[data, "key_atom"])],
   True,
-  TestID -> "CrossCheck-KeyPolynomial"
+  TestID -> "CrossCheck-KeyAtomPolynomials"
 ]
 
 VerificationTest[

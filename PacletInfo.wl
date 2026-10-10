@@ -30,7 +30,7 @@ PacletObject[
           "UnicellularChromatics`",
           "RookTools`",
           "PosetData`",
-          "MacdonaldPolynomials`"
+          "NonsymmetricPolynomials`"
         }
       },
       (* Legacy packages, kept loadable for existing notebooks (issue #9). *)
@@ -39,6 +39,7 @@ PacletObject[
         "Root" -> "Legacy",
         "Context" -> {
           "OldYoungTableaux`",
+          "MacdonaldPolynomials`",
           "ChromaticFunctions`",
           "TreesData`",
           "RunSortedWords`"
