@@ -115,8 +115,8 @@ GraphColoringMonochromaticEdges[edges_List, col_List] := Sum[Boole[col[[e[[1]]]]
 StrictEdges::usage = "StrictEdges is an option for UnicellularLLTSymmetric.";
 
 Options[UnicellularLLTSymmetric] = {StrictEdges -> {}};
-UnicellularLLTSymmetric[attacking_List, n_Integer, q_: 1, opts:OptionsPattern[]] := 
-	UnicellularLLTSymmetric[attacking, n, q, opts] = Module[{c,lam,perms},
+UnicellularLLTSymmetric[attacking : {{_Integer, _Integer} ...}, n_Integer, q_: 1, opts:OptionsPattern[]] := 
+UnicellularLLTSymmetric[attacking, n, q, opts] = Module[{c,lam,perms,strict},
 	
 	(* We have a list of strict edges *)
 	strict = OptionValue[StrictEdges];
@@ -190,7 +190,7 @@ ChromaticSymmetric[gg_Graph, opts : OptionsPattern[]] :=
      colorings},
     properQ[col_List] := With[
       {sub = Association[Thread[vv -> col]]},
-      And @@ Table[sub[[First[e]]] != sub[[Last[e]]], {e, ee}]
+      And @@ Table[Lookup[sub, First[e]] != Lookup[sub, Last[e]], {e, ee}]
       ];
     Sum[
      (*All colorings with lam as weight, and proper *)
@@ -273,6 +273,47 @@ OrientationSinks[edges_List, n_: 0] := Module[
 ];
 
 *)
+
+Options[GraphOrientations] = {StrictEdges -> {}, WeakEdges -> {}};
+GraphOrientations[edges_List, opts:OptionsPattern[]] := Module[
+	{nEdges = Length@edges, orients, strict, weak, strictIndicator, weakIndicator},
+
+	strict = OptionValue[StrictEdges];
+	weak = OptionValue[WeakEdges];
+	strictIndicator = Table[Boole@MemberQ[strict, e], {e, edges}];
+	weakIndicator = Table[Boole@MemberQ[weak, e], {e, edges}];
+
+	orients = Tuples[{0, 1}, nEdges];
+	If[Length@strict > 0,
+		orients = Select[orients, (# . strictIndicator) == Tr[strictIndicator] &]
+	];
+	If[Length@weak > 0,
+		orients = Select[orients, ((1 - #) . weakIndicator) == Tr[weakIndicator] &]
+	];
+
+	Table[
+		Table[If[or[[i]] == 1, edges[[i]], Reverse@edges[[i]]], {i, nEdges}],
+		{or, orients}
+	]
+];
+
+Options[GraphAcyclicOrientations] = {StrictEdges -> {}};
+GraphAcyclicOrientations[edges_List, opts:OptionsPattern[]] :=
+	GraphAcyclicOrientations[edges, opts] = Module[
+		{n = Max[edges, 0], orients, strict, strictIndices},
+
+		orients = Union@Table[
+			(If[Less @@ col[[#]], #, Reverse@#] &) /@ edges,
+			{col, Permutations@Range@n}
+		];
+		strict = OptionValue[StrictEdges];
+		strictIndices = Select[Range[Length@edges], MemberQ[strict, edges[[#]]] &];
+		If[Length@strict > 0,
+			orients = Select[orients,
+				And @@ Table[edges[[i]] == #[[i]], {i, strictIndices}] &]
+		];
+		orients
+	];
 
 (***************************************************)
 
