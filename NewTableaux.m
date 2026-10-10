@@ -80,23 +80,29 @@ iList = {RepeatedNull[_Integer]};
 SYTSize::usage = "SYTSize[tab] returns the number of boxes in the tableau.";
 SYTSize[syt_YoungTableau]:=Length@SYTReadingWord[syt];
 
-SYTMax::usage = "MaxSize[tab] returns the maximum of all boxes in the tableau.";
+SYTMax::usage = "SYTMax[tab] returns the maximum entry in the tableau.";
 SYTMax[syt_YoungTableau] := Max@SYTReadingWord[syt];
 
 
+SYTReadingWord::usage = "SYTReadingWord[tab] returns the reading word of tab, formed by reading rows from bottom to top and omitting None entries.";
 SYTReadingWord[YoungTableau[syt_]] := DeleteCases[Join @@ Reverse[syt], None];
 
+SYTMajorIndex::usage = "SYTMajorIndex[syt] returns the major index of a standard Young tableau.";
 SYTMajorIndex[syt_YoungTableau] := MajorIndex[Ordering[SYTReadingWord@syt]];
 
 
 SYTCharge::usage = "SYTCharge[ssyt] returns the charge of a semistandard tableau, with partition weight.";
 SYTCharge[ssyt_YoungTableau] := WordCharge@SYTReadingWord@ssyt;
+SYTCocharge::usage = "SYTCocharge[ssyt] returns the cocharge of a semistandard tableau.";
 SYTCocharge[ssyt_YoungTableau] := WordCocharge@SYTReadingWord@ssyt;
 
+SSYTCharge::usage = "SSYTCharge[ssyt] returns the charge of a semistandard Young tableau.";
 SSYTCharge[ssyt_YoungTableau] := WordCharge@SYTReadingWord@ssyt;
+SSYTCocharge::usage = "SSYTCocharge[ssyt] returns the cocharge of a semistandard Young tableau.";
 SSYTCocharge[ssyt_YoungTableau] := WordCocharge@SYTReadingWord@ssyt;
 
 (* Only works on SYTs ! *)
+SYTDualMajorIndex::usage = "SYTDualMajorIndex[syt] returns the dual major index of a standard Young tableau.";
 SYTDualMajorIndex[YoungTableau[syt_]] := With[{m=Max[syt]},
 Sum[
  j Boole[Position[syt,j][[1,1]]>Position[syt,j+1][[1,1]]]
@@ -106,7 +112,7 @@ Sum[
 
 
 
-YoungTableauSize::usage = "YoungTableauSize[tab] returns the number of boxes in the shape. Does not count skew boxes.";
+YoungTableauSize::usage = "YoungTableauSize[tab] returns the number of boxes in the tableau, excluding skew boxes represented by None.";
 YoungTableauSize[syt_YoungTableau]:=Length[SYTReadingWord[syt]];
 
 YoungTableauShape::usage = "YoungTableauShape[tab] returns the outer shape of the tableau. 
@@ -121,6 +127,7 @@ SYTDescentSet::usage = "SYTDescentSet[syt] returns the descent set of the standa
 (* All i such that i+1 appears South of i *)
 SYTDescentSet[YoungTableau[tt_]] := DescentSet@Ordering@Cases[Reverse[tt], _Integer?Positive, {2}];
 
+SYTDescents::usage = "SYTDescents[syt] returns the number of descents of a standard Young tableau.";
 SYTDescents[syt_YoungTableau] := Length@SYTDescentSet[syt];
 
 
@@ -400,6 +407,7 @@ UnitTest[SemiStandardYoungTableaux]:=And[
 	Length[StandardYoungTableaux[{{5, 4, 2}, {2, 1}}]]
 ];
 
+YoungTableauWeight::usage = "YoungTableauWeight[tab] returns the weight vector counting entries 1 through the maximum entry of tab.";
 YoungTableauWeight[YoungTableau[tableau_]]:=Module[{i,rw = DeleteCases[Join@@tableau,None]},
 	Table[Count[rw,i],{i,Max[rw,0]}]
 ];
@@ -419,7 +427,7 @@ YoungTableau/:Min[YoungTableau[tableau_]]:=Min@SYTReadingWord@YoungTableau@table
 
 YoungTableau/:Format[YoungTableau[tableau_]]:=YoungTableauForm[YoungTableau[tableau]];
 
-YoungTableauForm::usage = "YoungTableauForm[tab] returns a graphical representation of the Young tableau.";
+YoungTableauForm::usage = "YoungTableauForm[tab, options] returns a graphical representation of the Young tableau. ItemSize defaults to 1 and DescentSet defaults to False.";
 
 Options[YoungTableauForm]={ItemSize->1, DescentSet->False};
 YoungTableauForm[diagram_List, opts:OptionsPattern[]]:=YoungTableauForm[YoungTableau@diagram, opts];
@@ -465,6 +473,7 @@ YoungTableauForm[YoungTableau[diagram_], opts:OptionsPattern[]]:= Module[
 	]
 ];
 
+YoungDiagramForm::usage = "YoungDiagramForm[lam, options] returns a graphical representation of the Young diagram of partition lam. YoungDiagramForm[{lam, mu}, options] uses skew shape lam/mu. ItemSize defaults to 1 and DescentSet defaults to False.";
 Options[YoungDiagramForm]={ItemSize->1, DescentSet->False};
 YoungDiagramForm[lam:iList, opts:OptionsPattern[]]:=YoungDiagramForm[{lam,{}},opts];
 
@@ -480,7 +489,7 @@ YoungDiagramForm[{lam:iList,mu:iList}, opts:OptionsPattern[]]:= Module[{is,tab,r
 	YoungTableauForm[tab,ItemSize->is]
 ];
 
-TableauShortTeX::usage = "YoungTableauTeX[tab] returns the \\tableaushort{..} TeX version of the tableau.";
+TableauShortTeX::usage = "TableauShortTeX[tab] returns the \\tableaushort{..} TeX string for the tableau.";
 
 (* TeX form of Young diagrams. *)
 TableauShortTeX[YoungTableau[diagram_]]:= Module[{str, strTbl, tex},
@@ -492,6 +501,7 @@ TableauShortTeX[YoungTableau[diagram_]]:= Module[{str, strTbl, tex},
 ];
 
 
+YTableauTeX::usage = "YTableauTeX[tab, options] returns a ytableau TeX string for tab. The LineBreaks option defaults to True.";
 Options[YTableauTeX] = {LineBreaks->True};
 YTableauTeX[YoungTableau[diagram_],opts:OptionsPattern[]]:= Module[
 	{str, strTbl, strLines, texString, lb},
@@ -602,6 +612,7 @@ CylindricTableaux[{lam:iList, mu:iList}, k_Integer: 0] := Module[{
    Select[SemiStandardYoungTableaux[{lam, mu}], isValidQ]
 ];
 
+CylindricSYT::usage = "CylindricSYT[lam, k] returns all standard Young tableaux of cylindric shape lam with shift k. CylindricSYT[{lam, mu}, k] uses skew shape lam/mu; k defaults to 0.";
 CylindricSYT[lam:iList, k_Integer: 0] := CylindricSYT[{lam, {}}, k];
 CylindricSYT[{lam:iList, mu:iList}, k_Integer: 0] :=  Module[{isValidQ, firstSkew, firstTot, lastBoxes, firstBoxes, 
     minShift},
@@ -848,6 +859,7 @@ InvMajStatistic[YoungTableau[tab_]] := Module[{isInvQ, fil, mu, muc, inv, maj},
 (***************************** RSK ***********************)
 
 
+ArrayToBiword::usage = "ArrayToBiword[a] converts a nonnegative integer array a to a biword listing the positions of its entries.";
 ArrayToBiword[a_] := 
   Transpose@Flatten[MapIndexed[ConstantArray[#2, #1] &, a, {2}], 2];
 
@@ -856,7 +868,8 @@ ArrayToBiword[a_] :=
 
 (* This one inserts the pair {a,b} into the tableaux *)
 
-BiwordRSK::usage = "BiwordRSK[{w1,w2}] inserts the two words and produces a pair of Young Tableaux."
+BiwordRSK::usage = "BiwordRSK[{w1, w2}] applies row-insertion RSK to two equal-length words and returns a pair of YoungTableau objects.
+BiwordRSK[w] applies RSK with the increasing word Range[Length[w]] as the first word.";
 
 BiwordRSK[{a_Integer, b_Integer}, {YoungTableau[pTab_], YoungTableau[qTab_]}] := Module[
 	{insertInRow, pTabOut = pTab, qTabOut = qTab, swapIndex, newi},
@@ -897,7 +910,8 @@ BiwordRSK[w1:{___Integer}, w2:{___Integer}] /; Length[w1] == Length[w2] :=
 BiwordRSK[w1_List]:=BiwordRSK[Range[Length@w1],w1];
 
 
-BiwordRSKDual::usage="BiwordRSKDual[{w1,w2} inserts the two words and produces a pair of Young Tableaux."
+BiwordRSKDual::usage="BiwordRSKDual[{w1, w2}] applies dual row-insertion RSK to two equal-length words and returns a pair of YoungTableau objects.
+BiwordRSKDual[w] applies dual RSK with the increasing word Range[Length[w]] as the first word.";
 
 BiwordRSKDual[{a_Integer,b_Integer},{YoungTableau[pTab_],YoungTableau[qTab_]}]:=
 	Module[{insertInRow,pTabOut=pTab,qTabOut=qTab,swapIndex,newi},
@@ -943,6 +957,7 @@ KnuthRepresentative[w_List] := KnuthRepresentative[w] =
 
 
 (* The top row in the biword is row-indices, and bottom row are corresponding column indices, of the ones in the matrix *)
+BinaryMatrixToBiword::usage = "BinaryMatrixToBiword[m] converts a binary matrix m to its biword of positions of 1 entries.";
 BinaryMatrixToBiword[m_List] := Transpose@SortBy[
     Join @@ 
      MapIndexed[If[#1 == 1, #2, Nothing[]] &, 

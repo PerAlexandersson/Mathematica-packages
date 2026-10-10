@@ -140,14 +140,15 @@ SeparatedNonCrossingPartitions;
 Begin["`Private`"];
 
 (*Maps -1, -2, ... -n, to n+1,n+2,... 2n *)
-FromTypeB::usage="Convert negative type B integers to positive.";
-ToTypeB::usage="Convert integers >n to negative.";
+FromTypeB::usage="FromTypeB[n, i] converts a negative type B label -j to n+j, and leaves a positive label unchanged. FromTypeB[n, list] applies this conversion to every entry.";
+ToTypeB::usage="ToTypeB[n, i] converts a label i>n to n-i, and leaves a label at most n unchanged. ToTypeB[n, list] applies this conversion to every entry.";
 FromTypeB[n_Integer,i_Integer] := If[i < 0, n-i, i];
 ToTypeB[n_Integer,i_Integer]:=If[i>n, n-i, i];
 FromTypeB[n_,ii_List]:=FromTypeB[n,#]&/@ii;
 ToTypeB[n_,ii_List]:=ToTypeB[n,#]&/@ii;
 
 (* Given an interval on -[n] cup [n], present it sorted cyclically counterclockwise. *)
+TypeBSortInterval::usage="TypeBSortInterval[interval] sorts an interval in the type B cyclic order, starting after -1 when -1 is present and otherwise starting after 1.";
 TypeBSortInterval[ii_List] := With[{
 	pp = Sort[Select[ii, Positive]],
 	nn = Sort[Select[ii, Negative], Greater]},
@@ -283,9 +284,12 @@ CircularGraphMajorIndex::usage = "CircularGraph[gc] returns the the sum first ve
 CircularGraphMajorIndex[cg_CircularGraph]:=Tr[CircularGraphShortEdgeSet@cg];
 *)
 
+CircularGraphEdges::usage="CircularGraphEdges[circularGraph] returns the list of edges or blocks stored in a CircularGraph object.";
 CircularGraphEdges[CircularGraph[n_Integer, edges_List]]:=edges;
+CircularGraphProperEdges::usage="CircularGraphProperEdges[circularGraph] returns the distinct non-loop edges or blocks stored in a CircularGraph object.";
 CircularGraphProperEdges[CircularGraph[n_Integer, edges_List]]:=Union@Select[
 edges,#[[1]]!=#[[2]]&];
+CircularGraphLoops::usage="CircularGraphLoops[circularGraph] returns the distinct loop edges stored in a CircularGraph object.";
 CircularGraphLoops[CircularGraph[n_Integer, edges_List]]:=Union@Select[
 edges,#[[1]]==#[[2]]&];
 
@@ -399,6 +403,7 @@ Reap[
 ][[-1,1]];
 
 
+NonCrossingMatchingsTypeB::usage="NonCrossingMatchingsTypeB[n] returns the non-crossing perfect matchings of type B on 2n pairs, represented as CircularGraph objects.";
 NonCrossingMatchingsTypeB[n_Integer] := NonCrossingMatchingsTypeB[n] = Select[
 	NonCrossingMatchings[2 n], CircularGraphRotate[#, 2 n] == # &];
 
@@ -416,6 +421,7 @@ The default value for s is 2. Promotion correspond to s=1.";
 NCMRotate[cg_CircularGraph, steps_: 2] := CircularGraphRotate[cg, steps];
 
 (* Same as MajorIndex[ NCMToDyckPath@match]] *)
+NCMMajorIndex::usage="NCMMajorIndex[matching] returns the major-index statistic of a non-crossing perfect matching represented as a CircularGraph.";
 NCMMajorIndex[CircularGraph[n_,edges_]] := Sum[
 		i*Boole[ MemberQ[edges, {_Integer, i}] && MemberQ[edges,{i+1, _Integer}] ]
 	,{i, n - 1}];
@@ -445,14 +451,14 @@ NCMFaces[CircularGraph[n_, ncm_]] :=
 
 
 (* Another Catalan family. *)
-NonCrossingPartitions::usage="NonCrossingPartitions[n] returns non-crossing matchings. 
-There are Cat(n) many. Non-crossing partitions with k components is Narayana(n,k)."
+NonCrossingPartitions::usage="NonCrossingPartitions[n] returns all non-crossing set partitions of [n], represented as CircularGraph objects. There are Catalan(n) of them; those with k blocks are counted by Narayana(n,k)."
 
 
 NonCrossingPartitions[n_Integer]:= NonCrossingPartitions[n] = Map[
 CircularGraph[n,#]&, NonCrossingPartitionsHelper[n]];
 
 
+NonCrossingPartitionsTypeB::usage="NonCrossingPartitionsTypeB[n] returns the non-crossing set partitions of type B on the labels +/-1,...,+/-n, represented as CircularGraph objects.";
 NonCrossingPartitionsTypeB[n_Integer] := NonCrossingPartitionsTypeB[n] = Select[
 	NonCrossingPartitions[2 n], CircularGraphRotate[#, n] == # &];
 
@@ -474,6 +480,7 @@ NonCrossingPartitionsHelper[n_Integer] :=
 
 
 
+NCPRotate::usage="NCPRotate[partition, steps] rotates a non-crossing partition by steps vertices; steps defaults to 1. The partition is a CircularGraph object.";
 NCPRotate[cg_CircularGraph, steps_: 1] := CircularGraphRotate[cg,steps];
 
 NCPBlocks::usage = "NCPBlocks[ncp] returns the number of blocks.";
@@ -513,6 +520,7 @@ DyckPath[
 https://pdfs.semanticscholar.org/e25a/4edb2a9c332717543331da06a1808595f95a.pdf
 *)
 
+NCPRestrictedGrowthFunction::usage="NCPRestrictedGrowthFunction[partition] returns the restricted-growth word of a non-crossing partition represented as a CircularGraph.";
 NCPRestrictedGrowthFunction[CircularGraph[n_, ncp_List]] := With[
 	{blocks = SortBy[ncp, Min]},
 	Table[Position[blocks, i, 2, 1][[1, 1]], {i, n}]
@@ -587,9 +595,11 @@ StanleyCatalan60[n_Integer] := StanleyCatalan60[n] = Join[
 	][[-1,1]]
 ];
 
+StanleyCatalan60Rotate::usage="StanleyCatalan60Rotate[circularGraph, steps] rotates a Stanley Catalan object by steps vertices; steps defaults to 1.";
 StanleyCatalan60Rotate := CircularGraphRotate;
 
 (* If 1 is marked, flip it to unmarked *)
+StanleyCatalan60Flip::usage="StanleyCatalan60Flip[circularGraph] toggles the loop at vertex 1 when no non-loop edge is incident to that vertex.";
 StanleyCatalan60Flip[CircularGraph[n_,edges_]] := 
 CircularGraph[n,
 	Which[
@@ -613,11 +623,13 @@ CircularGraph[n,
 		]
 ];
 
+StanleyCatalan60Action::usage="StanleyCatalan60Action[circularGraph] applies StanleyCatalan60Flip followed by StanleyCatalan60Rotate. StanleyCatalan60Action[circularGraph, k] iterates this action k times.";
 StanleyCatalan60Action[cg_CircularGraph] := StanleyCatalan60Rotate@StanleyCatalan60Flip@cg;
 
 StanleyCatalan60Action[cg_, k_Integer] := Nest[StanleyCatalan60Action, cg, k];
   
 (* This refinement gives the Narayana numbers. *)
+StanleyCatalan60EdgesAndLoops::usage="StanleyCatalan60EdgesAndLoops[circularGraph] returns the number of edges and loops, counted with multiplicity, in a Stanley Catalan object.";
 StanleyCatalan60EdgesAndLoops[cg_CircularGraph]:=Length@CircularGraphEdges[cg];
 
 
@@ -669,6 +681,7 @@ DyckAreaLists[n_Integer] := DyckAreaLists[n] =
      , {k, 0, n - 1}], 2];
 
 
+AreaToDyckPath::usage="AreaToDyckPath[area] converts a Dyck area sequence to its DyckPath representation.";
 AreaToDyckPath[area_List] := With[{n=Length@area},
 	DyckPath@Normal[
 		SparseArray[
@@ -677,6 +690,7 @@ AreaToDyckPath[area_List] := With[{n=Length@area},
 			"e"]]
 ];
 
+AreaToIntervalGraph::usage="AreaToIntervalGraph[area] returns the unit interval graph associated with a Dyck area sequence.";
 AreaToIntervalGraph[aa_List]:=With[{n = Length@aa},
 	Graph[Range@n,Join @@ Table[
 		{Mod[k - i - 1, n] + 1, k}
@@ -688,6 +702,7 @@ AreaPeaks::usage = "AreaPeaks[area] returns number of peaks, assuming its a Dyck
 AreaPeaks[aa_List] := 1 + Sum[Boole[aa[[j]] >= aa[[j + 1]]], {j, Length[aa] - 1}];
 
 
+DyckAreaCliqueDecomposition::usage="DyckAreaCliqueDecomposition[area] returns the clique decomposition of the unit interval graph associated with a Dyck area sequence.";
 DyckAreaCliqueDecomposition[area_List] := With[{n = Length[area]},
    (* Look at all peaks of the Dyck path, and construct 
    the corresponding cliques of the Unit interval graph. *)
@@ -698,15 +713,19 @@ DyckAreaCliqueDecomposition[area_List] := With[{n = Length[area]},
     , {i, Length[area]}]
 ];
 
+DyckAreaCliqueNesting::usage="DyckAreaCliqueNesting[area] returns the maximum number of cliques in the Dyck area clique decomposition containing a vertex.";
 DyckAreaCliqueNesting[area_List] := 
   With[{dacd = DyckAreaCliqueDecomposition[area]},
    Max[0, Last /@ Tally[Join @@ dacd]]
 ];
 
+DyckAreaCliqueNestingVector::usage="DyckAreaCliqueNestingVector[area] returns the sorted vector of vertex nesting counts in the Dyck area clique decomposition.";
 DyckAreaCliqueNestingVector[aa_List] := Last /@ Sort[Tally[Flatten@DyckAreaCliqueDecomposition[aa]]];
 
+LineGraphAreaQ::usage="LineGraphAreaQ[area] returns True when the unit interval graph of the Dyck area sequence is a line graph.";
 LineGraphAreaQ[area_List] := DyckAreaCliqueNesting[area] <= 2;
 
+AbelianDyckAreaQ::usage="AbelianDyckAreaQ[area] returns True when the Dyck area sequence has an abelian unit interval graph.";
 AbelianDyckAreaQ[area_List] := With[{dacd = DyckAreaCliqueDecomposition[area]},
    Or[Length[dacd] == 1, Last[dacd[[1]]] + 1 >= First[dacd[[-1]]]]
 ];
@@ -779,11 +798,13 @@ AreaTranspose[area_List] := Module[{n = Length@area, cg, k},
 ];
 
 
+AreaToBounceShape::usage="AreaToBounceShape[area] returns the bounce shape associated with a Dyck area sequence.";
 AreaToBounceShape[{}] := {};
 AreaToBounceShape[area_List] := Module[{n = Length@area, k},
    k = LengthWhile[area - Range[n] + 1, # >= 0 &];
    Join[Range[0, k - 1], AreaToBounceShape[area[[k + 1 ;;]]]]];
 
+AreaBounce::usage="AreaBounce[area] returns the bounce statistic of a Dyck area sequence.";
 AreaBounce[area_List] := 
   Tr@Most[(Join @@ Position[Reverse@AreaToBounceShape@area, 0])];
 
@@ -807,6 +828,7 @@ AreaRemoveVertices[area_List, verts_List] :=
 
 
 AreaListPlot::usage = "AreaListPlot[area,opts] plots the area. Options are Circular and Labels";
+Labels::usage = "Option for AreaListPlot specifying labels as rules from edges or vertices to displayed values.";
 Options[AreaListPlot]={Circular->False, Labels->{}};
 
 AreaListPlot[areaList_List, opts:OptionsPattern[AreaListPlot]] := Module[{edgeToGridCoord,
@@ -871,7 +893,7 @@ Join[
 
 
 
-SchroederPathUpSteps::usage = "SchroderPathUpSteps[word] returns a list indices where up or diagonal steps appear.";
+SchroederPathUpSteps::usage = "SchroederPathUpSteps[path] returns the 1-based indices of up or diagonal steps in a Schroeder path given as a string or list.";
 SchroederPathUpSteps[path_String] := 
   SchroederPathUpSteps@Characters[path];
 SchroederPathUpSteps[path_List] := Join @@ Position[path, "n" | "d"];
@@ -908,6 +930,7 @@ FussCatalanPaths[n_Integer, k_Integer : 2] :=
     ];
 
 
+DyckPath::usage="DyckPath[word] constructs a DyckPath object from a word as a string of n/e steps or a list of n/e steps. DyckPath[binary] accepts a list of 0/1 values, with 0 mapped to n and 1 mapped to e.";
 DyckPath[binary:{(0 | 1) ..}]:=DyckPath[binary/.{0->"n",1->"e"}];
 DyckPath[neWord_String]:=DyckPath[Characters@neWord];
 
@@ -921,6 +944,7 @@ DyckCoordinates[dp_List] := Accumulate@Prepend[ReplaceAll[dp,
      {"n" -> {0, 1}, "e" -> {1, 0}, "d" -> {1, 1}}], {0, 0}];
 
 
+DyckPlot::usage="DyckPlot[path] returns a Graphics representation of a DyckPath object or a string of n/e steps.";
 DyckPlot[path_String] := DyckPlot[DyckPath[path]];
 
 DyckPlot[DyckPath[path_List]] := Module[
@@ -938,6 +962,7 @@ DyckPlot[DyckPath[path_List]] := Module[
 ];
 
 
+DyckPathToTikz::usage="DyckPathToTikz[path] returns a TikZ source string for a DyckPath object.";
 DyckPathToTikz[p_DyckPath] := Module[{
     pairsToPath, coords, lightGrayPath, n, grayStr, pathStr, gridStr, 
     nodeStr},
@@ -987,14 +1012,17 @@ DyckPathToTikz[p_DyckPath] := Module[{
 ];
 
    
+DyckPathHeight::usage="DyckPathHeight[path] returns the maximum height of a DyckPath object.";
 DyckPathHeight[p_DyckPath] := Max[#2 - #1 & @@@ DyckCoordinates[p]];
 
 DyckMajorIndex::usage = "DyckMajorIndex[dp] where dp is a ne-path, returns sum of indices of valleys. Summing over all these gives the qCatalan number. This is same as major index of the word where n=0, e=1.";
 
 DyckMajorIndex[DyckPath[dp_List]] := Tr[First /@ SequencePosition[dp, {"e", "n"}]];
 
+DyckValleys::usage="DyckValleys[path] returns the number of valleys in a DyckPath object.";
 DyckValleys[DyckPath[dp_List]] := Length[ SequencePosition[dp, {"e", "n"}] ];
 
+DyckPeaks::usage="DyckPeaks[path] returns the number of peaks in a DyckPath object.";
 DyckPeaks[DyckPath[dp_List]] := Length[ SequencePosition[dp, {"n", "e"}] ];
 
 
@@ -1096,6 +1124,7 @@ NonCrossingForests[n_Integer] := NonCrossingForests[n] = Module[
 	][[-1,1]]
 ];
 
+NCFComponents::usage="NCFComponents[forest] returns the connected components of a non-crossing forest.";
 NCFComponents:=CircularGraphComponents;
 
 
@@ -1143,6 +1172,7 @@ And @@ Table[
 {p,pl}] &];
 
 
+RookInversionList::usage="RookInversionList[board, rooks] returns, for each row of a coordinate board, the number of squares in RookInversions[board, rooks].";
 RookInversionList[board_List, pl_List]:=With[{invSet=RookInversions[board,pl],n=Max@board},
 	Table[ Length@Select[invSet, #[[1]]==k &],{k,n}]
 ];
@@ -1151,9 +1181,11 @@ RookInversionList[board_List, pl_List]:=With[{invSet=RookInversions[board,pl],n=
 AreaToPartition::usage="AreaToPartition[area] returns the partition associated with the area sequence.";
 AreaToPartition[aa_List]:=With[{n = Length@aa}, n + 1 - Range[n] + aa];
 
+AreaToFerrersBoard::usage="AreaToFerrersBoard[area] returns the list of coordinate squares in the Ferrers board associated with an area sequence.";
 AreaToFerrersBoard[aa_List]:=With[{n=Length@aa},(Join @@ Table[{r, c}, {r, n}, {c, r - aa[[r]], n}])];
 
 
+RookPlacementPlot::usage="RookPlacementPlot[board, rooks] returns a Grid displaying a rook placement on a coordinate board.";
 RookPlacementPlot[board_List, rp_List] := Module[{flip, data, n = Max@board},
 	flip[{r_,c_}]:={n+1-r,c};
    data = Table[
@@ -1178,6 +1210,7 @@ RookPlacementPlot[board_List, rp_List] := Module[{flip, data, n = Max@board},
 (* A one-vertex tree is a list with 1. *)
 (* Ordered rooted trees is a Catalan family. *)
 
+OrderedRootedTrees::usage="OrderedRootedTrees[n] returns all ordered rooted trees with n edges, represented recursively as lists of child trees.";
 OrderedRootedTrees[0] := {{}}; (* One root *)
 OrderedRootedTrees[1] := {{{}}}; (* Two vertices. *)
 OrderedRootedTrees[n_Integer] := Reap[Do[Outer[Sow[
@@ -1188,8 +1221,10 @@ OrderedRootedTrees[n_Integer] := Reap[Do[Outer[Sow[
 		OrderedRootedTrees[n - 1 - k], 1]
 		,{k, 0, n - 1}]][[-1, 1]];
 
+OrderedRootedTreeSize::usage="OrderedRootedTreeSize[tree] returns the number of vertices in an ordered rooted tree represented recursively as a list of child trees.";
 OrderedRootedTreeSize[ot_List] := 1 + Total[OrderedRootedTreeSize /@ ot];
 
+OrderedRootedTreeToGraph::usage="OrderedRootedTreeToGraph[tree] converts an ordered rooted tree represented recursively to a directed Graph.";
 OrderedRootedTreeToGraph[{}] := Graph[{1}, {}];
 OrderedRootedTreeToGraph[ot_List] := OrderedRootedTreeToGraph[ot] = Module[
 	{subTrees, sizes, eLists, toAdd, adjustedEdges, newEdges},
@@ -1208,6 +1243,7 @@ OrderedRootedTreeToGraph[ot_List] := OrderedRootedTreeToGraph[ot] = Module[
 ];
 
 
+OrderedRootedTreePlot::usage="OrderedRootedTreePlot[tree] returns a graphical representation of an ordered rooted tree.";
 OrderedRootedTreePlot[ot_List] := Module[{gg},
 	gg = OrderedRootedTreeToGraph[ot];
 	LayeredGraphPlot[gg, ImageSize -> 3 {70, 70}, 
@@ -1219,6 +1255,7 @@ OrderedRootedTreePlot[ot_List] := Module[{gg},
 These permutations are ordered increasinly, so its evident that the \
 result is 231-avoiding.
 *) 
+ORTTo231Perm::usage="ORTTo231Perm[tree] returns the 231-avoiding permutation associated with an ordered rooted tree.";
 ORTTo231Perm[{}] := {};
 ORTTo231Perm[ot_List] := ORTTo231Perm[ot] = Module[
     {pi, adjPi, n},
@@ -1248,6 +1285,7 @@ Av231[n_Integer] := Av231[n] = Module[{j, left, right},
 ];
 
 
+Av132::usage="Av132[n] returns all 132-avoiding permutations of size n.";
 Av132[0] := {{}};
 Av132[1] := {{1}};
 Av132[n_Integer] := Av132[n] = (
@@ -1282,8 +1320,12 @@ From132To123Avoiding[pi_List] := Module[{ltrMin, rem},
 ];
 
 Av231[n_Integer] := Reverse /@ Av132[n];
+Av213::usage="Av213[n] returns all 213-avoiding permutations of size n.";
 Av213[n_Integer] := Reverse[n + 1 - #] & /@ Av132[n];
+Av123::usage="Av123[n] returns all 123-avoiding permutations of size n.";
+Av312::usage="Av312[n] returns all 312-avoiding permutations of size n.";
 Av312[n_Integer] := n + 1 - # & /@ Av132[n];
+Av321::usage="Av321[n] returns all 321-avoiding permutations of size n.";
 Av123[n_Integer] := From132To123Avoiding /@ Av132[n];
 Av321[n_Integer] := Reverse[From132To123Avoiding[#]] & /@ Av132[n];
 
@@ -1377,6 +1419,7 @@ SetPartitionLinePlot[CircularGraph[n_, blocks_]] := Module[
    Graphics[{arcs, pts, lbls}, ImageSize -> 30 d]
 ];
 
+SetPartitionForm::usage="SetPartitionForm[blocks] formats a set partition, including signed labels, as a Row expression.";
 SetPartitionForm[bb_List] := Row[Row /@ (bb/.{i_Integer:>If[i<0,OverBar[-i],i]}), "|"];
 
 FormatTypeBSetPartition::usage = "FormatTypeBSetPartition[sp] returns a canonicalized version.";

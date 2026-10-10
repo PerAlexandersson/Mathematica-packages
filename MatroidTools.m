@@ -93,14 +93,14 @@ IsSubsetClosedQ[sets_List] := Module[{i, set},
 
 MatroidLoops::usage = "MatroidLoops[groundSet,bases] returns the list of loops (dependent 1-element sets).";
 MatroidLoops[ee_List, bb_List] := Complement[ee, Sequence @@ bb];
-MatroidColoops::usage = "MatroidColoops[groundSet,bases] returns the list of coloops (elements independent from all other).";
+MatroidColoops::usage = "MatroidColoops[groundSet,bases] returns the list of coloops, namely elements contained in every basis.";
 MatroidColoops[ee_List, bb_List] := If[Length@bb == 0, {}, Intersection @@ bb];
 
-MatroidDual::usage = "MatroidDual[e,bases] returns the list of bases for the dual of the matroid.";
+MatroidDual::usage = "MatroidDual[groundSet,bases] returns the bases of the dual matroid.";
 MatroidDual[ee_List, bb_List]:=(Complement[ee,#]&/@bb);
 
 
-IndependentSets::usage = "IndependentSets[bases] returns all independent sets";
+IndependentSets::usage = "IndependentSets[bases] returns all independent sets contained in the listed bases.";
 IndependentSets[bases_List] := Module[{independentSets, toExplore, basis},
    independentSets = CreateDataStructure["HashSet"];
    toExplore = CreateDataStructure["HashSet"];
@@ -119,8 +119,10 @@ IndependentSets[bases_List] := Module[{independentSets, toExplore, basis},
 ];
 
 
+MatroidSetRank::usage = "MatroidSetRank[bases,set] returns the matroid rank of set, computed as the maximum intersection size with a basis.";
 MatroidSetRank[bases_List, set_List]:=MatroidSetRank[bases,set]=Max[Table[Length[Intersection[b, set]], {b, bases}]];
 
+MatroidFlats::usage = "MatroidFlats[bases] returns the flats of the matroid specified by its bases.";
 MatroidFlats[bases_List] := Module[{indSets, grndSet},
    indSets = IndependentSets[bases];
    grndSet = Union @@ bases;
@@ -132,6 +134,7 @@ MatroidFlats[bases_List] := Module[{indSets, grndSet},
      , {ind, indSets}]
    ];
 
+LatticeOfFlats::usage = "LatticeOfFlats[bases] returns all ordered comparable pairs of distinct flats, represented as pairs of sets.";
 LatticeOfFlats[bases_List] := With[
    {verts = MatroidFlats[bases]},
    Join @@ Table[
@@ -199,7 +202,7 @@ MatroidCharacteristicPolynomial[{groundSet_List, bases_List}, t_]:=Expand@If[Len
 (-1)^Length[First@bases] MatroidTuttePolynomial[{groundSet,bases},{1-t,0}]];
 
 
-InternallyActiveElements::usage = "InternallyActiveElements[groundSet, B, F] returns all internally active elements with respect to the basis F";
+InternallyActiveElements::usage = "InternallyActiveElements[groundSet,bases,basis] returns the internally active elements of basis with respect to the order on groundSet.";
 InternallyActiveElements[groundSet_List, bases_List, b_] := Table[
    With[{bd = DeleteCases[b, e]},
     Catch[
@@ -208,7 +211,7 @@ InternallyActiveElements[groundSet_List, bases_List, b_] := Table[
       , {f, TakeWhile[groundSet, # != e &]}]; e]
     ]
    , {e, b}];
-ExternallyActiveElements::usage = "ExternallyActiveElements[groundSet, B, F] returns all externally active elements with respect to the basis F";
+ExternallyActiveElements::usage = "ExternallyActiveElements[groundSet,bases,basis] returns the externally active elements of basis with respect to the order on groundSet.";
 ExternallyActiveElements[groundSet_List, bases_List, b_] := Table[
    With[{bf = Append[b, e]},
     Catch[
@@ -295,6 +298,7 @@ Subsets[Range@8,{4}],
   {5, 6, 7, 8}
 }];
 
+UniformBases::usage = "UniformBases[r,n] returns all r-element bases of the uniform matroid on {1,2,...,n}.";
 UniformBases[r_Integer,n_Integer]:=Subsets[Range@n,{r}];
 
 
@@ -304,6 +308,7 @@ MatchingMatroidBases[g_Graph] := With[{mm = GraphMatchings[g]},
 ];
 
 
+MatroidIsomorphisms::usage = "MatroidIsomorphisms[basesA,basesB] returns all bijections carrying the bases of one matroid to the bases of the other.";
 MatroidIsomorphisms[basesA_List,basesB_List]:=SetIsomorphisms[basesA,basesB];
 
 SetIsomorphisms::usage = "SetIsomorphisms[setsA,setsB] returns all isomorphisms between the two sets.";

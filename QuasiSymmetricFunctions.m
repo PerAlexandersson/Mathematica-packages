@@ -48,6 +48,7 @@ Module[{rest, first},
 ];
 *)
 
+PartitionedCompositionCoarsenings::usage = "PartitionedCompositionCoarsenings[alpha] returns all coarsenings of the partitioned composition alpha, represented as a list of lists of compositions.";
 PartitionedCompositionCoarsenings[alpha_List] := Module[{v, n = Length@alpha},
 	Map[Join @@ # &, ListSplits[alpha], {2}]
 ];
@@ -164,30 +165,36 @@ createQSymBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[
 ];
 
 
+MonomialQSymbol::usage = "MonomialQSymbol[alpha, x] represents the monomial quasisymmetric-function basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 createQSymBasis[MonomialQSymbol, "M", 
 	MultiplicationFunction -> QMonomialProduct,
 	PowerFunction -> "Mult"
 ];
 
 
+FundamentalQSymbol::usage = "FundamentalQSymbol[alpha, x] represents the fundamental quasisymmetric-function basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 createQSymBasis[FundamentalQSymbol, "F", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
+PowerSumQSymbol::usage = "PowerSumQSymbol[alpha, x] represents the quasisymmetric power-sum basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 createQSymBasis[PowerSumQSymbol, "\[Psi]", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
+ZPowerSumQSymbol::usage = "ZPowerSumQSymbol[alpha, x] represents the z-normalized quasisymmetric power-sum basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 createQSymBasis[ZPowerSumQSymbol, "z\[Psi]", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
+MonomialQSymmetric::usage = "MonomialQSymmetric[alpha, x] returns the monomial quasisymmetric function indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 MonomialQSymmetric[alpha_List, x_: None] := MonomialQSymbol[alpha, x];
 
 
+FundamentalQSymmetric::usage = "FundamentalQSymmetric[alpha, x] returns the fundamental quasisymmetric function indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 FundamentalQSymmetric[alpha_List, x_: None] := 
 FundamentalQSymmetric[alpha, x] = Sum[
 	MonomialQSymbol[beta, x]
@@ -204,6 +211,7 @@ UnitTest[FundamentalQSymmetric] := And[
 ];
 
 
+PowerSumQSymmetric::usage = "PowerSumQSymmetric[alpha, x] returns the quasisymmetric power-sum function indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 PowerSumQSymmetric[alpha_List, x_: None] := PowerSumQSymmetric[alpha, x] = Module[{pi},
 	pi[comp_List] := Times @@ Accumulate[comp];
 	Expand[
@@ -215,10 +223,12 @@ PowerSumQSymmetric[alpha_List, x_: None] := PowerSumQSymmetric[alpha, x] = Modul
 ];
 
 (* With a constant *)
+ZPowerSumQSymmetric::usage = "ZPowerSumQSymmetric[alpha, x] returns the z-normalized quasisymmetric power-sum function indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 ZPowerSumQSymmetric[alpha_List, x_: None] := ZPowerSumQSymmetric[alpha, x] = 
 		Expand[PowerSumQSymmetric[alpha,x]/ZCoefficient[alpha]];
 
 
+PowerSumAltQSymmetric::usage = "PowerSumAltQSymmetric[alpha, x] returns the alternate quasisymmetric power-sum function indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
 PowerSumAltQSymmetric[alpha_List, x_: None] := PowerSumAltQSymmetric[alpha, x] = Module[{spi},
 	spi[comp_List] := Length[comp]! (Times @@ comp);
 	Expand[
@@ -263,6 +273,7 @@ CompositionIndexedBasisRule[size_Integer, bb_, toBasis_, monom_: MonomialQSymbol
 ];
 
 
+ToOtherQSymmetricBasis::usage = "ToOtherQSymmetricBasis[basis, pol, newSymb, x, mm] converts pol from the monomial basis to the basis specified by basis and newSymb. The alphabet x defaults to None and the monomial symbol mm defaults to MonomialQSymbol.";
 ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymbol] := Module[
 	{mmVars, deg, maxDegree, monomList},
 	
@@ -281,12 +292,15 @@ ToOtherQSymmetricBasis[basis_, pol_, newSymb_, x_: None, mm_: MonomialQSymbol] :
 ];
 
 
+ToFundamentalBasis::usage = "ToFundamentalBasis[poly, x] converts poly to the fundamental quasisymmetric basis. The alphabet x defaults to None.";
 ToFundamentalBasis[poly_, x_: None] := 
 	ToOtherQSymmetricBasis[FundamentalQSymmetric, poly, FundamentalQSymbol, x];
 
+ToPowerSumQSymBasis::usage = "ToPowerSumQSymBasis[poly, x] converts poly to the quasisymmetric power-sum basis. The alphabet x defaults to None.";
 ToPowerSumQSymBasis[poly_,x_: None] := 
 	ToOtherQSymmetricBasis[PowerSumQSymmetric, poly, PowerSumQSymbol, x];
 	
+ToZPowerSumQSymBasis::usage = "ToZPowerSumQSymBasis[poly, x] converts poly to the z-normalized quasisymmetric power-sum basis. The alphabet x defaults to None.";
 ToZPowerSumQSymBasis[poly_,x_: None] := 
 	ToOtherQSymmetricBasis[ZPowerSumQSymmetric, poly, ZPowerSumQSymbol, x];
 

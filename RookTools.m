@@ -16,9 +16,11 @@ RookPlacementPlot;
 Begin["`Private`"];
 
 
+FerrersNonCrossingPlacements::usage = "FerrersNonCrossingPlacements[lam,mu] returns all non-crossing rook placements on the skew Ferrers board lam/mu; mu defaults to {}.";
 FerrersNonCrossingPlacements[lam_List,mu_List:{}]:=GraphNonCrossingMatchings[FerrersBoardGraph[lam, mu]];
 
 
+NonCrossingRookPolynomial::usage = "NonCrossingRookPolynomial[lam,t] returns the rook polynomial whose coefficient of t^k counts non-crossing placements of k rooks on the Ferrers board lam.";
 NonCrossingRookPolynomial[{}, t_] := 1;
 NonCrossingRookPolynomial[{m_Integer}, t_] := 1 + m t;
 NonCrossingRookPolynomial[lam_List, t_] :=
@@ -37,6 +39,7 @@ NonCrossingRookPolynomial[lam_List, t_] :=
     ];
 
 
+FerrersPlacementToBasis::usage = "FerrersPlacementToBasis[lam,mu,p] returns the matroid basis corresponding to the rook placement p on the skew Ferrers board lam/mu.";
 FerrersPlacementToBasis[lam_List, mu_List, p_List] := Module[{rowVars, colVars},
    rowVars = Range[Length@lam];
    colVars = Length[lam] + Range[lam[[1]]];
@@ -45,11 +48,14 @@ FerrersPlacementToBasis[lam_List, mu_List, p_List] := Module[{rowVars, colVars},
 ];
 
 
+FerrersRookPlacementPlot::usage = "FerrersRookPlacementPlot[lam,mu,rp] returns a graphic of the rook placement rp on the skew Ferrers board lam/mu.";
 FerrersRookPlacementPlot[lam_List, mu_List, rp_List] := RookPlacementPlot[
 	EdgeList@FerrersBoardGraph[lam, mu], rp, Length[lam]];
 
 (* Squares are edges {r, nrows + c}, as produced by FerrersBoardGraph. Without nrows,
    the number of rows is taken to be the largest row index of a square. *)
+RookPlacementPlot::usage = "RookPlacementPlot[boardSquares,rp] returns a graphic of a rook placement, inferring nrows from boardSquares.
+RookPlacementPlot[boardSquares,rp,nrows] returns a graphic of a rook placement using the specified number of rows.";
 RookPlacementPlot[boardSquares_List, rp_List] := RookPlacementPlot[boardSquares, rp,
 	Max[First /@ (boardSquares /. UndirectedEdge -> List)]];
 
