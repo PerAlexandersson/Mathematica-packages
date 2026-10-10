@@ -58,7 +58,8 @@ supported replacement, and `LegacyConversions` converts legacy data.
 - `NonsymmetricPolynomials`: nonsymmetric Macdonald polynomials `MacdonaldEPolynomial[alpha, x,
   q, t]`, generated from 1 by the Knop-Sahi affine shift and intertwiners (they agree with the
   Haglund-Haiman-Loehr filling formula, the legacy package and sym-poly), permuted basements
-  `MacdonaldEPolynomial[alpha, sigma, x, q, t]`, `NonsymmetricJackPolynomial` and
+  `MacdonaldEPolynomial[alpha, sigma, x, q, t]` (from the identity basement by t-Demazure
+  operators, Alexandersson 2019, Corollary 16), `NonsymmetricJackPolynomial` and
   `IntegralMacdonaldE` (#51).
 - The divided-difference family of operators is applied monomial by monomial in x[i], x[i+1]
   with memoized expanded formulas instead of forming and cancelling quotients (keys about 2.4

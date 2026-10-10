@@ -278,11 +278,12 @@ VerificationTest[
   TestID -> "NonsymmetricPolynomials-MacdonaldE-operator-recursion"
 ]
 
-(* Issue #51 (P4): permuted basements. With p, p' the rows of the basement entries i, i + 1:
-   E^(s_i sigma) = T_i E^sigma if p < p' and alpha_p >= alpha_p', and T_i^(-1) E^sigma if p > p' and
-   alpha_p <= alpha_p' (s_i sigma swaps the values i, i + 1). All basements of S_3 and S_4 for
-   small alpha agree with the filling formula, whether reached by operators or not, and the
-   rule is checked directly on S_3. *)
+(* Issue #51 (P4): permuted basements are generated from the identity basement by
+   t-Demazure operators (Alexandersson 2019, Corollary 16), and agree with the
+   Haglund-Haiman-Loehr filling formula for all basements in S_3 and S_4 (small alpha).
+   Also checked directly on S_3, with p, p' the rows of the basement entries i, i + 1:
+   E^(s_i sigma) = T_i E^sigma if p < p' and alpha_p >= alpha_p', and T_i^(-1) E^sigma if p > p'
+   and alpha_p <= alpha_p' (s_i sigma swaps the values i, i + 1). *)
 VerificationTest[
   Module[{fill, T, comps, swap},
     fill[a_, s_] := NonsymmetricPolynomials`Private`macdonaldFillingPolynomial[a, s, x, q, t];
