@@ -4,13 +4,14 @@
 (* MathKernel -script file.m *)
 
 
-BeginPackage["UnicellularChromatics`",{"SymmetricFunctions`","CombinatoricTools`","CatalanObjects`"}];
+BeginPackage["UnicellularChromatics`",{"SymmetricFunctions`","CombinatoricTools`","CatalanObjects`","GraphTools`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
 
 
 AreaLists;
+GraphAreaLists;
 Circular;
 Width;
 UnitIntervalEdges;
@@ -53,6 +54,12 @@ GraphColoringAscents;
 GraphColoringMonochromaticEdges;
 
 (* Compatibility and graph/area utilities ported from ChromaticFunctions. *)
+AreaConjugate;
+ValleyEdges;
+DiagramRookPlacements;
+OrientationPlot;
+PArrayPlot;
+UnitIntervalPlot;
 PathShapes;
 BounceLengths;
 AttackingPoset;
@@ -150,6 +157,30 @@ AreaLists[n_Integer, opts:OptionsPattern[]] := AreaLists[n, opts] =
 		Select[gData, isOkQ ]
 	]
 ];
+
+GraphAreaLists::usage = "GraphAreaLists[n, opts] returns area lists of unit interval graphs on n vertices, starting with 0 as in CatalanObjects (UnitIntervalEdges accepts them). Options: Circular -> True (default) also includes circular (cylindric) area lists; Width -> w bounds the entries by w - 1 (default n); All -> False (default) keeps one representative per rotation class, All -> True returns all.";
+Options[GraphAreaLists] = {All -> False, Circular -> True, Width -> -1};
+GraphAreaLists[n_Integer, opts : OptionsPattern[]] := GraphAreaLists[n, opts] =
+	Module[{rec, isOkQ, gData = {}, isMinimal, w = -1},
+		w = OptionValue[Width];
+		If[w == -1, w = n];
+		rec[gList_List, n] := AppendTo[gData, gList];
+		rec[gList_List, i_Integer] :=
+		Do[rec[Append[gList, k], i + 1],
+			{k, Max[Last[gList] - 1, 0], w - 1}];
+		Do[rec[{k}, 1], {k, 0, w - 1}];
+		isOkQ[lst_List] :=
+			(lst[[1]] >= lst[[-1]] - 1) &&
+			(OptionValue[Circular] === True || Last[lst] == 0);
+		isMinimal[lst_List] :=
+			(lst === Last@Sort[Table[RotateLeft[lst, k], {k, 0, n - 1}]]);
+		(* The construction uses lists ending with 0; reverse them to the shared
+		   0-first convention (CONVENTIONS.md). *)
+		Reverse /@ If[Not@OptionValue[All],
+			Select[gData, isOkQ[#] && isMinimal[#] &],
+			Select[gData, isOkQ]
+		]
+	];
 
 
 
@@ -261,116 +292,6 @@ ChromaticSymmetric[gg_Graph, opts : OptionsPattern[]] :=
 
 
 
-
-(***************************************************)
-
-(*
-
-Options[GraphOrientations] = {StrictEdges -> {}, WeakEdges -> {}};
-GraphOrientations[edges_List, opts:OptionsPattern[]] := Module[
-	{isConnectedQ, multiEdgedQ, n = Max@edges, orients, nEdges = Length@edges, 
-		strict, weak, weakIndicator,strictIndicator},
-	
-	strict = OptionValue[StrictEdges];
-	weak = OptionValue[WeakEdges];
-	
-	(* There is a 1 at the strict edges. *)
-	strictIndicator = Table[ Boole@MemberQ[strict,e], {e,edges}];
-	weakIndicator = Table[ Boole@MemberQ[weak,e], {e,edges}];
-	
-	orients = Tuples[{0, 1}, nEdges];
-	If[Length@strict>0,
-		orients = Select[ orients, (#.strictIndicator)==Tr[strictIndicator] & ];
-	];
-	If[Length@weak>0,
-		orients = Select[ orients, ((1-#).weakIndicator)==Tr[weakIndicator] & ];
-	];
-	
-	orients = Table[
-		Table[
-			If[ or[[i]] == 1, 
-				edges[[i]],
-				Reverse@edges[[i]]]
-			,{i, nEdges}]
-	, {or, orients}];
-	
-	orients
-];
-
-
-GraphAcyclicOrientations::usage = "GraphAcyclicOrientations[edges] returns the set of acyclic orientations.";
-Options[GraphAcyclicOrientations] = {StrictEdges -> {}};
-GraphAcyclicOrientations[edges_List, opts:OptionsPattern[]] := GraphAcyclicOrientations[edges,opts] = Module[{n = Max[edges, 0], orients, strict, strictIndices},
-	
-	(* Try all colorings with different colors. Such colorings 
-		can only result in acyclic orientations. *)
-	
-	orients = Union@Table[
-			(
-			If[ Less @@ col[[#]], 
-				#, 
-				Reverse@#]
-			) & /@ edges
-	, {col, Permutations@Range@n}];
-	
-	strict = OptionValue[StrictEdges];
-	strictIndices = Select[ Range[Length@edges], MemberQ[strict, edges[[#]]] & ];
-	
-	If[Length@strict>0,
-		orients = Select[ orients, And@@Table[ edges[[i]]==#[[i]], {i,strictIndices }] & ];
-	];
-	orients
-];
-
-OrientationSinks::usage = "OrientationSinks[edges,n] return list of sinks.";
-OrientationSinks[edges_List, n_: 0] := Module[
-   {verts = Union[Join @@ edges]},
-   (* Sinks are vertices with no outgoing edges. *)
-   Complement[Join[verts, Range[1, n]], First /@ edges]
-];
-
-*)
-
-Options[GraphOrientations] = {StrictEdges -> {}, WeakEdges -> {}};
-GraphOrientations[edges_List, opts:OptionsPattern[]] := Module[
-	{nEdges = Length@edges, orients, strict, weak, strictIndicator, weakIndicator},
-
-	strict = OptionValue[StrictEdges];
-	weak = OptionValue[WeakEdges];
-	strictIndicator = Table[Boole@MemberQ[strict, e], {e, edges}];
-	weakIndicator = Table[Boole@MemberQ[weak, e], {e, edges}];
-
-	orients = Tuples[{0, 1}, nEdges];
-	If[Length@strict > 0,
-		orients = Select[orients, (# . strictIndicator) == Tr[strictIndicator] &]
-	];
-	If[Length@weak > 0,
-		orients = Select[orients, ((1 - #) . weakIndicator) == Tr[weakIndicator] &]
-	];
-
-	Table[
-		Table[If[or[[i]] == 1, edges[[i]], Reverse@edges[[i]]], {i, nEdges}],
-		{or, orients}
-	]
-];
-
-Options[GraphAcyclicOrientations] = {StrictEdges -> {}};
-GraphAcyclicOrientations[edges_List, opts:OptionsPattern[]] :=
-	GraphAcyclicOrientations[edges, opts] = Module[
-		{n = Max[edges, 0], orients, strict, strictIndices},
-
-		orients = Union@Table[
-			(If[Less @@ col[[#]], #, Reverse@#] &) /@ edges,
-			{col, Permutations@Range@n}
-		];
-		strict = OptionValue[StrictEdges];
-		strictIndices = Select[Range[Length@edges], MemberQ[strict, edges[[#]]] &];
-		If[Length@strict > 0,
-			orients = Select[orients,
-				And @@ Table[edges[[i]] == #[[i]], {i, strictIndices}] &]
-		];
-		orients
-	];
 
 (***************************************************)
 
@@ -757,6 +678,66 @@ UnitIntervalData[area_List, col_List] := Module[{lam = Reverse@area, ap, bl, n =
 	{#1, col[[#2]]} & @@@ pairs
 ];
 
+PArrayPlot::usage = "PArrayPlot[lambda, coloring] returns a Graphics of a coloring as a P-array.";
+PArrayPlot[lam_List, col_List, test_ : (False &)] :=
+	Module[{arr, shape, color, poset, arrows, levelEdges, baseGraphics},
+		poset = AttackingPoset[lam];
+		arr = Select[PArray[col], Tr[#] > 0 &];
+		shape = Length /@ arr;
+		color = If[test[lam, col], LightBlue, LightGray];
+		baseGraphics = Table[
+			{{color, EdgeForm[Black],
+				Rectangle[{c, -r}, {c + 1, -(r + 1)}]},
+				Inset[arr[[r, c]], {c + 1/2, -(r + 1/2)}]},
+			{r, Length@shape}, {c, shape[[r]]}];
+		levelEdges[r_] := Join @@ Table[
+			Which[
+				MemberQ[poset, {arr[[r, c1]], arr[[r + 1, c2]]}],
+				{Blue, Arrow[{{c1 + 1/2, -(r + 1/2)},
+					{c2 + 1/2, -(r + 3/2)}}]},
+				MemberQ[poset, {arr[[r + 1, c2]], arr[[r, c1]]}],
+				{Red, Arrow[{{c2 + 1/2, -(r + 3/2)},
+					{c1 + 1/2, -(r + 1/2)}}]},
+				True, Sequence @@ {}
+			],
+			{c1, shape[[r]]}, {c2, shape[[r + 1]]}];
+		arrows = If[Length[shape] < 2, {},
+			Join @@ Table[levelEdges[r], {r, Length[shape] - 1}]];
+		Graphics[{baseGraphics, arrows},
+			ImageSize -> 40 {Max[1, Max[shape, 0]], Max[1, Length@shape]}]
+	];
+
+OrientationPlot::usage = "OrientationPlot[area, orientation] returns a Graphics of an oriented unit interval graph.";
+OrientationPlot[area_List, ao_List] :=
+	Module[{n = Length@area, edges, ascEdges, points, edgeGraphics, vertexGraphics},
+		edges = UnitIntervalEdges[area];
+		ascEdges = GraphOrientationIntersection[edges, ao];
+		points = Table[{Cos[2 Pi (i - 1)/Max[1, n]],
+			Sin[2 Pi (i - 1)/Max[1, n]]}, {i, n}];
+		edgeGraphics = Map[
+		Function[e,
+			{If[MemberQ[ascEdges, e], Blue, Red],
+				Arrow[{points[[e[[1]]]], points[[e[[2]]]]}]}], edges];
+		vertexGraphics = Table[
+			{White, EdgeForm[Black], Disk[points[[i]], .08],
+				Black, Text[i, points[[i]]]}, {i, n}];
+		Graphics[{edgeGraphics, vertexGraphics}, PlotRange -> 1.2]
+	];
+
+UnitIntervalPlot::usage = "UnitIntervalPlot[area, coloring] returns a Graphics of a coloring in unit interval order.";
+UnitIntervalPlot[area_List, col_List] :=
+	Module[{pairs, bplen, array, r, c, i},
+		pairs = UnitIntervalData[area, col];
+		bplen = If[pairs === {}, 0, Max[First /@ pairs]];
+		array = Table[
+			{r, c} = {-i, -pairs[[i, 1]]};
+			{{LightBlue, EdgeForm[Black],
+				Rectangle[{c, -r}, {c + 1, -(r + 1)}]},
+				Inset[pairs[[i, 2]], {c + 1/2, -(r + 1/2)}]},
+			{i, Length@pairs}];
+		Graphics[array, ImageSize -> 20 {Max[1, bplen], Max[1, Length@area]}]
+	];
+
 GraphAttackingEdges::usage = "GraphAttackingEdges[edges, coloring] returns monochromatic edges.";
 GraphAttackingEdges[edges_List, col_List] := GraphAttackingEdges[edges, col] =
 	Select[edges, col[[#[[1]]]] == col[[#[[2]]]] &];
@@ -878,6 +859,12 @@ InnerCorners[area_List] := Module[{n = Length@area, edgeList = UnitIntervalEdges
 		! MemberQ[edgeList, {#[[1]], Mod[#[[2]], n] + 1}] &&
 			! MemberQ[edgeList, {Mod[#[[1]] - 2, n] + 1, #[[2]]}] &]
 ];
+ValleyEdges::usage = "ValleyEdges[edges, n] returns the edges that are valleys in the diagram.";
+ValleyEdges[edgeList_List, n_Integer] := Select[
+	edgeList,
+		! MemberQ[edgeList, {#[[1]], Mod[#[[2]], n] + 1}] &&
+			! MemberQ[edgeList, {Mod[#[[1]] - 2, n] + 1, #[[2]]}] &
+];
 OuterCorners::usage = "OuterCorners[area] returns the outer corners of a 0-first area list.";
 OuterCorners[area_List] := Module[{n = Length@area, edgeList, nonEdges},
 	edgeList = Join[UnitIntervalEdges@area, Table[{k, k}, {k, n}]];
@@ -893,6 +880,13 @@ areaToTopBounceShapeLegacy[area_List] := Module[{k = area[[1]]},
 	Join[Range[k, 0, -1], areaToTopBounceShapeLegacy[area[[k + 2 ;;]]]]
 ];
 AreaToTopBounceShape[area_List] := areaToTopBounceShapeLegacy[Reverse@area];
+
+AreaConjugate::usage = "AreaConjugate[area] returns the conjugate of a non-circular 0-first area list.";
+areaConjugateLegacy[area_List] := Module[{n = Length@area, cg},
+	cg = Reverse[Range[n] - 1];
+	cg - Table[Count[cg - area, i_ /; i >= k], {k, n}]
+];
+AreaConjugate[area_List] := Reverse@areaConjugateLegacy[Reverse@area];
 
 AreaToDyckWord::usage = "AreaToDyckWord[area, corners] converts a 0-first area list to its Dyck word.";
 areaToDyckWordLegacy[area_List, innerCorners_List : {}] := Module[{cr = First /@ innerCorners,
@@ -1016,6 +1010,30 @@ PartitionRookPlacements::usage = "PartitionRookPlacements[lambda] returns permut
 PartitionRookPlacements[lam_List] := With[{n = Length@lam},
 	Select[Permutations[Range[n]], And @@ Table[lam[[i]] >= #[[i]], {i, n}] &]
 ];
+
+DiagramRookPlacements::usage = "DiagramRookPlacements[diagram, n] returns all non-attacking placements of n rooks in a diagram.";
+DiagramRookPlacements[diagram_List, 0] := {{}};
+DiagramRookPlacements[{}, n_Integer] := If[n == 0, {{}}, {}];
+DiagramRookPlacements[diagram_List, n_Integer] :=
+	Module[{minR, maxR, rookPlaceComplement},
+		minR = Min[First /@ diagram];
+		maxR = Max[First /@ diagram];
+		rookPlaceComplement[diag_, {r_, c_}] :=
+			Select[diag, #[[1]] != r && #[[2]] != c &];
+		Which[
+			minR == maxR && n > 1, {},
+			minR == maxR && n == 1, List /@ diagram,
+			True,
+			Join[
+				Join @@ Table[
+					Append[#, sq] & /@
+						DiagramRookPlacements[rookPlaceComplement[diagram, sq], n - 1],
+					{sq, Select[diagram, #[[1]] == minR &]}],
+				DiagramRookPlacements[
+					rookPlaceComplement[diagram, {minR, Infinity}], n]
+			]
+		]
+	];
 
 SouthWestDiagram::usage = "SouthWestDiagram[permutation] returns the south-west diagram.";
 SouthWestDiagram[perm_List] := With[{n = Length@perm},

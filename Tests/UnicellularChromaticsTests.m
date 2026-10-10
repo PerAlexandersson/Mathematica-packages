@@ -286,3 +286,133 @@ VerificationTest[
   {{}, False},
   TestID -> "UnicellularChromatics-Weights-is-System-symbol"
 ]
+
+(* GitHub issue #51: GraphAreaLists returns 0-first area lists; the legacy version
+   returns the same lists ending with 0. *)
+VerificationTest[
+  Module[{new, old},
+    And @@ Flatten@Table[
+      new = UnicellularChromatics`GraphAreaLists[n, All -> all,
+        Circular -> circ];
+      old = ChromaticFunctions`GraphAreaLists[n, All -> all,
+        Circular -> circ];
+      new === Reverse /@ old,
+      {n, 1, 5}, {all, {True, False}}, {circ, {True, False}}]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-GraphAreaLists-legacy-equivalence"
+]
+
+(* GitHub issue #51: non-circular GraphAreaLists agree with CatalanObjects area lists
+   (0-first, a[i+1] <= a[i] + 1). *)
+VerificationTest[
+  And @@ Table[
+    With[{areas = UnicellularChromatics`GraphAreaLists[n, All -> True,
+        Circular -> False]},
+      areas[[All, 1]] === ConstantArray[0, Length[areas]] &&
+      And @@ (And @@ Thread[Differences[#] <= 1] & /@ areas) &&
+      Length[areas] == CatalanNumber[n]],
+    {n, 1, 6}],
+  True,
+  TestID -> "UnicellularChromatics-GraphAreaLists-zero-first"
+]
+
+(* GitHub issue #51: orientation results are unchanged on every small area list. *)
+VerificationTest[
+  Module[{areas, old, new, n, edgeMap, oldEdges, newEdges},
+    areas = Flatten[Table[
+        ChromaticFunctions`GraphAreaLists[n, All -> True, Circular -> False],
+        {n, 1, 4}], 1];
+    And @@ Table[
+      n = Length[old];
+      edgeMap[e_] := n + 1 - Reverse[e];
+      oldEdges = ChromaticFunctions`AreaToEdges[old];
+      newEdges = edgeMap /@ oldEdges;
+      new = Reverse[old];
+      And[
+        Sort[GraphTools`GraphOrientations[newEdges]] ===
+          Sort[edgeMap /@ # & /@ ChromaticFunctions`GraphOrientations[oldEdges]],
+        Sort[GraphTools`GraphAcyclicOrientations[newEdges]] ===
+          Sort[edgeMap /@ # & /@ ChromaticFunctions`GraphAcyclicOrientations[oldEdges]]
+      ],
+      {old, areas}]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-orientation-legacy-equivalence-small-areas"
+]
+
+(* GitHub issue #51: circular area lists convert to the 0-first edge convention. *)
+VerificationTest[
+  Module[{areas, edgeMap, old, new, n},
+    areas = Flatten[Table[
+        ChromaticFunctions`GraphAreaLists[n, All -> True, Circular -> True],
+        {n, 1, 4}], 1];
+    And @@ Table[
+      n = Length[old];
+      edgeMap[e_] := n + 1 - Reverse[e];
+      new = Reverse[old];
+      Sort[UnicellularChromatics`UnitIntervalEdges[new]] ===
+        Sort[edgeMap /@ ChromaticFunctions`AreaToEdges[old]],
+      {old, areas}]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-UnitIntervalEdges-circular-legacy-equivalence"
+]
+
+(* GitHub issue #51: area conjugation follows the 0-first convention. *)
+VerificationTest[
+  Module[{areas, old, new},
+    areas = Flatten[Table[
+        ChromaticFunctions`GraphAreaLists[n, All -> True, Circular -> False],
+        {n, 1, 4}], 1];
+    And @@ Table[
+      new = Reverse[old];
+      UnicellularChromatics`AreaConjugate[new] ===
+        Reverse[ChromaticFunctions`AreaConjugate[old]],
+      {old, areas}]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-AreaConjugate-legacy-equivalence"
+]
+
+(* GitHub issue #51: ValleyEdges is the edge-list form of inner corners. *)
+VerificationTest[
+  Module[{old = {0, 1, 1}, n = 3, edgeMap, oldEdges, newEdges},
+    edgeMap[e_] := n + 1 - Reverse[e];
+    oldEdges = ChromaticFunctions`AreaToEdges[old];
+    newEdges = edgeMap /@ oldEdges;
+    Sort[UnicellularChromatics`ValleyEdges[newEdges, n]] ===
+      Sort[edgeMap /@ ChromaticFunctions`ValleyEdges[oldEdges, n]]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-ValleyEdges-legacy-equivalence"
+]
+
+(* GitHub issue #51: diagram rook placements agree with a direct subset check. *)
+VerificationTest[
+  Module[{diagram = {{1, 1}, {1, 2}, {2, 1}, {2, 2}}, brute},
+    brute = Select[Subsets[diagram, {2}],
+      #[[1, 1]] =!= #[[2, 1]] && #[[1, 2]] =!= #[[2, 2]] &];
+    Sort[Sort /@ UnicellularChromatics`DiagramRookPlacements[diagram, 2]] ===
+      Sort[Sort /@ brute]
+  ],
+  True,
+  TestID -> "UnicellularChromatics-DiagramRookPlacements-brute-force"
+]
+
+(* GitHub issue #51: the migrated plotting functions return Graphics with stable primitives. *)
+VerificationTest[
+  Module[{orientation, pArray, interval},
+    orientation = UnicellularChromatics`OrientationPlot[
+      {0, 1, 1}, {{1, 2}, {2, 3}}];
+    pArray = UnicellularChromatics`PArrayPlot[{1, 0}, {1, 2}];
+    interval = UnicellularChromatics`UnitIntervalPlot[{0, 1, 1}, {1, 2, 3}];
+    {
+      Head[orientation], Length[Cases[orientation, _Arrow, Infinity]],
+      Head[pArray], Length[Cases[pArray, _Rectangle, Infinity]],
+      Head[interval], Length[Cases[interval, _Rectangle, Infinity]]
+    }
+  ],
+  {Graphics, 2, Graphics, 2, Graphics, 3},
+  TestID -> "UnicellularChromatics-migrated-plots-graphics-primitives"
+]

@@ -83,3 +83,49 @@ VerificationTest[
   {{UndirectedEdge[2, 3]}, 2},
   TestID -> "GraphTools-GraphDeleteEdge-multiple-edges"
 ]
+
+(* GitHub issue #51: orientation enumeration is shared by edge lists and Graph objects. *)
+VerificationTest[
+  Module[{edges = {{1, 2}, {2, 3}}, g},
+    g = Graph[Range[3], UndirectedEdge @@@ edges];
+    And[
+      Sort[GraphOrientations[edges]] ===
+        Sort[Sort /@ (List @@@ EdgeList[#] & /@ GraphOrientations[g])],
+      Sort[GraphAcyclicOrientations[edges]] ===
+        Sort[Sort /@ (List @@@ EdgeList[#] & /@ GraphAcyclicOrientations[g])],
+      GraphOrientations[edges, StrictEdges -> {{1, 2}}, WeakEdges -> {{2, 3}}] ===
+        {{{1, 2}, {3, 2}}}
+    ]
+  ],
+  True,
+  TestID -> "GraphTools-orientations-edge-list-and-graph-inputs"
+]
+
+(* GitHub issue #51: acyclic orientation counts agree with the chromatic polynomial. *)
+VerificationTest[
+  Module[{graphs = {
+      Graph[{1, 2, 3}, UndirectedEdge @@@ {{1, 2}, {2, 3}}],
+      Graph[{1, 2, 3}, UndirectedEdge @@@ {{1, 2}, {2, 3}, {1, 3}}]}},
+    And @@ Table[
+      Length[GraphAcyclicOrientations[g]] === Abs[ChromaticPolynomial[g, -1]],
+      {g, graphs}]
+  ],
+  True,
+  TestID -> "GraphTools-acyclic-orientations-chromatic-polynomial-count"
+]
+
+(* GitHub issue #51: Graph inputs retain arbitrary vertex labels. *)
+VerificationTest[
+  Length[GraphAcyclicOrientations[
+    Graph[{2, 5, 7}, {UndirectedEdge[2, 5], UndirectedEdge[5, 7]}]]],
+  4,
+  TestID -> "GraphTools-acyclic-orientations-arbitrary-vertex-labels"
+]
+
+(* GitHub issue #51: sink enumeration also accepts the shared edge-list representation. *)
+VerificationTest[
+  {OrientationSinks[{{1, 2}, {3, 2}}, 3],
+   OrientationSinks[Graph[{1, 2, 3}, {DirectedEdge[1, 2], DirectedEdge[3, 2]}]]},
+  {{2}, {2}},
+  TestID -> "GraphTools-orientation-sinks-edge-list-and-graph-inputs"
+]
