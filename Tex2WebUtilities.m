@@ -239,7 +239,29 @@ TeXToUTF8Rule[] := List[
 "{\\th}" -> "þ",
 "{\\TH}" -> "Þ",
 "\\textasciitilde "->"~",
-"\\&" -> "&"
+"\\&" -> "&",
+"\\\"{o}" -> "ö",
+"\\\"o" -> "ö",
+"{\\\"o}" -> "ö",
+"\\\"{O}" -> "Ö",
+"\\\"O" -> "Ö",
+"{\\\"O}" -> "Ö",
+"{\\H o}" -> "ő",
+"\\H{o}" -> "ő",
+"\\H o" -> "ő",
+"\\v{c}" -> "č",
+"\\v c" -> "č",
+"\\'{e}" -> "é",
+"\\'e" -> "é",
+"\\`{e}" -> "è",
+"\\`e" -> "è",
+"\\~{n}" -> "ñ",
+"\\~n" -> "ñ",
+"\\c{c}" -> "ç",
+"\\c c" -> "ç",
+"{\\={i}}" -> "ī",
+"\\={i}" -> "ī",
+"\\=i" -> "ī"
 ];
 
 UTF8ToTeXRule[] := Reverse /@ TeXToUTF8Rule[];
@@ -267,6 +289,14 @@ StringSplitBraces[str_String] := Module[{pieces},
 
 
 (* For formatting a single entry in an array, ytableau, tabular, or similar. *)
+htmlEscape[str_String] := StringReplace[str, {
+    "&" -> "&amp;",
+    "<" -> "&lt;",
+    ">" -> "&gt;",
+    "\"" -> "&quot;",
+    "'" -> "&#39;"
+    }];
+
 Options[DiagramFormatEntry] = {
 "Delimiter"->"$",
 "Align"->""  (* lcr *)
@@ -275,45 +305,55 @@ DiagramFormatEntry[entIn_String, opts:OptionsPattern[]] := Module[
 	{
 		ent = entIn,
 		delimiter = OptionValue["Delimiter"],
-		align = OptionValue["Align"],
-		color,
-		classes = "",
-		colorStyle = ""
-	},
-	
-	(* Extract color directive *)
-	color = StringCases[ent, Shortest["*(" ~~ col__ ~~ ")"] :> col];
-	color = If[Length@color == 1,First@color, "" ];
-	
-	ent = StringReplace[ent, Shortest["*(" ~~ col__ ~~ ")"] :> ""];
+			align = OptionValue["Align"],
+			color = "",
+			colorDirective = "",
+			colorMatches,
+			classes = "",
+			colorStyle = ""
+		},
+		
+		(* Extract color directive *)
+		colorMatches = StringCases[ent,
+			s : RegularExpression["\\*\\(([A-Za-z][A-Za-z-]*|#[0-9A-Fa-f]{3,8}|rgb\\([0-9]+\\s*,\\s*[0-9]+\\s*,\\s*[0-9]+\\s*\\))\\)"] :>
+				{s, StringTake[s, {3, -2}]}];
+		If[Length[colorMatches] == 1,
+			colorDirective = First[colorMatches][[1]];
+			color = First[colorMatches][[2]];
+			ent = StringReplace[ent, colorDirective -> ""];
+		];
 	
 	
 	If[color != "",
-		colorStyle = StringJoin[" style=\"background-color: ",color,"\" "];
+		colorStyle = StringJoin[" style=\"background-color: ",htmlEscape[color],"\" "];
 	];
 	
 	(* No border class *)
 	If[ !StringFreeQ[ent, "\\none"],
-		ent = StringReplace[ent,"\\none"->""];
+			ent = StringReplace[ent,"\\none"->""];
 		classes = classes <> " none";
 	];
 	
 	(* If there is entry alignment directive. *)
 	If[StringMatchQ[align,"r"|"l"|"c"],
-		classes = classes <> (" entryAlign-"<>align)
-	];
-	
-	(* Empty string is replaced with html. *)
-	If[StringTrim[ent] == "",
-		ent = "&nbsp;";
-		delimiter = "";
-	];
+			classes = classes <> (" entryAlign-"<>align)
+		];
+
+		ent = StringReplace[ent, "\\&" -> "&"];
+		
+		(* Empty string is replaced with html. *)
+		If[StringTrim[ent] == "",
+			ent = "&nbsp;";
+			delimiter = "";
+		,
+			ent = htmlEscape[ent];
+		];
 	
 	If[classes != "",
 		classes = StringJoin[" class=\"",classes,"\" "];
 	];
 	
-	StringJoin["<td",classes, colorStyle ,">",delimiter,ent,delimiter, "</td>"]
+		StringJoin["<td",classes, colorStyle ,">",delimiter,ent,delimiter, "</td>"]
 	
 ];
 
@@ -360,7 +400,7 @@ TabularTableauToHTMLRule[] := Module[
 				
 				True,
 					(
-					lineEntries = StringSplit[line, "&"];
+						lineEntries = StringSplit[line, RegularExpression["(?<!\\\\)&"]];
 					
 					(* Add missing directives. *)
 					specList = PadRight[specList, Length@lineEntries,"d"];
@@ -410,7 +450,7 @@ YoungTableauToHTMLRule[] := Module[{ytableaushortToHTML, youngtabToHTML},
 			lines = Most[lines]
 		];
 	
-		entries = StringSplit[#, "&"] & /@ lines;
+			entries = StringSplit[#, RegularExpression["(?<!\\\\)&"]] & /@ lines;
 		
 		(* Pad *)
 		maxWidth = Max[Length/@entries];
@@ -451,7 +491,7 @@ YoungTableauToHTMLRule[] := Module[{ytableaushortToHTML, youngtabToHTML},
 	];
 	
 	(* Several rules. *)
-	Sequence@@List[
+		List[
 		Shortest["\\" ~~ ("ytableaushort" | "young") ~~ "{" ~~ table:BalancedBracketPattern[] ~~ "}"] :> ytableaushortToHTML[table]
 		,
 		Shortest["\\" ~~ ("textytableaushort") ~~ "{" ~~ table:BalancedBracketPattern[] ~~ "}"] :> ytableaushortToHTML[table,""]
@@ -576,7 +616,7 @@ BibliographyHTMLRulesDEPRECATED[textBlob_String] := Module[
         If[link == "", title,
         "<a class=\"citeLinkTitle\" href=\"" <> link <> "\">" <> 
           title <> "</a>"
-        ]
+		]
         , "</span> ",
         StringJoin @@ rest
         , "</li>"];
@@ -601,6 +641,8 @@ BibliographyHTMLRulesDEPRECATED[textBlob_String] := Module[
   Message[BibliographyHTMLRules::info, Length@citations];
   out
 ];
+
+BibliographyHTMLRules[textBlob_String] := BibliographyHTMLRulesDEPRECATED[textBlob];
 
 
 
@@ -629,7 +671,8 @@ ParseAuthor[str_String] := Module[{authList, fnameLnameList},
       ,
       {StringJoin @@ (Riffle[StringTrim /@ (Most@#), " "]), Last@#} &@
        StringSplit[auth, " "]
-      ]
+]
+
      , {auth, authList}];
    
    Map[StringReplace[#, "+" :> " "] &, fnameLnameList, {2}]
@@ -660,64 +703,72 @@ AuthorBibKey[authors_List, year_: ""] := Module[{lastNamesFirstLetters, authKey}
 
 FixLaTeXCapitalization[Missing] := "";
 FixLaTeXCapitalization[""] := "";
-FixLaTeXCapitalization[title_String] := Module[{str},
-   str = StringReplace[
-     ToLowerCase[title]
-     , Shortest["{" ~~ w : LetterCharacter .. ~~ "}"] :> ToUpperCase[w]
-     ];
-   
-   (* Replace first letter with original first letter *)
-   
-   If[StringMatchQ[StringTake[title, 1], LetterCharacter],
-    StringReplacePart[str, StringTake[title, {1, 1}], {1, 1}]
-    ,
-    str
-    ]
-   ];
+FixLaTeXCapitalization[title_String] := Module[
+	{protected = {}, marker = FromCharacterCode[0], protect, str},
+
+	protect[value_String] := Module[{token},
+		AppendTo[protected, value];
+		token = marker <> ToString[Length[protected]] <> marker;
+		token
+		];
+
+	str = StringReplace[title, {
+		math : Shortest["$" ~~ ___ ~~ "$"] :> protect[math],
+		braced : Shortest["{" ~~ (LetterCharacter ..) ~~ "}"] :>
+			protect[StringTake[braced, {2, -2}]]
+		}];
+	str = ToLowerCase[str];
+	str = StringReplace[str,
+		marker ~~ i : DigitCharacter .. ~~ marker :> protected[[ToExpression[i]]]];
+
+	(* Replace first letter with original first letter *)
+	If[StringMatchQ[StringTake[title, 1], LetterCharacter],
+		StringReplacePart[str, StringTake[title, {1, 1}], {1, 1}],
+		str]
+	];
 
 RawBibTexEntries[bibData_String] := 
-  Module[{fixValue, entries, splitEntry},
-   
-   entries = StringCases[
-     StringReplace[bibData, Join[TeXToUTF8Rule[], {"--"->"–"}]]
-     ,
-     data : 
-       Shortest[
-        "@" ~~ type : LetterCharacter .. ~~ "{" ~~ 
-         key : WordCharacter .. ~~ "," ~~ 
-         body : BalancedBracketPattern[] ~~ "}"] :> {type, key, body}
-     ];
-   
-   fixValue[str_String] := StringTrim@StringReplace[str, WhitespaceCharacter .. :> " "];
-   
-   splitEntry[more_String] := StringCases[more, {
-      Shortest[
-        StringExpression[
-         key : (WordCharacter | "-" | "_") ..,
-         WhitespaceCharacter ...,
-         "=" ~~ WhitespaceCharacter ...,
-         "{",
-         value : BalancedBracketPattern[]
-         , "}"
-         ]
-        ] :> (ToLowerCase[key] -> fixValue@value)
-      ,
-      "month" ~~ WhitespaceCharacter ... ~~ "=" ~~ 
-        WhitespaceCharacter ... ~~
-        value : WordCharacter .. :> ("month" -> value)
-      }
-     , IgnoreCase -> True
-     ];
-   
-   (* TODO: Save raw bibtex entry as well, for debugging purposes? *)
-   Association[
-      Join[
-        {"id" -> #2,
-        "type" -> ToLowerCase@#1,
-        "author" -> Missing,
-        "year" -> ""},
-       splitEntry[#3]]] & @@@ entries
-   ];
+	Module[{fixValue, entries, splitEntry},
+
+		entries = StringCases[bibData,
+			data : Shortest[
+				"@" ~~ type : LetterCharacter .. ~~ "{" ~~
+				key : (WordCharacter | ":" | "-" | "_" | ".") .. ~~ "," ~~
+				body : BalancedBracketPattern[] ~~ "}"] :> {type, key, body}];
+
+		fixValue[str_String, key_String] := StringTrim@StringReplace[
+			StringReplace[str, TeXToUTF8Rule[]],
+			If[ToLowerCase[key] === "url", {}, {"--" -> "–"}]];
+
+		splitEntry[more_String] := StringCases[more, {
+			Shortest[StringExpression[
+				key : (WordCharacter | ":" | "-" | "_" | ".") ..,
+				WhitespaceCharacter ...,
+				"=" ~~ WhitespaceCharacter ...,
+				"{", value : BalancedBracketPattern[], "}"]] :>
+				(ToLowerCase[key] -> fixValue[value, key]),
+			Shortest[StringExpression[
+				key : (WordCharacter | ":" | "-" | "_" | ".") ..,
+				WhitespaceCharacter ...,
+				"=" ~~ WhitespaceCharacter ...,
+				"\"", value : Shortest[___], "\""]] :>
+				(ToLowerCase[key] -> fixValue[value, key]),
+			StringExpression[
+				key : (WordCharacter | ":" | "-" | "_" | ".") ..,
+				WhitespaceCharacter ...,
+				"=" ~~ WhitespaceCharacter ...,
+				value : (WordCharacter | "-" | ".") ..] :>
+				(ToLowerCase[key] -> fixValue[value, key])
+			}, IgnoreCase -> True];
+
+		(* TODO: Save raw bibtex entry as well, for debugging purposes? *)
+		Association[Join[
+			{"id" -> #2,
+			 "type" -> ToLowerCase@#1,
+			 "author" -> Missing,
+			 "year" -> ""},
+			splitEntry[#3]]] & @@@ entries
+	];
 
 (* Perhaps add url from doi and arxiv-id as well here *)
 
@@ -725,10 +776,12 @@ FixKeysAndAuthors[rawBibtexEntries_List] :=
   Module[{updatedEntries, dupEntries, authorsList, dupKeyEntries, 
     title, key, year, m},
    
-   updatedEntries = Table[
-     authorsList = ParseAuthor[dd[["author"]]];
-     year = dd[["year"]];
-     key = AuthorBibKey[Last /@ authorsList, year];
+	updatedEntries = Table[
+	     authorsList = If[StringQ[Lookup[dd, "author", Missing]],
+	      ParseAuthor[Lookup[dd, "author"]], {}];
+	     year = Lookup[dd, "year", ""];
+	     key = If[authorsList === {}, dd[["id"]],
+	      AuthorBibKey[Last /@ authorsList, year]];
      Join[
       dd,
       Association[
@@ -742,7 +795,10 @@ FixKeysAndAuthors[rawBibtexEntries_List] :=
    (* Now we have alphabetical ordering. *)
    
    updatedEntries = 
-    SortBy[updatedEntries, {Last /@ #[["author"]] &, #[["year"]] &, #[["title"]] &}];
+	    SortBy[updatedEntries, {
+	      Last /@ Lookup[#, "author", {}] &,
+	      Lookup[#, "year", ""] &,
+	      Lookup[#, "title", ""] &}];
    
    (* Return all entries with key k. *)
    
@@ -767,16 +823,19 @@ FixKeysAndAuthors[rawBibtexEntries_List] :=
 
 (* Given entry, determines an url. *)
 
-BibTeXURL[entry_Association] := Module[{eprint, doi, url, theURL},
+safeURLQ[url_String] := StringMatchQ[StringTrim[url],
+	RegularExpression["(?i)https?://[^\\s<>]*"]];
+
+BibTeXURL[entry_Association] := Module[{eprint, doi, url},
    eprint = Lookup[entry, "eprint", Missing];
    doi = Lookup[entry, "doi", Missing];
    url = Lookup[entry, "url", Missing];
    
    (* Priority for url rule. *)
    Which[
-    doi=!=Missing, "http://dx.doi.org/" <> doi,
-    eprint=!=Missing, "https://arxiv.org/abs/" <> eprint,
-    url=!=Missing, url,
+	    StringQ[doi], "http://dx.doi.org/" <> doi,
+	    StringQ[eprint], "https://arxiv.org/abs/" <> eprint,
+	    StringQ[url] && safeURLQ[url], StringTrim[url],
     True, Missing
     ]
 ];
@@ -784,14 +843,17 @@ BibTeXURL[entry_Association] := Module[{eprint, doi, url, theURL},
 AuthorsToString[authListIn_List] := Module[{authList},
    authList = (StringJoin @@ Riffle[#, " "]) & /@ authListIn;
    
-   If[Length@authList == 1,
-    authList[[1]]
+	If[authList === {},
+		"",
+	If[Length@authList == 1,
+		authList[[1]]
     ,
     StringJoin[
      (StringJoin @@ Riffle[Most[authList], ", "])
      , " and ", Last@authList]
-    ]
-   ];
+		]
+		]
+	];
 
 ToFullMonth[str_String] := Lookup[
    Association[
@@ -826,40 +888,40 @@ BibTeXEntryToHTML[entry_Association] := Module[{MakeSpanEntry,
    MakeSpanEntry[w_String, Missing] := "";
    MakeSpanEntry[field_String, value_String] :=
     StringJoin["<span class=\"cite", Capitalize[field], "\">", 
-        StringReplace[value, Shortest["{" ~~ w : LetterCharacter .. ~~ "}"] :> w], (* Remove braces *)
+	        htmlEscape[StringReplace[value, Shortest["{" ~~ w : LetterCharacter .. ~~ "}"] :> w]], (* Remove braces *)
      "</span>"];
    
     MakeSpanEntry["author", value_List] :=
-    StringJoin["<span class=\"citeAuthor\">", AuthorsToString[value], 
+	    StringJoin["<span class=\"citeAuthor\">", htmlEscape[AuthorsToString[value]], 
      "</span>"];
 
 	 (* TODO - Parse better -- *)
 	MakeSpanEntry["edition", value_String] :=
-    StringJoin["<span class=\"citeEdition\">", value, " edition,</span>"];
+	    StringJoin["<span class=\"citeEdition\">", htmlEscape[value], " edition,</span>"];
 	 
    MakeSpanEntry["number", value_String] :=
-    StringJoin["<span class=\"citeNumber\">(", value, ")</span>"];
+	    StringJoin["<span class=\"citeNumber\">(", htmlEscape[value], ")</span>"];
    
    MakeSpanEntry["pages", value_String] :=
-    StringJoin["<span class=\"citePages\">:", value, "</span>"];
+	    StringJoin["<span class=\"citePages\">:", htmlEscape[value], "</span>"];
    
    MakeSpanEntry["key", value_String] :=
-    StringJoin["<span class=\"citeKey\">[", value, "]</span>"];
+	    StringJoin["<span class=\"citeKey\">[", htmlEscape[value], "]</span>"];
     
     MakeSpanEntry["series", value_String] :=
-    StringJoin["<span class=\"citeSeries\">", value, ", </span>"];
+	    StringJoin["<span class=\"citeSeries\">", htmlEscape[value], ", </span>"];
     
     MakeSpanEntry["year", value_String] :=
-    StringJoin["<span class=\"citeYear\">",value , ". </span>"];
+	    StringJoin["<span class=\"citeYear\">",htmlEscape[value] , ". </span>"];
    
 	 
-	MakeSpanEntry["note", value_String] :=StringJoin["<span class=\"citeNote\">", value, "</span>"];
+	MakeSpanEntry["note", value_String] :=StringJoin["<span class=\"citeNote\">", htmlEscape[value], "</span>"];
    
    MakeSpanEntry["title", value_String] := With[{url = BibTeXURL[entry],capTitle = FixLaTeXCapitalization@value},
      If[url=!=Missing,
-      StringJoin["<a class=\"citeLinkTitle\" href=\"", url, "\">",capTitle, "</a>"]
+      StringJoin["<a class=\"citeLinkTitle\" href=\"", htmlEscape[url], "\">",htmlEscape[capTitle], "</a>"]
       ,
-      StringJoin["<span class=\"citeTitle\">",capTitle, "</span>"]
+      StringJoin["<span class=\"citeTitle\">",htmlEscape[capTitle], "</span>"]
       ]
      ];
    
@@ -921,7 +983,7 @@ BibTeXEntryToHTML[entry_Association] := Module[{MakeSpanEntry,
      mainData = StringReplace[mainData,{ ", ,"->", ", ". ,"->". " }];
    
    StringJoin[
-    "<li class=\"citeLI\" id=\"",citeId,"\">",   citeKey, " ", mainData,
+	    "<li class=\"citeLI\" id=\"",htmlEscape[citeId],"\">",   citeKey, " ", mainData,
     "</li>\n"]
    
    ];
@@ -939,8 +1001,8 @@ CreateBibliography[str_String] := Module[{citations},
 	"CiteToLinkRule" -> Rule[
 		StringJoin["\\cite{", #[["id"]], "}"]
 		,
-		StringJoin["<a class=\"cite\" href=\"#", #[["id"]], 
-		"\">", #[["key"]], "</a>"]
+		StringJoin["<a class=\"cite\" href=\"#", htmlEscape[#[["id"]]], 
+			"\">", htmlEscape[#[["key"]]], "</a>"]
 		]
 	]] & /@ citations
 ];
@@ -981,7 +1043,8 @@ are used on the same file name. This is to make memoization work correctly.
 *)
 
 MemoizedImport[file_String, type_, funcName_: None, 
-   "MEMOIZED"] := {None, None};
+	   "MEMOIZED"] := {None, None};
+MemoizedImport[file_String, type_, funcName_: None, "MEMOIZED", func_: (# &) ] := {None, None};
 
 Options[MemoizedImport] = {
 	"Type" -> "Text", 
@@ -997,7 +1060,7 @@ MemoizedImport[file_String, OptionsPattern[]] := Module[{fileDate,
    
    fileDate = FileDate[file];
    
-   {date, contents} = MemoizedImport[file, type, fName, "MEMOIZED"];
+	   {date, contents} = MemoizedImport[file, type, fName, "MEMOIZED", func];
    If[date === None || fileDate =!= date || forced,
     
     If[contents =!= None,
@@ -1005,11 +1068,11 @@ MemoizedImport[file_String, OptionsPattern[]] := Module[{fileDate,
      ];
     
     contents = func@Import[file, type];
-    MemoizedImport[file, type, fName, "MEMOIZED"] = {fileDate, 
+	    MemoizedImport[file, type, fName, "MEMOIZED", func] = {fileDate, 
       contents};
     
     ];
-   MemoizedImport[file, type, fName, "MEMOIZED"][[2]]
+	   MemoizedImport[file, type, fName, "MEMOIZED", func][[2]]
 ];
 
 
