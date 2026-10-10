@@ -374,53 +374,36 @@ macdonaldEGeneric[alpha_List] := macdonaldE[alpha, qq, tt];
 macdonaldNumericParametersQ[q_, t_] :=
 	ExactNumberQ[q] && ExactNumberQ[t] && q != 0 && t != 0;
 
-(* Permuted basements. With p and p' the rows of the basement entries i and i + 1,
-   E^(s_i sigma)_alpha = T_i E^sigma_alpha if p < p' and alpha_p >= alpha_p', and
-   E^(s_i sigma)_alpha = T_i^(-1) E^sigma_alpha if p > p' and alpha_p <= alpha_p', where s_i sigma
-   swaps the values i and i + 1 in sigma, T_i = TDemazureOperator[., x, t, i] and
-   T_i^(-1) = (T_i + t - 1)/t. Basements reachable from the identity by these moves are
-   computed by operators; the others by the non-attacking filling formula. *)
-macdonaldBasementMoves[alpha_List, sigma_List] := Module[{p, pp},
-	Join @@ Table[
-		p = First@FirstPosition[sigma, i]; pp = First@FirstPosition[sigma, i + 1];
-		Which[
-			p < pp && alpha[[p]] >= alpha[[pp]], {{sigma /. {i -> i + 1, i + 1 -> i}, i, 1}},
-			p > pp && alpha[[p]] <= alpha[[pp]], {{sigma /. {i -> i + 1, i + 1 -> i}, i, -1}},
-			True, {}],
-		{i, Length[sigma] - 1}]];
+(* Permuted basements (Alexandersson, "Non-symmetric Macdonald polynomials and
+   Demazure-Lusztig operators", Sem. Lothar. Combin. 76 (2019), Corollary 16): with a reduced
+   word sigma = s_w1 ... s_wl (positions) and pi~_i = TDemazureOperator[., x, t, i],
+     pi~_w1 ... pi~_wl E^id_alpha = t^k E^sigma_alpha,
+   k = #{i < j : alpha_i < alpha_j, sigma_i > sigma_j} in the basement order used here
+   (the paper's twinv_pi reads the basement in the opposite order). *)
+basementReducedWord[sigma_List] := Module[{p = sigma, w = {}},
+	While[p =!= Sort[p],
+		Do[If[p[[k]] > p[[k + 1]], p[[{k, k + 1}]] = p[[{k + 1, k}]]; AppendTo[w, k]; Break[]],
+			{k, Length[p] - 1}]];
+	Reverse[w]];
 
-(* Breadth-first search from the identity; returns the list of moves {i, +1 or -1} or $Failed. *)
-macdonaldBasementPath[alpha_List, sigma_List] := cached[{"macdonaldBasementPath", alpha, sigma},
-	Module[{start = Range[Length[sigma]], parent = <||>, queue, cur, path = {}, node},
-		parent[start] = None; queue = {start};
-		While[queue =!= {} && !KeyExistsQ[parent, sigma],
-			cur = First[queue]; queue = Rest[queue];
-			Do[If[!KeyExistsQ[parent, m[[1]]],
-					parent[m[[1]]] = {cur, m[[2]], m[[3]]}; AppendTo[queue, m[[1]]]],
-				{m, macdonaldBasementMoves[alpha, cur]}]];
-		If[!KeyExistsQ[parent, sigma], Return[$Failed, Module]];
-		node = sigma;
-		While[parent[node] =!= None,
-			PrependTo[path, parent[node][[2 ;; 3]]]; node = parent[node][[1]]];
-		path]];
+basementTwinv[alpha_List, sigma_List] := Count[Subsets[Range[Length[alpha]], {2}],
+	{i_, j_} /; alpha[[i]] < alpha[[j]] && sigma[[i]] > sigma[[j]]];
 
-macdonaldEBasementGeneric[alpha_List, sigma_List] := cached[{"macdonaldEBasement", alpha, sigma},
-	Module[{path = macdonaldBasementPath[alpha, sigma]},
-		If[path === $Failed,
-			macdonaldFillingPolynomial[alpha, sigma, xx, qq, tt],
-			Fold[Function[{f, step}, With[{g = TDemazureOperator[f, xx, tt, step[[1]]]},
-					Together[If[step[[2]] == 1, g, (g + (tt - 1) f)/tt]]]],
-				macdonaldEGeneric[alpha], path]]]];
+macdonaldEBasement[alpha_List, sigma_List, q_, t_] := cached[{"macdonaldEBasement", alpha, sigma, q, t},
+	Together[t^(-basementTwinv[alpha, sigma]) *
+		TDemazureOperator[macdonaldE[alpha, q, t], xx, t, basementReducedWord[sigma]]]];
 
-MacdonaldEPolynomial::usage = "MacdonaldEPolynomial[alpha, x, q, t] returns the nonsymmetric Macdonald polynomial E_alpha in Length[alpha] variables, with leading monomial x^alpha and identity basement. MacdonaldEPolynomial[alpha, sigma, x, q, t] uses the permutation basement sigma. It is generated from 1 by the Knop-Sahi affine shift and intertwiners (Demazure-Lusztig operators) and agrees with the Haglund-Haiman-Loehr non-attacking filling formula; q = 0 gives TAtomPolynomial[alpha, x, t].";
+MacdonaldEPolynomial::usage = "MacdonaldEPolynomial[alpha, x, q, t] returns the nonsymmetric Macdonald polynomial E_alpha in Length[alpha] variables, with leading monomial x^alpha and identity basement. MacdonaldEPolynomial[alpha, sigma, x, q, t] uses the permutation basement sigma, obtained from the identity basement by t-Demazure operators (Alexandersson 2019, Corollary 16). It is generated from 1 by the Knop-Sahi affine shift and intertwiners (Demazure-Lusztig operators) and agrees with the Haglund-Haiman-Loehr non-attacking filling formula; q = 0 gives TAtomPolynomial[alpha, x, t].";
 MacdonaldEPolynomial[alpha_?weakCompositionQ, x_, q_, t_] := Together[If[
 	macdonaldNumericParametersQ[q, t],
 	Quiet[Check[macdonaldE[alpha, q, t], macdonaldEGeneric[alpha] /. {qq -> q, tt -> t},
 		{Power::infy, Infinity::indet}], {Power::infy, Infinity::indet}] /. xx -> x,
 	macdonaldEGeneric[alpha] /. {xx -> x, qq -> q, tt -> t}]];
 MacdonaldEPolynomial[alpha_?weakCompositionQ, sigma_?permutationQ, x_, q_, t_] /;
-		Length[sigma] == Length[alpha] :=
-	Together[macdonaldEBasementGeneric[alpha, sigma] /. {xx -> x, qq -> q, tt -> t}];
+		Length[sigma] == Length[alpha] := Together[If[
+	macdonaldNumericParametersQ[q, t],
+	macdonaldEBasement[alpha, sigma, q, t] /. xx -> x,
+	macdonaldEBasement[alpha, sigma, qq, tt] /. {xx -> x, qq -> q, tt -> t}]];
 
 NonsymmetricJackPolynomial::usage = "NonsymmetricJackPolynomial[alpha, x, a] returns the nonsymmetric Jack polynomial obtained as Limit[MacdonaldEPolynomial[alpha, x, t^a, t], t -> 1].";
 NonsymmetricJackPolynomial[alpha_?weakCompositionQ, x_, a_] :=
