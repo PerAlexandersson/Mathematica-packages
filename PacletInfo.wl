@@ -31,7 +31,8 @@ PacletObject[
           "UnicellularChromatics`",
           "RookTools`",
           "PosetData`",
-          "NonsymmetricPolynomials`"
+          "NonsymmetricPolynomials`",
+          "LegacyConversions`"
         }
       },
       (* Legacy packages, kept loadable for existing notebooks (issue #9). *)

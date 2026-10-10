@@ -37,7 +37,7 @@ VerificationTest[
   Module[{supported = {"AlgebraicBases", "CombinatoricTools", "NewTableaux", "SymmetricFunctions", "ShiftedSymmetricFunctions",
       "GTPatterns", "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions",
       "GraphTools", "MatroidTools", "CatalanObjects", "UnicellularChromatics",
-      "RookTools", "PosetData", "NonsymmetricPolynomials"}, short},
+      "RookTools", "PosetData", "NonsymmetricPolynomials", "LegacyConversions"}, short},
     Scan[Needs[# <> "`"] &, supported];
     short = Flatten[(Last@StringSplit[#, "`"] & /@ Names[# <> "`*"]) & /@ supported];
     Select[Tally[short], Last[#] > 1 &]],
@@ -49,4 +49,12 @@ VerificationTest[
   {Context[StrictEdges], Context[WeakEdges], Head[CatalanObjects`RookPlacementGrid[{{1, 1}}, {{1, 1}}]]},
   {"CombinatoricTools`", "CombinatoricTools`", Grid},
   TestID -> "LoadOrder-shared-edge-options-and-rook-grid"
+]
+
+(* GitHub issue #51: LegacyConversions must be usable after a legacy package has
+   already been loaded, without defining any duplicate public names. *)
+VerificationTest[
+  Quiet[Needs["LegacyConversions`"], General::shdw],
+  Null,
+  TestID -> "LoadOrder-LegacyConversions-after-legacy-loads-cleanly"
 ]
