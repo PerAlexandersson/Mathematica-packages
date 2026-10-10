@@ -5,7 +5,7 @@ PacletDirectoryLoad[testRoot];
    Legacy packages still export duplicated names (issue #9), so only
    General::shdw is tolerated while loading. *)
 
-usagePackages = {"CombinatoricTools", "NewTableaux", "SymmetricFunctions", "GTPatterns",
+usagePackages = {"AlgebraicBases", "CombinatoricTools", "NewTableaux", "SymmetricFunctions", "GTPatterns",
   "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions", "GraphTools",
   "MatroidTools", "CatalanObjects", "UnicellularChromatics", "ChromaticFunctions",
   "RookTools", "PosetData", "TreesData", "OldYoungTableaux", "MacdonaldPolynomials",
