@@ -5,7 +5,7 @@ All notable changes to this repository are documented here. The format follows
 versioning as described in `RELEASING.md`. Issue and pull-request numbers refer to
 <https://github.com/PerAlexandersson/Mathematica-packages>.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-10-10
 
 First release as a paclet (`PerAlexandersson/MathematicaPackages`). The state before
 this refactoring is tagged `pre-refresh-2026-10`.
@@ -190,3 +190,5 @@ Core utilities
 - `SymmetricFunctionsTestSuite.m`; its cases are in `Tests/SymmetricFunctionsTests.m` (#27).
 - `Tex2WebUtilities` (website tooling of an older project, replaced by other tools); it
   remains available in the `pre-refresh-2026-10` tag.
+
+[0.1.0]: https://github.com/PerAlexandersson/Mathematica-packages/releases/tag/v0.1.0
