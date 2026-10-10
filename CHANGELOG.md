@@ -75,6 +75,11 @@ this refactoring is tagged `pre-refresh-2026-10`.
   `ShiftedJackPEvaluate`, `ShiftedJackJEvaluate`, `NormalizedCharacter` and
   `StanleyCharacterPolynomial` (Feray-Sniady formula in multirectangular coordinates;
   legacy `ChNormalizedCharacter` = (-1)^(|mu| - length(mu)) times it) (#51).
+- New package `LegacyConversions` for old notebooks: `FromLegacyGTPattern`/`ToLegacyGTPattern`
+  (row order), `FromLegacyYoungTableau`/`ToLegacyYoungTableau` (skew marker),
+  `FromLegacyAreaList`/`ToLegacyAreaList`, `FromLegacyEdges`/`ToLegacyEdges`,
+  `FromLegacyKeyIndex` and `FromLegacyIndex[family, index]`. It loads no legacy package and
+  puts no other context on `$ContextPath` (#51).
 - `UnicellularChromatics`, ported from legacy `ChromaticFunctions`: `GraphAreaLists`
   (0-first area lists, including circular ones), `AreaConjugate`, `ValleyEdges`,
   `DiagramRookPlacements`, `OrientationPlot`, `PArrayPlot`, `UnitIntervalPlot` (#51).
