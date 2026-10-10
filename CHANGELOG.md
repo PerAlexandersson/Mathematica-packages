@@ -50,6 +50,12 @@ this refactoring is tagged `pre-refresh-2026-10`.
   and `ToQuasiSymmetric` (embedding Sym into QSym) (#51).
 - `QuasiSchurQSymbol` and `QuasiSchurQSymmetric`: quasisymmetric Schur functions, built from
   Demazure atoms (#51).
+- `GTPatterns`, ported from `OldYoungTableaux` (bottom-to-top rows): BZ patterns
+  (`BZPattern`, `BZPatterns`, `BZPlus`), `GTPlus`, `GTMonomial`, `GogPatterns`,
+  `MagogPatterns`, tiles and snakes (`GTTiles`, `GTSnakes`, `TilingMatrix`,
+  `ContainingFaceDimension`), `GTPatternForm` options `GTPartition` (string values) and
+  `EnableSkew`, `GTPatternTikz`, `LatticePathForm`, `LatticePathTikz`,
+  `UpperBoundKostkaDegree` and `GTEhrhartPolynomial` (stretched Kostka counts) (#51).
 - `UnicellularChromatics`, ported from legacy `ChromaticFunctions`: `GraphAreaLists`
   (0-first area lists, including circular ones), `AreaConjugate`, `ValleyEdges`,
   `DiagramRookPlacements`, `OrientationPlot`, `PArrayPlot`, `UnitIntervalPlot` (#51).
