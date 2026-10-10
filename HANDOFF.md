@@ -12,6 +12,9 @@
   `Permutations[n]` convenience (#3); package-status proposal approved (#2);
   keep large tree data (#8); MIT license; plain `.m` files for tests, scripts
   and examples.
+- Next: port the legacy packages into the supported structure with cross-package
+  compatibility; the plan is issue #51 (milestone `Legacy port`), awaiting owner
+  decisions D1--D7. Nothing in it is implemented yet.
 - Open for the owner: whether to rename the remaining legacy names that differ
   in meaning from supported ones (PR #47), and when to release 0.1.0
   (`RELEASING.md`).
