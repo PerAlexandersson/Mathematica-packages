@@ -40,8 +40,7 @@ PacletObject[
           "OldYoungTableaux`",
           "ChromaticFunctions`",
           "TreesData`",
-          "RunSortedWords`",
-          "Tex2WebUtilities`"
+          "RunSortedWords`"
         }
       },
       {"Asset", "Root" -> "Data", "Assets" -> {{"Data", "."}}}

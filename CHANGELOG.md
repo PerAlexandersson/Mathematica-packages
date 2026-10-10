@@ -30,9 +30,7 @@ this refactoring is tagged `pre-refresh-2026-10`.
 - Every package uses its own private context; code that reached package helpers through
   the shared top-level ``Private` `` context must use full names such as
   `NewTableaux`Private`helper` (#3, #32).
-- `Tex2WebUtilities` HTML output escapes text and attributes, so regenerated pages contain
-  entities such as `&amp;` (#19, #30).
-- ChromaticFunctions, OldYoungTableaux, TreesData, RunSortedWords and Tex2WebUtilities
+- ChromaticFunctions, OldYoungTableaux, TreesData and RunSortedWords
   are legacy packages; see `Legacy/README.md` (#9).
 
 ### Added
@@ -96,11 +94,10 @@ Core utilities
 - Legacy packages: `GetTrees`, `FundamentalSlide`, `QuasiSymmetricPowerSum2`, loading
   MacdonaldPolynomials no longer modifies other packages, `OrderPolynomial` for non-natural
   labellings, `StembridgePoset` size, `SchurPolynomial` (#18, #29).
-- Tex2WebUtilities: HTML injection through BibTeX fields and colour directives, BibTeX
-  keys with punctuation and unbraced values, entries without authors, capitalization of
-  math, accent forms (#19, #30).
 - Graph and tree data no longer load from a hard-coded `~/Dropbox` path (#8, #37).
 
 ### Removed
 
 - `SymmetricFunctionsTestSuite.m`; its cases are in `Tests/SymmetricFunctionsTests.m` (#27).
+- `Tex2WebUtilities` (website tooling of an older project, replaced by other tools); it
+  remains available in the `pre-refresh-2026-10` tag.

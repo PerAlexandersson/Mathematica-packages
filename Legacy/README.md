@@ -10,7 +10,6 @@ and no supported package loads them. Prefer the replacements below in new code.
 | `ChromaticFunctions` | `UnicellularChromatics`, which contains its useful functions with the 0-first area-list convention of `CatalanObjects` (ChromaticFunctions area lists end with 0) |
 | `TreesData` | `GraphTools`TreeGraphs` (unrooted, n <= 20) and `GraphTools`RootedTreeGraphs` (n <= 10) |
 | `RunSortedWords` | `CombinatoricTools`RunSortedPermutations` and `SetPartitionToRunSortedPermutation`; the package is now a shim |
-| `Tex2WebUtilities` | none; website tooling for symmetricfunctions.com, kept here until it has another home |
 
 ## Names shared with supported packages
 

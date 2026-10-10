@@ -9,7 +9,7 @@ usagePackages = {"CombinatoricTools", "NewTableaux", "SymmetricFunctions", "GTPa
   "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions", "GraphTools",
   "MatroidTools", "CatalanObjects", "UnicellularChromatics", "ChromaticFunctions",
   "RookTools", "PosetData", "TreesData", "OldYoungTableaux", "MacdonaldPolynomials",
-  "Tex2WebUtilities", "RunSortedWords"};
+  "RunSortedWords"};
 
 VerificationTest[
   Quiet[Scan[Needs[# <> "`"] &, usagePackages], General::shdw],

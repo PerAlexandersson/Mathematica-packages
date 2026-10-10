@@ -54,8 +54,8 @@ polynomials), `PosetData`` (connected posets up to 7 elements, linear extensions
 and P-Eulerian polynomials), and `RookTools``.
 
 Legacy packages (in `Legacy/`) remain loadable for old notebooks; `Legacy/README.md`
-lists their replacements: `OldYoungTableaux``, `ChromaticFunctions``, `TreesData``,
-`RunSortedWords``, and the website tooling `Tex2WebUtilities``.
+lists their replacements: `OldYoungTableaux``, `ChromaticFunctions``, `TreesData`` and
+`RunSortedWords``.
 
 Every public symbol has a usage message, e.g. `?SchurSymmetric`.
 
