@@ -29,3 +29,24 @@ VerificationTest[
   {},
   TestID -> "LoadOrder-no-shared-top-level-Private-context"
 ]
+
+(* GitHub issue #2: supported packages export no name twice. StrictEdges and
+   WeakEdges are shared options owned by CombinatoricTools; the CatalanObjects grid
+   is RookPlacementGrid, distinct from RookTools`RookPlacementPlot. *)
+VerificationTest[
+  Module[{supported = {"CombinatoricTools", "NewTableaux", "SymmetricFunctions",
+      "GTPatterns", "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions",
+      "GraphTools", "MatroidTools", "CatalanObjects", "UnicellularChromatics",
+      "RookTools", "PosetData", "MacdonaldPolynomials"}, short},
+    Scan[Needs[# <> "`"] &, supported];
+    short = Flatten[(Last@StringSplit[#, "`"] & /@ Names[# <> "`*"]) & /@ supported];
+    Select[Tally[short], Last[#] > 1 &]],
+  {},
+  TestID -> "LoadOrder-supported-packages-export-distinct-names"
+]
+
+VerificationTest[
+  {Context[StrictEdges], Context[WeakEdges], Head[CatalanObjects`RookPlacementGrid[{{1, 1}}, {{1, 1}}]]},
+  {"CombinatoricTools`", "CombinatoricTools`", Grid},
+  TestID -> "LoadOrder-shared-edge-options-and-rook-grid"
+]

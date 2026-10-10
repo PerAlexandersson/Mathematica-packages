@@ -112,7 +112,7 @@ RookPlacements;
 RookInversions;
 RookInversionList;
 AreaToFerrersBoard;
-RookPlacementPlot;
+RookPlacementGrid;
 
 
 OrderedRootedTrees;
@@ -1185,8 +1185,8 @@ AreaToFerrersBoard::usage="AreaToFerrersBoard[area] returns the list of coordina
 AreaToFerrersBoard[aa_List]:=With[{n=Length@aa},(Join @@ Table[{r, c}, {r, n}, {c, r - aa[[r]], n}])];
 
 
-RookPlacementPlot::usage="RookPlacementPlot[board, rooks] returns a Grid displaying a rook placement on a coordinate board.";
-RookPlacementPlot[board_List, rp_List] := Module[{flip, data, n = Max@board},
+RookPlacementGrid::usage="RookPlacementGrid[board, rooks] returns a Grid displaying a rook placement on a coordinate board.";
+RookPlacementGrid[board_List, rp_List] := Module[{flip, data, n = Max@board},
 	flip[{r_,c_}]:={n+1-r,c};
    data = Table[
      If[MemberQ[flip/@rp, {r, c}],

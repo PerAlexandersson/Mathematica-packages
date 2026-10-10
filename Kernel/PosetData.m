@@ -23,8 +23,6 @@ PosetColorings;
 OrderPolynomial;
 PEulerianPolynomial;
 
-WeakEdges;
-StrictEdges;
 EqualEdges;
 ColorWeight;
 
@@ -103,8 +101,6 @@ PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
 
 PosetPlotOld::usage = "PosetPlotOld[opts] plots a poset specified by the StrictEdges, WeakEdges, and EqualEdges options.";
 
-StrictEdges::usage="StrictEdges is an option for PosetPlotOld, PosetColorings, and related coloring functions; its value is a list of strict relations.";
-WeakEdges::usage="WeakEdges is an option for PosetPlotOld, PosetColorings, and related coloring functions; its value is a list of weak relations.";
 EqualEdges::usage="EqualEdges is an option for PosetPlotOld and PosetColorings; its value is a list of equality relations.";
 Options[PosetPlotOld] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges -> {}};
 PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, strictEdges, equalEdges},

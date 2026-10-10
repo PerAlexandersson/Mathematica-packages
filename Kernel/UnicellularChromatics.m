@@ -15,9 +15,6 @@ Circular;
 Width;
 UnitIntervalEdges;
 GraphColoringAscents;
-StrictEdges;
-WeakEdges;
-WeakEdges::usage="WeakEdges is an option for GraphOrientations; its value is a list of edges required to be oriented weakly.";
 UnicellularLLTSymmetric;
 UnicellularLLTSymmetricSchur;
 ChromaticSymmetric;
@@ -172,7 +169,6 @@ GraphColoringMonochromaticEdges::usage="GraphColoringMonochromaticEdges[edges, c
 GraphColoringMonochromaticEdges[edges_List, col_List] := Sum[Boole[col[[e[[1]]]] == col[[e[[2]]]] ], {e, edges}];
 
 
-StrictEdges::usage = "StrictEdges is an option for UnicellularLLTSymmetric.";
 
 Options[UnicellularLLTSymmetric] = {StrictEdges -> {}};
 UnicellularLLTSymmetric[attacking : {{_Integer, _Integer} ...}, n_Integer, q_: 1, opts:OptionsPattern[]] := 
