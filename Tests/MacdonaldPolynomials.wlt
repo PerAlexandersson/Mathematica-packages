@@ -74,7 +74,7 @@ VerificationTest[
 
 (* The private charge implementation remains equivalent to the imported one. *)
 VerificationTest[
-  Private`MacdonaldWordCharge[{1, 2, 1}] ===
+  MacdonaldPolynomials`Private`MacdonaldWordCharge[{1, 2, 1}] ===
     CombinatoricTools`WordCharge[{1, 2, 1}],
   True,
   TestID -> "MacdonaldPolynomials-charge-function-preserved"

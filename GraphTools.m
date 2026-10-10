@@ -44,7 +44,7 @@ OrientationSinks;
 AcyclicSinkPolynomial;
 OrientationsSinkPolynomial;
 
-Begin["Private`"];
+Begin["`Private`"];
 
 KnGraph::usage = "KnGraph[n] gives the complete graph on n vertices.";
 KnGraph[n_Integer] := Join @@ Table[{i, j}, {i, n}, {j, i + 1, n}];

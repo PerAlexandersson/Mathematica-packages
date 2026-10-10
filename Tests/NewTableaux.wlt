@@ -64,7 +64,7 @@ VerificationTest[
 
 VerificationTest[
   SemiStandardYoungTableaux[{{2, 1}, {}}, {1, 1, 1}];
-  {ValueQ[Private`g], DownValues[Private`pathToSSYT]},
+  {ValueQ[NewTableaux`Private`g], DownValues[NewTableaux`Private`pathToSSYT]},
   {False, {}},
   TestID -> "NewTableaux-SemiStandardYoungTableaux-does-not-leak-locals"
 ]

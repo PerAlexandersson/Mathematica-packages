@@ -146,7 +146,7 @@ DualGrothendieckFillings::usage = "DualGrothendieckFillings[shape]";
 RPPColumnWeight::usage = "RPPColumnWeight[fil]";
 
 (***************** Switch to private context *********************************)
-Begin["Private`"];
+Begin["`Private`"];
 
 
 

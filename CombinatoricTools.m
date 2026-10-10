@@ -145,7 +145,7 @@ LinearlyIndependentRows;
 SetsStabilizer;
 
 
-Begin["Private`"];
+Begin["`Private`"];
 
 (* Pattern for list of integers *)
 iList = {RepeatedNull[_Integer]};
@@ -158,17 +158,12 @@ Nicify[expr_] := Module[{polVars, collected},
 ];
 
 
-(* Private function for memoizing permutations *)
-permutationsMemoized[n_Integer?Positive] := permutationsMemoized[n] = Permutations@Range[n];
-
-(* Make permutations function better, by accepting positive integer arguments *)
+(* Convenience for interactive use: Permutations[n] gives the permutations of Range[n].
+   This modifies a System symbol, so package code must not rely on it (see issue #3).
+   Results are not cached: Permutations[10] alone holds 3.6 million permutations. *)
 Unprotect[Permutations];
 Permutations[0]:={{}};
-Permutations[n_Integer?Positive] :=
-  If[n <= 10,
-   permutationsMemoized[n],
-   Permutations@Range@n
-];
+Permutations[n_Integer?Positive] := Permutations@Range@n;
 Protect[Permutations];
 
 ListSplits::usage = "ListSplits[list] returns all 2^(n-1) ways to split the list into non-empty sublists";

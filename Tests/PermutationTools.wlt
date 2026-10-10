@@ -51,3 +51,21 @@ VerificationTest[
   True,
   TestID -> "PermutationTools-PermutationFromWord-memoizes-n"
 ]
+
+(* GitHub issue #3: package code must not depend on the CombinatoricTools
+   convenience rule Permutations[n_Integer], which modifies a System symbol. *)
+VerificationTest[
+  Internal`InheritedBlock[{Permutations},
+    Unprotect[Permutations];
+    DownValues[Permutations] = {};
+    Protect[Permutations];
+    Length /@ {GrassmannPermutations[4], SimsunPermutations[4],
+      SkewMergedPermutations[4], WachsPermutations[4], TypeBPermutations[3],
+      NQueensPermutations[5], GeneratePAPS[4], GeneratePAPS[4, Is231AvoidingQ],
+      GenerateRAPS[4, 2]}],
+  Length /@ {GrassmannPermutations[4], SimsunPermutations[4],
+    SkewMergedPermutations[4], WachsPermutations[4], TypeBPermutations[3],
+    NQueensPermutations[5], GeneratePAPS[4], GeneratePAPS[4, Is231AvoidingQ],
+    GenerateRAPS[4, 2]},
+  TestID -> "PermutationTools-no-reliance-on-Permutations-patch"
+]

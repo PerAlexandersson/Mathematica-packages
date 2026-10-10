@@ -41,7 +41,7 @@ weight gives the multiplicity of the variables.";
 
 
 (***************** Switch to private context *********************************)
-Begin["Private`"];
+Begin["`Private`"];
 
 
 SkewShapePoset::usage = "SkewShapePoset[{lam,mu}] returns the poset corresponding to the skew shape.";

@@ -130,7 +130,7 @@ VerificationTest[
 (* GitHub issue #16: CircularGraphPlot helper definitions must be localized. *)
 VerificationTest[
   CircularGraphPlot[CircularGraph[-2, {}]];
-  DownValues[Private`fromTypeB] === {} && DownValues[Private`toTypeB] === {},
+  DownValues[CatalanObjects`Private`fromTypeB] === {} && DownValues[CatalanObjects`Private`toTypeB] === {},
   True,
   TestID -> "CatalanObjects-CircularGraphPlot-local-helper-definitions"
 ]

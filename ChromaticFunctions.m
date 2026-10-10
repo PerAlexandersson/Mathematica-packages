@@ -158,7 +158,7 @@ AthanasiadisUnimodalSets::usage = "AthanasiadisUnimodalSets[lambda] return all s
 AthanasiadisS::usage = "AthanasiadisUnimodalSets[lambda] = Tr[Most@lambda], shows up as S(lambda) in his paper.";
 
 (***************** Switch to private context *********************************)
-Begin["Private`"];
+Begin["`Private`"];
 
 
 (* All valid lambda of length n *)

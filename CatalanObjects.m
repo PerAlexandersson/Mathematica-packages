@@ -137,7 +137,7 @@ SetPartitionForm;
 FormatTypeBSetPartition;
 SeparatedNonCrossingPartitions;
 
-Begin["Private`"];
+Begin["`Private`"];
 
 (*Maps -1, -2, ... -n, to n+1,n+2,... 2n *)
 FromTypeB::usage="Convert negative type B integers to positive.";

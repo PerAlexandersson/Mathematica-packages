@@ -27,7 +27,7 @@ MemoizedImport;
 
 
 (***************** Switch to private context *********************************)
-Begin["Private`"];
+Begin["`Private`"];
 
 (* Add more from https://arxiv.org/edit-user/tex-accents.php and capital letters. *)
 

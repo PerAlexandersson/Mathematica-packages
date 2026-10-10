@@ -10,7 +10,7 @@ GetTrees::usage = "GetTrees[k] gives all trees with k vertices, 3<=k<=9";
 GetRootedTrees::usage = "GetRootedTrees[k] gives all trees with k vertices, 1<=k<=10";
 
 (***************** Switch to private context *********************************)
-Begin["Private`"];
+Begin["`Private`"];
 
 
 GetTrees[n_Integer]:=Select[ trees, Max[#]==n-1 &];
