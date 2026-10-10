@@ -11,7 +11,7 @@ SetPartitionToRSP;
 RunSortedPermutations;
 
 
-Begin["Private`"];
+Begin["`Private`"];
 
 SetPartitionToRSP[sp_List] := Prepend[1 + Join @@ (RotateLeft /@ sp), 1];
 

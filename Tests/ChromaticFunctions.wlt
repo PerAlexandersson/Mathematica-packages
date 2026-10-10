@@ -74,10 +74,10 @@ VerificationTest[
 
 (* GitHub issue #17: deprecation message assignments must store strings. *)
 VerificationTest[
-  Quiet[Check[Private`DyckDiagramPlot[{}, {}, 1], $Failed]];
-  Quiet[Check[Private`ColorPlot[{}, {}, Automatic], $Failed]];
-  StringQ[Private`DyckDiagramPlot::deprecated] &&
-    StringQ[Private`ColorPlot::deprecated],
+  Quiet[Check[ChromaticFunctions`Private`DyckDiagramPlot[{}, {}, 1], $Failed]];
+  Quiet[Check[ChromaticFunctions`Private`ColorPlot[{}, {}, Automatic], $Failed]];
+  StringQ[ChromaticFunctions`Private`DyckDiagramPlot::deprecated] &&
+    StringQ[ChromaticFunctions`Private`ColorPlot::deprecated],
   True,
   TestID -> "ChromaticFunctions-deprecation-messages-are-strings"
 ]

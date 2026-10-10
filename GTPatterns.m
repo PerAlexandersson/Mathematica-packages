@@ -16,7 +16,7 @@ GTPatterns;
 RowFlags;
 
 
-Begin["Private`"];
+Begin["`Private`"];
 
 GTPattern::usage = "GTPattern[data] represents a GT-pattern as a list of rows (partitions) ordered bottom to top.
 GTPattern[YoungTableau[t]] converts a (skew) SSYT to its GT-pattern.

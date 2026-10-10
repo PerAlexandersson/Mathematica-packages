@@ -422,7 +422,7 @@ Prepend[Join @@ Table[
 
 SimsunPermutations::usage = "SimsunPermutations[n] returns all Simsun permutations.";
 SimsunPermutations[n_Integer] := SimsunPermutations[n] = Select[
-    Permutations@n,
+    Permutations@Range@n,
     And @@ Table[
        ! (SequenceCount[
            Sign[Differences[DeleteCases[#, i_Integer /; i > k]]]
@@ -432,7 +432,7 @@ SimsunPermutations[n_Integer] := SimsunPermutations[n] = Select[
 
 
 SkewMergedPermutations::usage = "See https://www.sciencedirect.com/science/article/pii/0012365X94902429";
-SkewMergedPermutations[n_Integer]:=Select[Permutations@n, IsPermutationAvoidingQ[{2, 1, 4, 3}, #] &&  IsPermutationAvoidingQ[{3, 4, 1, 2}, #]&];
+SkewMergedPermutations[n_Integer]:=Select[Permutations@Range@n, IsPermutationAvoidingQ[{2, 1, 4, 3}, #] &&  IsPermutationAvoidingQ[{3, 4, 1, 2}, #]&];
      
 WachsPermutations::usage = "WachsPermutations[n] returns a list of all Wachs permutations in S_n. See arxiv:2212.04932.";
 WachsPermutations[n_Integer] := 
@@ -440,7 +440,7 @@ WachsPermutations[n_Integer] :=
     iStar[i_] := Which[EvenQ@i, i - 1, i + 1 <= n, i + 1, True, n];
     (* https://arxiv.org/pdf/2212.04932.pdf *)
     Select[
-     Permutations@n,
+     Permutations@Range@n,
      (And @@ 
         Table[Abs[Ordering[#][[i]] - Ordering[#][[iStar@i]]] <= 1, {i,
            n - 1}]) &]
@@ -489,8 +489,8 @@ GeneratePAPS[n_Integer] := GeneratePAPS[n] = Module[{a, b},
     {a, b} = {Ceiling[n/2], Floor[n/2]};
     Join @@ Outer[
       PairToPAP[{#1, #2}] &,
-      Permutations[a],
-      Permutations[b], 1]
+      Permutations[Range@a],
+      Permutations[Range@b], 1]
 ];
 
 
@@ -535,8 +535,8 @@ GeneratePAPS[n_Integer, cond_: True] :=
     Select[
      Join @@ Table[
        Riffle[2 p1 - 1, 2 p2],
-       {p1, Select[Permutations[a], cond]},
-       {p2, Select[Permutations[b], cond]}]
+       {p1, Select[Permutations[Range@a], cond]},
+       {p2, Select[Permutations[Range@b], cond]}]
      , cond]
 ];
 
@@ -611,7 +611,7 @@ GenerateRAPS[n_Integer, k_Integer, r_: 1] :=
        ConstantArray[Floor[n/k], k - c]];
      Flatten@
        Outer[z[TupleToRAP[{##}, r]] &, 
-        Sequence @@ Table[Permutations[lens[[i]]], {i, k}], 1] /. 
+        Sequence @@ Table[Permutations[Range@lens[[i]]], {i, k}], 1] /. 
       z[m_] :> m
      ]
     ];
@@ -640,7 +640,7 @@ GenerateRAPS[n_Integer, k_Integer] :=
       ];
     Flatten@Outer[
        z[TupleToRAP[{##}]] &,
-       Sequence @@ Table[Permutations[lens[[i]]], {i, k}],
+       Sequence @@ Table[Permutations[Range@lens[[i]]], {i, k}],
        1] /. z[m_] :> m
     ];
 	
@@ -648,7 +648,7 @@ GenerateRAPS[n_Integer, k_Integer] :=
 
 TypeBPermutations::usage = "TypeBPermutations[n] returns all permutations of type B.";
 TypeBPermutations[n_Integer] := TypeBPermutations[n] =
-  Join @@ Outer[#1*#2 &, Permutations@n, Tuples[{-1, 1}, n], 1];
+  Join @@ Outer[#1*#2 &, Permutations@Range@n, Tuples[{-1, 1}, n], 1];
 
   
 
@@ -662,7 +662,7 @@ ArrayPlot[
 
 
 NQueensPermutations::usage = "NQueensPermutations[n] returns the list of permutations that solves the n-queens problem on the nxn-board.";
-NQueensPermutations[n_Integer]:=  NQueensPermutations[n] = Select[Permutations@n, 
+NQueensPermutations[n_Integer]:=  NQueensPermutations[n] = Select[Permutations@Range@n, 
     And @@ (Join @@ 
         Table[Abs[#[[i]] - #[[j]]] != Abs[i - j], {i, n}, {j, i + 1, 
           n}]) &];

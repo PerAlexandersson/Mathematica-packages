@@ -184,7 +184,7 @@ Create functions for iterating over partitions, e.g.
  PartitionTable[ f[p], {p, 1, 7}] will be the same as evaluating f[p] over all integger partitions of 1...7 
  *)
 
-Begin["Private`"];
+Begin["`Private`"];
 
 
 (* Patterns for matching things we use often. *)
