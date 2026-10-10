@@ -1,0 +1,22 @@
+testRoot = DirectoryName[DirectoryName[$InputFileName]];
+If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
+
+VerificationTest[
+  Needs["RunSortedWords`"],
+  Null,
+  TestID -> "RunSortedWords-loads-cleanly"
+]
+
+(* GitHub issue #18: the empty input has a terminating base case. *)
+VerificationTest[
+  RunSortedPermutations[0],
+  {},
+  TestID -> "RunSortedWords-RunSortedPermutations-zero"
+]
+
+(* GitHub issue #18: counts agree with Bell[n-1]. *)
+VerificationTest[
+  Length /@ (RunSortedPermutations /@ Range[1, 6]),
+  {1, 1, 2, 5, 15, 52},
+  TestID -> "RunSortedWords-RunSortedPermutations-Bell-counts"
+]
