@@ -64,6 +64,9 @@ supported replacement, and `LegacyConversions` converts legacy data.
 - The divided-difference family of operators is applied monomial by monomial in x[i], x[i+1]
   with memoized expanded formulas instead of forming and cancelling quotients (keys about 2.4
   times faster, t-keys and Lascoux polynomials about 2.6-2.9 times) (#51).
+- `NonsymmetricPolynomials`: `DualGrothendieckPolynomial[alpha, x]` from fillings (column
+  weights); for weakly increasing alpha it is the Lam-Pylyavskyy dual Grothendieck g_lambda.
+  Legacy `DualGrothendieckPolynomial[alpha]` is the new one at `Reverse[alpha]` (#51).
 - `AlgebraicBases` supports permutation-indexed bases.
 - Polynomial bridges: `PolynomialToSymmetricFunction` (to any core basis, validating
   symmetry), `QuasiSymmetricFunctionToPolynomial`, `PolynomialToQuasiSymmetricFunction`,

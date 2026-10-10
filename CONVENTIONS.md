@@ -27,6 +27,8 @@ a function needs a different representation internally, it converts at its bound
   κ_(0,1) = x[1] + x[2] (as in the literature and the Rust `sym-poly` library). Lascoux
   polynomials use the same index; locks are Kohnert polynomials of right-justified diagrams
   (Assaf–Searles), so the lock of (2, 0) is x[1]^2.
+  Dual Grothendieck polynomials use the same index: for weakly increasing alpha they are
+  the symmetric g_lambda, as keys are Schur polynomials.
 - Nonsymmetric Macdonald polynomials follow Haglund-Haiman-Loehr (identity basement): E_alpha =
   x^alpha + lower terms, E_alpha(x; 0, t) is the t-atom and E_alpha(x; 0, 0) the atom, and
   E_(alpha_2, ..., alpha_n, alpha_1 + 1) = q^(-alpha_1) x_n E_alpha(q x_n, x_1, ..., x_(n-1)).
