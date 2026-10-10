@@ -45,6 +45,9 @@ supported replacement, and `LegacyConversions` converts legacy data.
 
 ### Added
 
+- Example scripts for `NonsymmetricPolynomials`, `ShiftedSymmetricFunctions`,
+  `QuasiSymmetricFunctions`, `GTPatterns`, `NewTableaux` fillings and `LegacyConversions`
+  (`Examples/*.m`); `Tests/ExamplesTests.m` runs every example in a fresh kernel.
 - `TUTORIAL.md`: a tour of the packages and how they fit together. Its code is checked by
   `Tests/TutorialTests.m`: every block runs, and every stated result is compared.
 - `NonsymmetricPolynomials`: divided difference, Demazure and Demazure atom operators with
