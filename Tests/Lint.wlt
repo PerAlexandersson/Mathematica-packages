@@ -34,7 +34,7 @@ VerificationTest[
         name -> Select[
           Association@KeyValueMap[#1 -> {#2, Lookup[Lookup[lintBaseline, name, <||>], #1, 0]} &, found],
           #[[1]] > #[[2]] &]],
-      {f, FileNames["*.m", testRoot]}],
+      {f, FileNames["*.m", FileNameJoin[{testRoot, #}] & /@ {"Kernel", "Legacy"}]}],
     # =!= <||> &],
   <||>,
   TestID -> "Lint-no-new-high-confidence-errors"

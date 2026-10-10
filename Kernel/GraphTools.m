@@ -50,8 +50,8 @@ Begin["`Private`"];
 KnGraph::usage = "KnGraph[n] gives the complete graph on n vertices.";
 KnGraph[n_Integer] := Join @@ Table[{i, j}, {i, n}, {j, i + 1, n}];
 
-(* Datasets live in Data/ next to this file; the location is fixed when the package loads. *)
-graphToolsDataDirectory = FileNameJoin[{DirectoryName[$InputFileName], "Data"}];
+(* Datasets live in Data/ at the paclet root, next to Kernel/; the location is fixed when the package loads. *)
+graphToolsDataDirectory = FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "Data"}];
 
 ConnectedSimpleGraphs::nodata = "Data file `1` was not found.";
 TreeGraphs::nodata = "Data file `1` was not found.";

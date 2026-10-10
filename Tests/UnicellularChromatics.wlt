@@ -1,5 +1,5 @@
 testRoot = DirectoryName[DirectoryName[$InputFileName]];
-If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
+PacletDirectoryLoad[testRoot];
 
 VerificationTest[
   Needs["UnicellularChromatics`"],
