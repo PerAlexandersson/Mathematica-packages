@@ -13,6 +13,8 @@ CreateDirectory[staging, CreateIntermediateDirectories -> True];
 CopyFile[FileNameJoin[{root, "PacletInfo.wl"}], FileNameJoin[{staging, "PacletInfo.wl"}]];
 Scan[CopyDirectory[FileNameJoin[{root, #}], FileNameJoin[{staging, #}]] &,
   {"Kernel", "Legacy", "Data"}];
+(* Old notebooks kept for reference are not part of the paclet. *)
+Quiet[DeleteDirectory[FileNameJoin[{staging, "Legacy", "notebooks"}], DeleteContents -> True]];
 
 archive = CreatePacletArchive[staging, build];
 If[!StringQ[archive] || !FileExistsQ[archive], Print["Archive creation failed"]; Exit[1]];

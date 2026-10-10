@@ -35,3 +35,14 @@ first in `$ContextPath` wins for newly typed input; use full names
   opposite area-list convention), `AreaBounce`, `AreaListPlot`, `AreaToBounceShape`,
   `Labels` (CatalanObjects), and `GraphOrientations`, `GraphAcyclicOrientations`
   (GraphTools, which takes `Graph` objects).
+
+## Old notebooks
+
+`notebooks/` keeps the notebooks that used to be in `Examples/`. They are not maintained;
+`Examples/` now has plain `.m` scripts, which the test suite runs.
+
+- `SymmetricFunctions-Introduction.nb`: superseded by `Examples/SymmetricFunctions-Introduction.m`
+  and [`TUTORIAL.md`](../TUTORIAL.md).
+- `FindPolynomialRecursion-usage.nb`: superseded by `Examples/FindPolynomialRecursion-usage.md`.
+- `StokesLinesPlot[2020]-ALEXANDERSSON.nb`: a standalone notebook from an older project.
+

@@ -2,7 +2,7 @@
 
 (* Introduction to the SymmetricFunctions package.
 
-   A plain-text version of SymmetricFunctions-Introduction.nb. Run it with
+   A plain-text version of the notebook Legacy/notebooks/SymmetricFunctions-Introduction.nb. Run it with
      wolframscript -file Examples/SymmetricFunctions-Introduction.m
    or evaluate it piece by piece in a notebook. Tests/IntroductionExampleTests.m checks
    that it runs without messages. *)
