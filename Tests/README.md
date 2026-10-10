@@ -11,6 +11,10 @@ wolframscript -file Tests/RunTests.wls
 file. The command exits non-zero if any test fails, a kernel fails, or a file
 contains no tests.
 
+`Lint.wlt` runs Wolfram Code Inspector on every package and fails on high-confidence
+errors beyond the reviewed baseline recorded in that file. `LoadOrder.wlt` checks that
+packages do not interfere through shared contexts.
+
 ## Conventions
 
 - One file per package, named `<Package>.wlt`.
