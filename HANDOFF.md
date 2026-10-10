@@ -2,28 +2,28 @@
 
 ## Current status
 
-- 2026-10-10: the repository refresh is essentially complete. The deep audit's
-  defects (#4, #5, #13--#21, #35) are fixed with regression tests; packages use
-  private contexts (#3); the repository is a paclet with `Kernel/`, `Legacy/`,
-  `Data/`, `Examples/`, `Tests/`, `Scripts/` (#7, #8); legacy packages are
-  documented in `Legacy/README.md` (#9); documentation, MIT license, changelog
-  and contribution guide are in place (#10). See `CHANGELOG.md` for 0.1.0.
-- Owner decisions: Haglund convention for `MacdonaldHSymmetric` (#35); keep the
-  `Permutations[n]` convenience (#3); package-status proposal approved (#2);
-  keep large tree data (#8); MIT license; plain `.m` files for tests, scripts
-  and examples.
-- Next: port the legacy packages into the supported structure with cross-package
-  compatibility; the plan is issue #51 (milestone `Legacy port`), awaiting owner
-  decisions D1--D7. Nothing in it is implemented yet.
-- Open for the owner: whether to rename the remaining legacy names that differ
-  in meaning from supported ones (PR #47), and when to release 0.1.0
-  (`RELEASING.md`).
-- Verification: `wolframscript -file Tests/RunTests.m` (252 tests in 26 files)
-  and `wolframscript -file Scripts/BuildPaclet.m` (all 19 contexts load from the
-  built archive). The Rust cross-check (`Tests/fixtures/rust/`) found no
-  disagreement with `sym-poly`, `combinatoric-core`, `combpoly`, `polytool`.
-- No worker owns files. Codex workers used during the refresh worked only in
-  scratch copies; all integration went through reviewed PRs #22--#50.
+- 2026-10-10: the repository refresh is complete (audit defects fixed with regression
+  tests, paclet layout, documentation, MIT license, `CHANGELOG.md` for 0.1.0; PRs #22--#50).
+- Legacy port, issue #51 (milestone `Legacy port`), owner decisions D1--D7 recorded there.
+  Merged so far: P0 conventions and compatibility tests (#54), `AlgebraicBases` (#55),
+  `NonsymmetricPolynomials` core (#56), ChromaticFunctions remainder (#57), polynomial
+  bridges and quasisymmetric Schur (#58), GT-pattern extensions (#59), Grothendieck,
+  Lascoux, slide and lock polynomials (#60), small helpers (#61).
+- In progress (Codex workers in scratch copies, reviewed by the orchestrator before
+  integration): P4 nonsymmetric Macdonald E by operators (owns
+  `Kernel/NonsymmetricPolynomials.m` and its tests), P5 SSAF objects in NewTableaux (owns
+  `Kernel/NewTableaux.m` and its tests), P7 new `ShiftedSymmetricFunctions` (owns the new
+  package, `SymmetricFunctions.m` for moving `ShiftedJackPSymmetric`, `PacletInfo.wl`,
+  `UsageTests.m`, `LoadOrderTests.m`). Remaining: P9 (`Legacy/MIGRATION.md`, converters,
+  release).
+- Rust: `sym-poly` `lock_polynomial` indexed locks in reverse; fixed in
+  PerAlexandersson/polytool#8. Until the shared `/workspace/rust` checkout includes it,
+  `CrossCheck-Grothendieck-Lascoux-Slide-Lock` compares `LockPolynomial[Reverse[a]]` with
+  `lock_polynomial_terms`; after it does, regenerate the fixtures and drop the `Reverse`.
+- Open for the owner: legacy names that differ in meaning (PR #47), and when to release
+  0.1.0 (`RELEASING.md`).
+- Verification: `wolframscript -file Tests/RunTests.m` (337 tests) and
+  `wolframscript -file Scripts/BuildPaclet.m` (all 20 contexts load from the archive).
 
 ## Planned sequence (completed)
 
