@@ -5,48 +5,25 @@
 - 2026-10-10: the repository refresh is complete (audit defects fixed with regression
   tests, paclet layout, documentation, MIT license, `CHANGELOG.md` for 0.1.0; PRs #22--#50).
 - Legacy port, issue #51 (milestone `Legacy port`), owner decisions D1--D7 recorded there:
-  implemented. Merged: P0 conventions and compatibility tests (#54), `AlgebraicBases` (#55),
-  `NonsymmetricPolynomials` core (#56), ChromaticFunctions remainder (#57), polynomial
-  bridges and quasisymmetric Schur (#58), GT-pattern extensions (#59), Grothendieck,
-  Lascoux, slide and lock polynomials (#60), small helpers (#61), `ShiftedSymmetricFunctions`
-  (#63), `LegacyConversions` (#64), nonsymmetric Macdonald E by operators (#65), SSAF objects
-  in NewTableaux (#66), `Legacy/MIGRATION.md` (this checkpoint). No worker owns files.
+  implemented in #54--#67, followed by faster expanded operators (#68), permuted basements
+  from operators via Alexandersson's Corollary 16 (#69) and dual Grothendieck polynomials
+  from fillings (#71). `Legacy/MIGRATION.md` maps every legacy name, including the names
+  whose meaning differs (this settles the renaming question from PR #47: no renames).
+  No worker owns files.
 - Rust: `sym-poly` `lock_polynomial` indexed locks in reverse; fixed in
-  PerAlexandersson/polytool#8 (merged into its `master`). The fixture crate builds against the
-  shared `/workspace/rust` checkout, which is on another lane's feature branch without the
-  fix; when it includes it, regenerate `Tests/fixtures/rust/` and drop the `Reverse` in
-  `CrossCheck-Grothendieck-Lascoux-Slide-Lock`.
+  PerAlexandersson/polytool#8 and cherry-picked onto the shared `/workspace/rust` branch
+  (owner's instruction); fixtures regenerated at that commit (see `Tests/fixtures/rust/README.md`).
 - Running Wolfram: memory matters (owner request). Use a wrapper with `ulimit -v 6000000`,
   `OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OMP_STACKSIZE=512k`, a small `JAVA_TOOL_OPTIONS` heap
   (`-Xmx512m`), `nice`, and run one Wolfram job at a time (parallel runs also exhaust kernel
   licenses, and a waiting `wolframscript` then hangs).
-- Open for the owner: legacy names that differ in meaning (PR #47), and when to release
-  0.1.0 (`RELEASING.md`).
-- Verification: `wolframscript -file Tests/RunTests.m` (390 tests) and
+- Open for the owner: when to release 0.1.0 (`RELEASING.md`), and when to remove the legacy
+  packages (planned: one minor release after the port). Parked: issue #70 (multiline-queue
+  formulas, references in the paper cache), `KNormalizedCharacter` and Jack structure
+  constants (need a definition), beta and basis conversion for dual Grothendieck.
+- Next candidates: run old notebooks elsewhere in `/workspace/projects` against the migration
+  guide; example scripts for the new packages.
+- Verification: `wolframscript -file Tests/RunTests.m` (392 tests) and
   `wolframscript -file Scripts/BuildPaclet.m` (all 22 contexts load from the archive).
 
-## Planned sequence (completed)
-
-1. Define supported contexts and public symbols (#2).
-2. Add the test baseline (#6), then repair context isolation and known defects
-   (#3--#5).
-3. Introduce the paclet layout and portable datasets (#7--#8).
-4. Archive or split unsupported material and finish documentation (#9--#10).
-
-## Review evidence
-
-- All published `.m` files load individually under Wolfram 14.3.
-- Loading `MacdonaldPolynomials` emits multiple context-shadowing warnings.
-- Eleven files use the shared top-level ``Private` `` context.
-- Confirmed defects and reproductions are recorded in issues #3--#5.
-- Wolfram Code Inspector reported 61 errors and 67 warnings before triage; issue #6
-  owns the reviewed baseline and executable tests.
-
-## Verification
-
-- Fresh clone matches `origin/master` at `664f6d2` before this planning update.
-- GitHub issues #1--#11 are assigned to milestone `Repository refresh`.
-- `wolframscript -file Tests/RunTests.wls`: 12 succeeded, 0 failed.
-- Representative unflagged `GTPatterns` calls match the pre-recovery GitHub
-  implementation; new tests cover zero content, empty shapes, row flags, and the
-  recovered cylindric-Schur behavior.
+Older notes (refresh plan, audit evidence): [`HANDOFF-archive.md`](HANDOFF-archive.md).

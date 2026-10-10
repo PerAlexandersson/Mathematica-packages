@@ -601,7 +601,7 @@ fn write_nonsymmetric_k(directory: &Path) {
         json!({
             "family": "Grothendieck, Lascoux, fundamental slide and lock polynomials",
             "rust_function": "sym_poly_multipoly::{beta_grothendieck_polynomial,beta_grothendieck_to_lascoux,lascoux_polynomial_by_operators,lascoux_polynomial,fundamental_slide_polynomial,lock_polynomial,kohnert_polynomial}",
-            "convention": "exponent vectors are in x_1,...,x_n order (a Kohnert polynomial has as many variables as its highest nonempty row); permutations are one-line, one-indexed; beta is the connective-K parameter; lascoux_expansion maps weak compositions to coefficients; right_kohnert_terms is the Kohnert polynomial of the right-justified diagram (the Assaf-Searles lock); lock_polynomial_terms is sym-poly lock_polynomial, which indexes locks in reverse.",
+            "convention": "exponent vectors are in x_1,...,x_n order (a Kohnert polynomial has as many variables as its highest nonempty row); permutations are one-line, one-indexed; beta is the connective-K parameter; lascoux_expansion maps weak compositions to coefficients; right_kohnert_terms is the Kohnert polynomial of the right-justified diagram (the Assaf-Searles lock); lock_polynomial_terms is sym-poly lock_polynomial, which uses the same (Assaf-Searles) index since polytool#8.",
             "grothendieck": grothendieck,
             "lascoux": lascoux,
             "slide_lock": slide_lock

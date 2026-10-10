@@ -365,8 +365,8 @@ VerificationTest[
 ]
 
 (* GitHub issue #51 (P3b): Grothendieck, Lascoux, slide and lock polynomials agree with
-   sym-poly. Rust indexes lock_polynomial in reverse; its Kohnert polynomial of the
-   right-justified diagram is the Assaf-Searles lock in the standard index. *)
+   sym-poly. Locks are checked against both sym-poly lock_polynomial (Assaf-Searles index
+   since polytool#8) and its Kohnert polynomial of the right-justified diagram. *)
 VerificationTest[
   With[{data = fixture["nonsymmetric-k.json"], x = Unique["x"]},
     And[
@@ -387,7 +387,7 @@ VerificationTest[
               multiTermsExpression[Lookup[r, "slide_terms"], x]] === 0 &&
             Expand[LockPolynomial[a, x] -
               multiTermsExpression[Lookup[r, "right_kohnert_terms"], x]] === 0 &&
-            Expand[LockPolynomial[Reverse[a], x] -
+            Expand[LockPolynomial[a, x] -
               multiTermsExpression[Lookup[r, "lock_polynomial_terms"], x]] === 0]] /@
         Lookup[data, "slide_lock"])]],
   True,

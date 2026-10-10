@@ -1,7 +1,7 @@
 # Mathematica/Rust cross-check fixtures
 
 This directory is a standalone Cargo crate. It was generated against the Rust
-workspace at commit `fb39208447c524dfccc709c07fc9babbb8f86167` and writes the
+workspace at commit `4349e40c96d4832aae5320c6c08bcdcc99cbcd0f` and writes the
 JSON files in this directory:
 
 ```bash
