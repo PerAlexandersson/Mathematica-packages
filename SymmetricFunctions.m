@@ -104,6 +104,8 @@ HallLittlewoodPSymmetric;
 ToHallLittlewoodPBasis
 HallLittlewoodPSymbol;
 
+kSchurSymmetric;
+
 
 SchursQSymmetric;
 SchursPSymmetric;
@@ -416,10 +418,11 @@ shiftedSchurDet[lambda_List, mu_List] := Module[
 
 
 LRCoefficient::usage="LRCoefficient[lam,mu,nu] gives the coefficient of S_nu in S_lam*S_mu.";
-LRCoefficient[lambda_List, mu_List, nu_List]:=lrCoefficientInternal[
-	DeleteCases[lambda,0],
-	DeleteCases[mu,0],
-	DeleteCases[nu,0]
+LRCoefficient[lambda_List, mu_List, nu_List] := Module[
+	{cleanLambda = DeleteCases[lambda, 0], cleanMu = DeleteCases[mu, 0],
+		cleanNu = DeleteCases[nu, 0]},
+	If[Tr[cleanNu] != Tr[cleanLambda] + Tr[cleanMu], 0,
+		lrCoefficientInternal[cleanLambda, cleanMu, cleanNu]]
 ];
 
 (* Base cases are values of shifted Schur functions. *)
@@ -790,7 +793,7 @@ fromElementaryToCoreBasisRule[{toBasisFunc_,toBasisSymb_}, deg_Integer, {x_, y_}
 	1
 ];
 
-basisInElementary[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip},
+basisInElementary[bb_,lam_]:=Module[{n=Tr@lam, transMat, ip, vec},
 	transMat = symFuncTransMatInternal[bb,ElementaryESymmetric,n];
 	ip = IntegerPartitions[n];
 	
@@ -1036,7 +1039,7 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 		
 		(* This is quite efficient. *)
 		q === 1,
-			Expand[poly] /. MonomialSymbol[lam_, x] :> psMon[lam],
+			Expand[ToMonomialBasis[poly, x]] /. MonomialSymbol[lam_, x] :> psMon[lam],
 		
 		True,
 			ToPowerSumBasis[poly,  x] /. 
@@ -1071,8 +1074,8 @@ Expand@Sum[
 	vG = First@rG;
 	
 	(* Special cases depending on constant term. *)
-	If[ vF === {}, 
-		lam = {1}
+	If[Total[vF] == 0, 
+		lam = {}
 		,
 		lam = Pick[vars, vF, 1][[1, 1]]
 	];
@@ -1110,8 +1113,8 @@ Expand@Sum[
 	vG = First@rG;
 
 	(* Special cases depending on constant term. *)
-	If[ vF === {},
-		lam = {1}
+	If[Total[vF] == 0,
+		lam = {}
 		,
 		lam = Pick[vars, vF, 1][[1, 1]]
 	];
@@ -1145,8 +1148,8 @@ NegateAlphabet[f_, x_: None] := ToMonomialBasis[f] /. MonomialSymbol[mu__, x] :>
 
 (* Here, f is in the xx alphabet, and plethysm act on ALL given alphabets in the g-expression. *)
 Plethysm[f_, g_, xx_: None] := Module[
-	{PkPlethysmWithG, fpp, gpp, fInP, gInP,
-		fVars, gVars, auxVars, cF, k, v, vF,alphabets
+	{PkPlethysmWithG, fInP, gInP,
+		gVars, auxVars, alphabets
 	},
 	
 	(* HERE, we decide which alphabet to replace into. *)
@@ -1156,19 +1159,16 @@ Plethysm[f_, g_, xx_: None] := Module[
 	alphabets = FunctionAlphabets[g];
 	gInP = Fold[ToPowerSumBasis[#1, #2] &, g, alphabets];
 	
-	fVars = Cases[Variables[fInP], PowerSumSymbol[__,_], {0, Infinity}];
 	gVars = Cases[Variables[gInP], PowerSumSymbol[__,_], {0, Infinity}];
 	
-	auxVars = Complement[Variables[{fInP, gInP}], fVars, gVars];
+	auxVars = Complement[Variables[{fInP, gInP}],
+		Cases[Variables[fInP], PowerSumSymbol[__,_], {0, Infinity}], gVars];
 	
 	PkPlethysmWithG[k_] := (gInP /. Table[v -> v^k, {v, auxVars}]) /. {PowerSumSymbol[mu__,x_] :> PowerSumSymbol[k*mu, x]};
 	
-	(* Here, we substitute into ALL alphabets in the f-expression *)
-	(* If only a subset, we should look at Last@vF *)
-	Expand@(Sum[
-		cF = Coefficient[fInP, vF];
-		cF Product[ PkPlethysmWithG[mui], {mui, First@vF}]
-		, {vF, fVars}])
+	(* Here, we substitute into ALL alphabets in the f-expression. *)
+	Expand[fInP /. PowerSumSymbol[mu_List, x_] :>
+		Times @@ (PkPlethysmWithG /@ mu)]
 ];
 
 
@@ -1208,7 +1208,7 @@ InternalProduct[f_, g_, x_ : None] :=
          Tr[vF] == Tr[vG] == 0,
      Last[rF]*Last[rG], True,
      With[{lam = Pick[vars, vF, 1][[1, 1]]},
-      Last[rF]*Last[rG] PowerSumSymbol[lam] ZCoefficient[lam]]
+      Last[rF]*Last[rG] PowerSumSymbol[lam, x] ZCoefficient[lam]]
      ]
     , {rF, rulesF}, {rG, rulesG}]
    ];
@@ -1336,7 +1336,7 @@ cached[{HallLittlewoodTSymmetric, lam, q, x}, Module[{Rij,
 
 
 kSchurSymmetric::usage = "kSchurSymmetric[mu,k returns the k-Schur function. Note that one must have mu1<=k.";
-kSchurSymmetric[mu_List, kk_Integer, t_ : 1, x_ : None] := kSchurSymmetric[mu, kk, t, x] = Module[
+kSchurSymmetric[mu_List, kk_Integer, t_ : 1, x_ : None] := cached[{kSchurSymmetric, mu, kk, t, x}, Module[
     {Rij, res, operators, ll = Length@mu, n = Tr@mu, applyIJ, ss, qq},
      Rij[vec_List, i_Integer, j_Integer, k_Integer] :=
      If[i != j,
@@ -1362,7 +1362,7 @@ kSchurSymmetric[mu_List, kk_Integer, t_ : 1, x_ : None] := kSchurSymmetric[mu, k
     (*Replace symbols with actual Schurs*)
 
     Expand[res /. {ss[a_] :> SchurSymbol[a, x], qq -> t}]
-    ];
+    ]];
 
 (* Compute Hall-Littlewood P via inverse Kostka-Foulkes matrix.*)
 (* This matrix is computed via HallLittlewoodTSymmetric *)
@@ -1531,12 +1531,14 @@ createBasis[MacdonaldHSymbol, "H",
 
 
 (* Used in SkewMacdonaldESymmetric *)
+symmetricFunctionsPermutationCharge[p_List] := MajorIndex[Reverse@Ordering@p];
+
 PostfixedCharge[mu_List, w_List] := Module[{postFix, decomp},
    postFix = 
     Reverse[Join @@ 
       MapIndexed[ConstantArray[#2[[1]], #1] &, ConjugatePartition@mu]];
    decomp = ChargeWordDecompose[Join[w, postFix]];
-   Total[PermutationCharge /@ decomp]
+   Total[symmetricFunctionsPermutationCharge /@ decomp]
 ];
 
 
