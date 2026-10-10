@@ -38,17 +38,18 @@ VerificationTest[
   TestID -> "GraphTools-GraphDeleteEdge-reverse-undirected-edge"
 ]
 
-(* GitHub issue #15: failed tree imports must not create memoized DownValues. *)
+(* GitHub issue #15: failed tree imports must not create memoized DownValues.
+   The failure is forced by pointing the data directory at a missing location. *)
 VerificationTest[
-  Module[{before, first, second, after},
-    before = Length[DownValues[TreeGraphs]];
-    first = Quiet[TreeGraphs[5]];
-    second = Quiet[TreeGraphs[5]];
-    after = Length[DownValues[TreeGraphs]];
-    MatchQ[first, $Failed | _Missing] &&
-      SameQ[first, second] && after === before
-  ],
-  True,
+  Block[{GraphTools`Private`graphToolsDataDirectory = "/nonexistent-graphtools-data"},
+    Module[{before, first, second, after},
+      before = Length[DownValues[TreeGraphs]];
+      first = TreeGraphs[7];
+      second = TreeGraphs[7];
+      after = Length[DownValues[TreeGraphs]];
+      {first, second, after === before}]],
+  {$Failed, $Failed, True},
+  {TreeGraphs::nodata, TreeGraphs::nodata},
   TestID -> "GraphTools-TreeGraphs-failed-import-not-memoized"
 ]
 
