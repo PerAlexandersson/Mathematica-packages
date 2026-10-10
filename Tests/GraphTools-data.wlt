@@ -25,3 +25,14 @@ VerificationTest[
   True,
   TestID -> "GraphTools-data-graphs-have-expected-type"
 ]
+
+(* GitHub issue #9: rooted trees moved from TreesData. Counts follow OEIS A000081 and
+   the trees for n = 7 are pairwise non-isomorphic as rooted (directed) trees. *)
+VerificationTest[
+  {Length /@ RootedTreeGraphs /@ Range[1, 10],
+   And @@ (Function[g, VertexInDegree[g, 1] == 0 && TreeGraphQ[UndirectedGraph[g]] &&
+       Count[VertexInDegree[g], 1] == VertexCount[g] - 1] /@ RootedTreeGraphs[7]),
+   Length[DeleteDuplicates[RootedTreeGraphs[7], IsomorphicGraphQ]]},
+  {{1, 1, 2, 4, 9, 20, 48, 115, 286, 719}, True, 48},
+  TestID -> "GraphTools-RootedTreeGraphs-OEIS-A000081"
+]
