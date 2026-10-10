@@ -59,19 +59,18 @@ LogConcaveQ[poly_, t_] := Module[{c},
     And @@ Table[c[[i]]^2 >= c[[i - 1]] c[[i + 1]], {i, 2, Length[c] - 1}]
     ]
    ];
-UltraLogConcaveQ::usage="LogConcaveQ[poly,t] returns true if coefficients form an ultra log-concave sequence.";
+UltraLogConcaveQ::usage="UltraLogConcaveQ[poly,t] returns true if coefficients form an ultra log-concave sequence.";
 UltraLogConcaveQ[poly_, t_] := Module[{c},
    c = CoefficientList[poly, t];
    If[Length[c] < 3, True,
-    And @@
-     And @@ Table[ i c[[i]]^2 >= (i + 1) c[[i - 1]] c[[i + 1]], {i, 2, Length[c] - 1}]
+     And @@ Table[(i - 1) c[[i]]^2 >= i c[[i - 1]] c[[i + 1]], {i, 2, Length[c] - 1}]
 	]
 ];
 
 
 Clear[RealRootedQ];
 RealRootedQ::usage = "RealRootedQ[poly] returns true if the poly is a real-rooted univariate polynomial, or a constant.";
-RealRootedQ::poly = "Argument `1` should be a polynomial,";
+RealRootedQ::poly = "Argument `1` should be a univariate polynomial.";
 RealRootedQ[0,t_]:=True;
 RealRootedQ[poly_,t_] := True/;NumberQ[poly]; 
 RealRootedQ[poly_, t_] := Module[{d},
@@ -80,11 +79,17 @@ RealRootedQ[poly_, t_] := Module[{d},
 ];
 RealRootedQ[0] := True;
 RealRootedQ[poly_] := True/;NumberQ[poly]; (* Constants are considered real-rooted. *)
-RealRootedQ[poly_] := If[
-   PolynomialQ[poly, Variables[poly][[1]]],
-   RealRootedQ[poly, Variables[poly][[1]]]
-   ,
-   Message[RealRootedQ::poly, poly]
+RealRootedQ[poly_] := Module[{vars = Variables[poly]},
+   Which[
+      Length[vars] > 1,
+      Message[RealRootedQ::poly, poly]; False,
+      vars === {},
+      Message[RealRootedQ::poly, poly]; False,
+      PolynomialQ[poly, First@vars],
+      RealRootedQ[poly, First@vars],
+      True,
+      Message[RealRootedQ::poly, poly]; False
+   ]
 ];
 
 SamePhaseStableQ::usage = "SamePhaseStableQ[poly, [samples] ] randomly checks some stuff. ";
@@ -208,7 +213,7 @@ https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-r
 *)
 
 InterleavingRootsQ::usage = "InterleavingRootsQ[P,Q,t] returns true 
-if the roots interleave (weakly). In particular, largest root of Q is greater than largest root of P.";
+if the real roots interleave (weakly). Non-real-rooted input returns False. In particular, largest root of Q is greater than largest root of P.";
 (*
 InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[ pp, qq, First@Variables[{pp,qq}]];
 *)
@@ -221,6 +226,7 @@ InterleavingRootsQ[pp1_, 0, t_Symbol,opts:OptionsPattern[]]:=True;
 
 InterleavingRootsQ[pp1_, qq1_, t_Symbol,opts:OptionsPattern[]] := Module[
 	{pp, qq, gcd, rootsPP, rootsQQ, interleavesQ,wp},
+	If[!And @@ (RealRootedQ[#, t] & /@ {pp1, qq1}), Return[False]];
 	
 	(* Factor out common roots. *)
 	gcd = PolynomialGCD[pp1, qq1];
@@ -306,6 +312,7 @@ SymmetricDecomposition[pp_, x_] := Module[{d = Exponent[pp, x], ii},
    ];
 
 (* Eulerian numbers. *)
+EulerianA[0, m_Integer] := Boole[m == 0];
 EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
 
 EulerianAPolynomial[0, t_]:=1;
@@ -405,8 +412,8 @@ IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer 
 DifferentialDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 RecurrenceLength::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 Homogeneous::usage = "Option for FindPolynomialRecurrence. True or False.";
-DenominatorVariableDegree::"Option for FindPolynomialRecurrence. Non-negative integer value.";
-DenominatorIndexDegree::"Option for FindPolynomialRecurrence. Non-negative integer value.";
+DenominatorVariableDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+DenominatorIndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
 
 Options[FindPolynomialRecurrence] = {
 	VariableDegree -> 1,
@@ -427,7 +434,7 @@ FindPolynomialRecurrence[polys_List, {t_Symbol, n_Symbol},
 	opts : OptionsPattern[]] := Module[{c, d, coeffSum, fracCoeffSum, vDeg, iDeg, rDeg,
 	dDeg, eqns, vars,
 	sol, solFormat,
-	formatSingleCoeffString, mm = Length@polys,
+	formatSingleCoeffString, ruleFormatSolution, mm = Length@polys,
 	ts = ToString@t,
 	ns = ToString@n,
 	homo, ansAsRule, denvDeg,deniDeg
@@ -520,6 +527,7 @@ CompleteHomogeneousPolynomial::usage = "CompleteHomogeneousPolynomial[d,{a,b},x]
 CompleteHomogeneousPolynomial[d_Integer, {a_Integer, b_Integer}, x_] := 
   CompleteHomogeneousPolynomial[d, {a, b}, x] = Expand[
     Which[
+     d < 0, 0,
      Not[1 <= a <= b], 0,
      a == b, x[a]^d,
      a < b, 
@@ -530,8 +538,9 @@ ElementarySymmetricPolynomial::usage = "ElementarySymmetricPolynomial[d,{a,b},x]
 ElementarySymmetricPolynomial[d_Integer, {a_Integer, b_Integer}, x_] := 
   ElementarySymmetricPolynomial[d, {a, b}, x] = Expand[
     Which[
-     Not[1 <= a <= b && (d <= a - b + 1)], 0,
-     a == b && d == 1, x[a],
+     d == 0, 1,
+     d < 0 || d > b - a + 1 || a > b, 0,
+     a == b, x[a],
      a < b, 
      x[a] ElementarySymmetricPolynomial[d - 1, {a + 1, b}, x] + ElementarySymmetricPolynomial[d, {a + 1, b}, x]
      ]];
@@ -543,7 +552,7 @@ HilbertFunctionValues::usage = "HilbertFunctionValues[polyIdeal,vars, d] returns
 (*Hilbert function values up to a chosen max degree*)
 Clear[HilbertFunctionValues];
 HilbertFunctionValues[polys_List, vars_List, maxdeg_Integer] := Module[
-   {gb, leadMons, monomialDividesQ, standardQ},
+   {gb, leadMons, monomialDividesQ, standardQ, MonomialsOfDegree},
    (*Gröbner basis with degree order so everything stays homogeneous*)
    gb = GroebnerBasis[polys, vars, 
      MonomialOrder -> DegreeReverseLexicographic];
@@ -574,4 +583,3 @@ HilbertFunctionValues[polys_List, vars_List, maxdeg_Integer] := Module[
      
 End[(* End private *)];
 EndPackage[];
-
