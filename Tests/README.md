@@ -9,7 +9,9 @@ wolframscript -file Tests/RunTests.m
 `RunTests.m` runs each `Tests/*Tests.m` file in its own fresh kernel (via
 `RunTestFile.m`), so a test file cannot depend on packages loaded by another
 file. The command exits non-zero if any test fails, a kernel fails, or a file
-contains no tests.
+contains no tests. It prints the time taken by each file; the whole suite runs in about four
+minutes and should stay under ten. A single test that takes more than 120 seconds is
+aborted and fails (`testTimeLimit` in `RunTests.m`), so keep each test small.
 
 `LintTests.m` runs Wolfram Code Inspector on every package and fails on high-confidence
 errors beyond the reviewed baseline recorded in that file. `LoadOrderTests.m` checks that

@@ -20,5 +20,5 @@ VerificationTest[
 		fresh],
 	{True, {}},
 	TestID -> "Docs-site-is-up-to-date",
-	TimeConstraint -> 600
+	TimeConstraint -> 120
 ]

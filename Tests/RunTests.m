@@ -20,19 +20,25 @@ scriptCommand = Module[{ws},
   ]
 ];
 
+(* Seconds allowed per test (a slower test fails); the whole suite should stay well under
+   ten minutes. *)
+testTimeLimit = 120;
+
 shellQuote[s_String] := "'" <> StringReplace[s, "'" -> "'\\''"] <> "'";
 
 (* Test files are named <Name>Tests.m; this runner (RunTests.m) must not run itself. *)
 files = Select[FileNames["*Tests.m", testDirectory],
   !MemberQ[{"RunTests.m", "RunTestFile.m"}, FileNameTake[#]] &];
 
+startTime = AbsoluteTime[];
 results = Table[
-  Module[{proc, lines, summary},
+  Module[{proc, lines, summary, seconds},
     (* RunProcess is unavailable in some sandboxes, so use a shell pipe. *)
-    proc = ReadList["!" <> StringRiffle[shellQuote /@ Join[scriptCommand, {runner, file}]]
-      <> " 2>&1", String];
+    {seconds, proc} = AbsoluteTiming[ReadList["!" <> StringRiffle[shellQuote /@
+      Join[scriptCommand, {runner, file, ToString[testTimeLimit]}]] <> " 2>&1", String]];
     lines = If[ListQ[proc], proc, {}];
     summary = Select[lines, StringStartsQ[#, "RESULT "] &];
+    Print[FileNameTake[file], ": ", Round[seconds, 0.1], " s"];
     Scan[Print[FileNameTake[file], ": ", #] &,
       Select[lines, StringStartsQ[#, "FAILED: "] &]];
     If[summary === {},
@@ -48,5 +54,6 @@ results = Table[
   {file, files}];
 
 {succeeded, failed} = Total[results];
+Print["Total time: ", Round[AbsoluteTime[] - startTime], " s"];
 Print["Tests succeeded: ", succeeded, "; failed: ", failed];
 Exit[If[failed == 0 && Length[files] > 0, 0, 1]];
