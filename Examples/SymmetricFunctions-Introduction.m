@@ -4,7 +4,7 @@
 
    A plain-text version of the notebook Legacy/notebooks/SymmetricFunctions-Introduction.nb. Run it with
      wolframscript -file Examples/SymmetricFunctions-Introduction.m
-   or evaluate it piece by piece in a notebook. Tests/IntroductionExampleTests.m checks
+   or evaluate it piece by piece in a notebook. Tests/IntroductionExample.wlt checks
    that it runs without messages. *)
 
 PacletDirectoryLoad[ParentDirectory[DirectoryName[$InputFileName]]];

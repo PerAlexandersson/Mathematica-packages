@@ -97,10 +97,10 @@ is next to it.
 ## Tests
 
 ```bash
-wolframscript -file Tests/RunTests.m
+wolframscript -file Tests/RunTests.wls
 ```
 
-runs every `Tests/*Tests.m` file in a fresh kernel. Besides regression tests, the suite
+runs every `Tests/*.wlt` file in a fresh kernel. Besides regression tests, the suite
 checks load-order independence, usage strings, a Code Inspector baseline, and agreement
 with the Rust libraries `sym-poly`, `combinatoric-core`, `combpoly` and `polytool` on
 about 25 families (`Tests/fixtures/rust/`). See `Tests/README.md`.

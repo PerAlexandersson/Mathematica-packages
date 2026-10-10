@@ -5,7 +5,7 @@
    - one reference page per supported package, generated from the usage messages, with
      background links to https://www.symmetricfunctions.com/ (Scripts/docs/symcat-links.wl).
    Usage: wolframscript -file Scripts/BuildDocs.m [outputDirectory]   (default: docs/)
-   Tests/DocsTests.m checks that docs/ is up to date. *)
+   Tests/Docs.wlt checks that docs/ is up to date. *)
 
 root = DirectoryName[DirectoryName[$InputFileName]];
 out = If[Length[$ScriptCommandLine] >= 2, $ScriptCommandLine[[2]], FileNameJoin[{root, "docs"}]];

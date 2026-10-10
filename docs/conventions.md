@@ -7,7 +7,7 @@ nav_order: 4
 # Conventions
 
 Every supported package uses the representations below, so objects produced by one
-package can be passed to another. `Tests/CompatibilityTests.m` checks the contract. If
+package can be passed to another. `Tests/Compatibility.wlt` checks the contract. If
 a function needs a different representation internally, it converts at its boundary.
 
 | Object | Representation | Owner |
@@ -58,5 +58,5 @@ a function needs a different representation internally, it converts at its bound
   (`SymmetricFunctionToPolynomial`, `PolynomialToSymmetricFunction`, their QSym
   analogues and `ToQuasiSymmetric`), not
   through ad hoc substitution rules.
-- Two supported packages never export the same name (`Tests/LoadOrderTests.m`).
+- Two supported packages never export the same name (`Tests/LoadOrder.wlt`).
 {% endraw %}
