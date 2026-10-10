@@ -26,7 +26,7 @@
 - No CI: running Wolfram on GitHub needs a paid licence entitlement, which the owner declined.
   Run the suite locally before every merge.
 - Open for the owner: when to remove the legacy packages (planned: one minor release after
-  the port); deleting the merged branches; closing issue #51 (all batches merged). Parked:
+  the port). Issue #51 is closed and merged branches are deleted (2026-10-10). Parked:
   issue #70 (multiline-queue formulas, references in the paper cache), `KNormalizedCharacter`
   and Jack structure constants (need a definition), beta and basis conversion for dual
   Grothendieck.
