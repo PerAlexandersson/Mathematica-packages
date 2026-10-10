@@ -7,7 +7,7 @@ functionality bumps the minor version, and fixes bump the patch version.
 
 ## Checklist
 
-1. `wolframscript -file Tests/RunTests.m` passes.
+1. `wolframscript -file Tests/RunTests.wls` passes.
 2. Update `"Version"` in `PacletInfo.wl` and add a changelog entry.
 3. `wolframscript -file Scripts/BuildPaclet.m` builds
    `build/PerAlexandersson__MathematicaPackages-<version>.paclet` and verifies that every

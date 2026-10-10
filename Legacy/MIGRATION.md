@@ -115,7 +115,7 @@ differ in meaning. When a legacy package is loaded too, use full names such as
 |---|---|
 | `ShiftedSchur[mu, d][p, q]`, `KNormalizedCharacter`, `JackPStructureConstant`, `JackJStructureConstant`, `LCoefficient`, `IndexedToFallingBasisRule`, `FerayN` | no stated contract that could be tested independently (`FerayN` is internal to `StanleyCharacterPolynomial`) |
 | `KnopTableaux`, `TopValleyRepresentation` | empty or "TODO" usage strings |
-| `UnittestPackage` | replaced by `Tests/RunTests.m` |
+| `UnittestPackage` | replaced by `Tests/RunTests.wls` |
 | `IntegralFormNonSymmetricJack` | uses the legacy basement; use `IntegralMacdonaldE` and `NonsymmetricJackPolynomial` |
 | `ElementaryPolynomial` (q-deformed e), `SkewMacdonaldE`, `ToMacdonaldEBasis` | not needed by the supported packages so far |
 | `DualGrothendieckFillings`, `RPPColumnWeight` | filling internals of `DualGrothendieckPolynomial` |

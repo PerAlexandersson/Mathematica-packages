@@ -8,7 +8,7 @@ nav_order: 2
 
 A tour of the packages, from tableaux to symmetric, quasisymmetric and nonsymmetric
 polynomials, showing how the packages work together. Every code block below is run by the
-test suite (`Tests/TutorialTests.m`), and every line ending in `(* => ... *)` is checked
+test suite (`Tests/Tutorial.wlt`), and every line ending in `(* => ... *)` is checked
 against the stated result, so the tutorial stays correct as the code changes.
 
 Conventions (indexing, orientation, parameters) are collected in

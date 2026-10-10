@@ -23,7 +23,7 @@
   constants (need a definition), beta and basis conversion for dual Grothendieck.
 - Next candidates: run old notebooks elsewhere in `/workspace/projects` against the migration
   guide; example scripts for the new packages.
-- Verification: `wolframscript -file Tests/RunTests.m` (392 tests) and
+- Verification: `wolframscript -file Tests/RunTests.wls` (392 tests) and
   `wolframscript -file Scripts/BuildPaclet.m` (all 22 contexts load from the archive).
 
 Older notes (refresh plan, audit evidence): [`HANDOFF-archive.md`](HANDOFF-archive.md).
