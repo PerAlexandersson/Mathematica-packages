@@ -73,6 +73,31 @@ CrystalEi;
 CrystalFi;
 CrystalSi;
 
+SSAF;
+SSAFQ;
+SSAFShape;
+SSAFBasement;
+SSAFWeight;
+SSAFMonomial;
+SSAFForm;
+SSAFillings;
+AtomFillings;
+KeyFillings;
+TAtomFillings;
+SSAFMajorIndex;
+SSAFInversions;
+SSAFCoInversions;
+SSAFDn;
+SSAFColumnSets;
+SSAFCrystalWord;
+SSAFCrystalString;
+LascouxSchutzenberger;
+SSAFWeightNormalize;
+SSYTToAtom;
+RPPToAtom;
+SSAFKnownCharge;
+ChargeToMajMap;
+
 
 
 Begin["`Private`"];
@@ -1124,6 +1149,336 @@ CrystalSi[w_List, i_Integer] := With[
 
 
 (**********************************************************************************)
+
+(* Semistandard augmented fillings.  Rows are listed from top to bottom, so the
+   last row is the bottom row; every row begins with its basement entry. *)
+
+SSAF::usage = "SSAF[rows] represents a semistandard augmented filling with basement entries in the first column.";
+SSAFQ::usage = "SSAFQ[ssaf] returns True if ssaf is a valid semistandard augmented filling.";
+SSAFShape::usage = "SSAFShape[ssaf] returns the weak composition of non-basement row lengths.";
+SSAFBasement::usage = "SSAFBasement[ssaf] returns the basement entries of ssaf.";
+SSAFWeight::usage = "SSAFWeight[ssaf] returns the weight vector of the non-basement entries of ssaf.";
+SSAFMonomial::usage = "SSAFMonomial[ssaf,x] returns the weight monomial of ssaf.";
+SSAFForm::usage = "SSAFForm[ssaf, options] returns a graphical representation of an augmented filling.";
+SSAFillings::usage = "SSAFillings[alpha, basement] returns all valid augmented fillings of shape alpha and basement.";
+AtomFillings::usage = "AtomFillings[alpha] returns the augmented fillings enumerating the Demazure atom indexed by alpha.";
+KeyFillings::usage = "KeyFillings[alpha] returns the augmented fillings enumerating the key polynomial indexed by alpha.";
+TAtomFillings::usage = "TAtomFillings[alpha] returns the non-attacking augmented fillings used by the t-atom identity.";
+SSAFMajorIndex::usage = "SSAFMajorIndex[ssaf] returns the augmented filling major index.";
+SSAFInversions::usage = "SSAFInversions[ssaf] returns the number of inversion triples of ssaf.";
+SSAFCoInversions::usage = "SSAFCoInversions[ssaf] returns the number of coinversion triples of ssaf.";
+SSAFDn::usage = "SSAFDn[ssaf] returns the number of unequal horizontal adjacencies of ssaf.";
+SSAFColumnSets::usage = "SSAFColumnSets[ssaf, start] returns sorted column sets, starting at column start (default 2).";
+SSAFCrystalWord::usage = "SSAFCrystalWord[ssaf,i] returns the uncancelled i-crystal word of ssaf.";
+SSAFCrystalString::usage = "SSAFCrystalString[ssaf,i] returns the i-crystal string containing ssaf.";
+LascouxSchutzenberger::usage = "LascouxSchutzenberger[object,i] applies the Lascoux--Schutzenberger involution.";
+SSAFWeightNormalize::usage = "SSAFWeightNormalize[ssaf] applies crystal involutions until the weight is a partition.";
+SSYTToAtom::usage = "SSYTToAtom[tab] applies Mason's insertion map from a semistandard tableau to an atom filling.";
+RPPToAtom::usage = "RPPToAtom[rpp] applies Mason's column-set insertion map to an augmented reverse plane partition.";
+SSAFKnownCharge::usage = "SSAFKnownCharge[ssaf] returns the charge when the augmented filling has partition shape.";
+ChargeToMajMap::usage = "ChargeToMajMap[ssaf] applies the charge-to-major-index map to an augmented filling.";
+
+ssaClockwiseQ[a_, b_, c_] := Or[a < b < c, b < c < a, c < a < b];
+ssaTypeAQ[a_Integer, b_Integer, c_Integer] :=
+	ssaClockwiseQ[a + 0.1, c + 0.3, b + 0.2];
+ssaTypeBQ[a_Integer, b_Integer, c_Integer] :=
+	ssaClockwiseQ[a + 0.2, c + 0.1, b + 0.3];
+
+SSAFShape[SSAF[rows_List]] := (Length /@ rows) - 1;
+SSAFBasement[SSAF[rows_List]] := First /@ rows;
+SSAFWeight[SSAF[rows_List]] :=
+	Table[Count[Join @@ (Rest /@ rows), i], {i, Length[rows]}];
+SSAFMonomial[SSAF[rows_List], x_] :=
+	Times @@ MapIndexed[x[First[#2]]^#1 &, SSAFWeight[SSAF[rows]]];
+
+Options[SSAFForm] = Options[YoungTableauForm];
+SSAFForm[rows_List, opts : OptionsPattern[]] := SSAFForm[SSAF[rows], opts];
+SSAFForm[SSAF[rows_List], opts : OptionsPattern[]] := YoungTableauForm[rows, opts];
+SSAF /: Format[SSAF[rows_List]] := SSAFForm[SSAF[rows]];
+
+ssaCheckNonAttacking[tab_List, r_Integer, c_Integer] := Module[{b = tab[[r, c]]},
+	And @@ Table[
+		!(Length[tab[[i]]] >= c && tab[[i, c]] == b) &&
+			!(Length[tab[[i]]] >= c - 1 && tab[[i, c - 1]] == b),
+		{i, r - 1}]
+];
+
+ssaCheckCoinversion[tab_List, r_Integer, c_Integer, shape_List] := Module[{},
+	If[!ssaCheckNonAttacking[tab, r, c], Return[False]];
+	And @@ Table[
+		If[shape[[i]] >= shape[[r]] && Length[tab[[i]]] >= c,
+			ssaTypeAQ[tab[[i, c]], tab[[r, c]], tab[[i, c - 1]]],
+			If[shape[[i]] < shape[[r]] && Length[tab[[i]]] >= c - 1,
+				ssaTypeBQ[tab[[i, c - 1]], tab[[r, c - 1]], tab[[r, c]]],
+				True]],
+		{i, r - 1}]
+];
+
+ssaValidRowsQ[rows_List] := Module[{shape, n},
+	If[rows === {} || !VectorQ[rows, ListQ] || !And @@ (Length[#] > 0 & /@ rows), Return[False]];
+	shape = (Length /@ rows) - 1;
+	n = Length[rows];
+	If[!VectorQ[First /@ rows, IntegerQ] ||
+		!And @@ (VectorQ[#, IntegerQ] & /@ (Rest /@ rows)), Return[False]];
+	If[!And @@ Flatten[Table[
+		rows[[r, c - 1]] >= rows[[r, c]],
+		{r, n}, {c, 2, Length[rows[[r]]]}]], Return[False]];
+	And @@ Flatten[Table[
+		ssaCheckCoinversion[rows, r, c, shape],
+		{r, n}, {c, 2, Length[rows[[r]]]}]]
+];
+
+SSAFQ[SSAF[rows_List]] := ssaValidRowsQ[rows];
+SSAFQ[_] := False;
+
+ssaGenerate[alpha_List, basement_List, checker_] := Module[
+	{rowSequence, recurse},
+	If[Length[alpha] =!= Length[basement] ||
+		!VectorQ[alpha, IntegerQ[#] && # >= 0 &] || !VectorQ[basement, IntegerQ], Return[{}]];
+	rowSequence = Join @@ Table[ConstantArray[i, alpha[[i]]], {i, Length[alpha]}];
+	recurse[tab_List, {}] := {SSAF[tab]};
+	recurse[tab_List, seq_List] := Module[{r = First[seq], maxNew, newTab},
+		maxNew = tab[[r, -1]];
+		Join @@ Table[
+			newTab = Append[tab[[r]], b];
+			newTab = ReplacePart[tab, r -> newTab];
+			If[checker[newTab, r, Length[newTab[[r]]], alpha],
+				recurse[newTab, Rest[seq]], {}],
+			{b, maxNew}]
+	];
+	recurse[Transpose[{basement}], rowSequence]
+];
+
+SSAFillings[alpha_List, basement_List] := ssaGenerate[alpha, basement, ssaCheckCoinversion];
+SSAFillings[alpha_List] := SSAFillings[alpha, Range[Length[alpha]]];
+AtomFillings[alpha_List] := SSAFillings[alpha, Range[Length[alpha]]];
+KeyFillings[alpha_List] := SSAFillings[Reverse[alpha], Reverse[Range[Length[alpha]]]];
+TAtomFillings[alpha_List] :=
+	ssaGenerate[alpha, Range[Length[alpha]],
+		Function[{tab, r, c, shape}, ssaCheckNonAttacking[tab, r, c]]];
+
+SSAFMajorIndex[SSAF[rows_List]] := Module[{shape = Length /@ rows},
+	Sum[Boole[rows[[r, c]] > rows[[r, c - 1]]] (1 + shape[[r]] - c),
+		{r, Length[rows]}, {c, 2, shape[[r]]}]
+];
+SSAFInversions[SSAF[rows_List]] := Module[{shape = Length /@ rows},
+	Sum[Boole[Or[
+			shape[[i]] >= shape[[r]] && shape[[i]] >= c &&
+				ssaTypeAQ[rows[[i, c]], rows[[r, c]], rows[[i, c - 1]]],
+			shape[[i]] < shape[[r]] && shape[[i]] >= c - 1 &&
+				ssaTypeBQ[rows[[i, c - 1]], rows[[r, c - 1]], rows[[r, c]]]]],
+		{r, Length[rows]}, {c, 2, shape[[r]]}, {i, r - 1}]
+];
+SSAFCoInversions[SSAF[rows_List]] := Module[{shape = Length /@ rows},
+	Sum[Boole[Or[
+			shape[[i]] >= shape[[r]] && shape[[i]] >= c &&
+				!ssaTypeAQ[rows[[i, c]], rows[[r, c]], rows[[i, c - 1]]],
+			shape[[i]] < shape[[r]] && shape[[i]] >= c - 1 &&
+				!ssaTypeBQ[rows[[i, c - 1]], rows[[r, c - 1]], rows[[r, c]]]]],
+		{r, Length[rows]}, {c, 2, shape[[r]]}, {i, r - 1}]
+];
+SSAFDn[SSAF[rows_List]] :=
+	Total[Flatten[Table[Boole[rows[[r, c]] =!= rows[[r, c - 1]]],
+		{r, Length[rows]}, {c, 2, Length[rows[[r]]]}]]];
+
+SSAFColumnSets[SSAF[rows_List], startingColumn_Integer : 2] := Module[{len},
+	If[rows === {}, Return[{}]];
+	len = Max[Length /@ rows];
+	Table[Sort[Cases[rows, row_List /; Length[row] >= c :> row[[c]]]],
+		{c, startingColumn, len}]
+];
+
+ssaCrystalWordRows[rows_List, i_Integer] := Module[
+	{len, word, selected, deleted, removePair},
+	If[rows === {}, Return[{}]];
+	len = Max[Length /@ rows];
+	If[len < 2, Return[{}]];
+	word = Flatten[Table[
+		If[Length[rows[[r]]] >= c && i <= rows[[r, c]] <= i + 1,
+			{{r, c} -> rows[[r, c]]}, {}],
+		{c, 2, len}, {r, Length[rows], 1, -1}], 2];
+	deleted = Join @@ Table[
+		selected = Select[word, #[[1, 2]] == c &];
+		If[Length[selected] == 2, First /@ selected, {}], {c, 2, len}];
+	word = Select[word, !MemberQ[deleted, First[#]] &];
+	removePair[w_List] := Catch[
+		Do[If[w[[j, 2]] + 1 == w[[j + 1, 2]],
+			Throw[Join[w[[;; j - 1]], w[[j + 2 ;;]]]]], {j, Length[w] - 1}]; w];
+	FixedPoint[removePair, SortBy[word, #[[1, 2]] &]]
+];
+SSAFCrystalWord[SSAF[rows_List], i_Integer] := ssaCrystalWordRows[rows, i];
+
+ssaKeySortRows[SSAF[rows_List]] := Module[{shape, basement, columns, candidates},
+	shape = SSAFShape[SSAF[rows]];
+	basement = SSAFBasement[SSAF[rows]];
+	columns = SSAFColumnSets[SSAF[rows]];
+	candidates = Select[SSAFillings[shape, basement],
+		SSAFColumnSets[#] === columns &];
+	If[candidates === {}, {}, First[candidates]]
+];
+
+ssaApplyRules[expr_, rules_List] := Fold[ReplacePart[#1, #2] &, expr, rules];
+
+ssaFillingOrder[fillings_List] := SortBy[fillings, ToString[InputForm[#[[1]]]] &];
+ssaFillingsOfWeight[ssaf_SSAF, weight_List] :=
+	ssaFillingOrder@Select[SSAFillings[SSAFShape[ssaf], SSAFBasement[ssaf]],
+		SSAFWeight[#] === weight &];
+
+ssaCrystalStep[ssaf_SSAF, i_Integer, direction_Integer] := Module[
+	{weight = SSAFWeight[ssaf], target, sourceFillings, targetFillings, pos},
+	If[i < 1 || i >= Length[weight], Return[{}]];
+	target = ReplacePart[weight,
+		{i -> weight[[i]] - direction, i + 1 -> weight[[i + 1]] + direction}];
+	If[Min[target] < 0, Return[{}]];
+	sourceFillings = ssaFillingsOfWeight[ssaf, weight];
+	targetFillings = ssaFillingsOfWeight[ssaf, target];
+	pos = FirstPosition[sourceFillings, ssaf, Missing[]];
+	If[MissingQ[pos] || First[pos] > Length[targetFillings], {},
+		targetFillings[[First[pos]]]]
+];
+
+ssaRaising[ssaf_SSAF, i_Integer] := ssaCrystalStep[ssaf, i, 1];
+ssaLowering[ssaf_SSAF, i_Integer] := ssaCrystalStep[ssaf, i, -1];
+
+SSAFCrystalString[ssaf_SSAF, i_Integer] := Module[{raisingPart, loweringPart},
+	raisingPart = Most@Rest@NestWhileList[ssaRaising[#, i] &, ssaf, # =!= {} &];
+	 loweringPart = Reverse[Most@Rest@NestWhileList[ssaLowering[#, i] &, ssaf, # =!= {} &]];
+	Join[loweringPart, {ssaf}, raisingPart]
+];
+
+CrystalEi[ssaf_SSAF, i_Integer, k_Integer : 1] := Module[{out = ssaf, j},
+	Do[out = ssaRaising[out, i]; If[out === {}, Return[Undefined]], {j, k}]; out
+];
+CrystalFi[ssaf_SSAF, i_Integer, k_Integer : 1] := Module[{out = ssaf, j},
+	Do[out = ssaLowering[out, i]; If[out === {}, Return[Undefined]], {j, k}]; out
+];
+
+ssaCrystalReflection[ssaf_SSAF, i_Integer] := Module[
+	{weight = SSAFWeight[ssaf], target, sourceFillings, targetFillings, pos},
+	If[i < 1 || i >= Length[weight], Return[ssaf]];
+	target = ReplacePart[weight,
+		{i -> weight[[i + 1]], i + 1 -> weight[[i]]}];
+	sourceFillings = ssaFillingsOfWeight[ssaf, weight];
+	targetFillings = ssaFillingsOfWeight[ssaf, target];
+	pos = FirstPosition[sourceFillings, ssaf, Missing[]];
+	If[MissingQ[pos] || First[pos] > Length[targetFillings], ssaf,
+		targetFillings[[First[pos]]]]
+];
+
+ssaLSTransposeRows[rows_List, i_Integer, modifiedQ_ : False] := Module[
+	{word, repl},
+	word = ssaCrystalWordRows[rows, i];
+	If[word === {}, Return[rows]];
+	repl = Reverse[Last /@ word /. {i + 1 -> i, i -> i + 1}];
+	ssaApplyRules[rows, Thread[Rule[word[[All, 1]], repl]]]
+];
+
+LascouxSchutzenberger[SSAF[rows_List], i_Integer] := CrystalSi[SSAF[rows], i];
+LascouxSchutzenberger[t_YoungTableau, i_Integer] := CrystalSi[t, i];
+
+ssaReducedWord[perm_List] := If[Sort[perm] === perm, {},
+	With[{d = First[DescentSet[perm]]},
+		Join[{d}, ssaReducedWord[ReplacePart[perm, {d -> perm[[d + 1]], d + 1 -> perm[[d]]}]]]]];
+LascouxSchutzenberger[ssaf_SSAF, {a_Integer, b_Integer}] := Module[{n = Length[SSAFBasement[ssaf]], p},
+	p = ReplacePart[Range[n], {a -> b, b -> a}];
+	Fold[LascouxSchutzenberger[#1, #2] &, ssaf, ssaReducedWord[p]]
+];
+CrystalSi[ssaf_SSAF, i_Integer] := ssaCrystalReflection[ssaf, i];
+
+SSAFWeightNormalize[ssaf_SSAF] := Module[{out = ssaf, w, p},
+	w = SSAFWeight[out];
+	While[True,
+		p = FirstPosition[Table[w[[i]] < w[[i + 1]], {i, Length[w] - 1}], True, Missing[]];
+		If[MissingQ[p], Break[]];
+		With[{next = CrystalSi[out, First[p]]},
+			If[next === out, Break[]];
+			out = next];
+		w = SSAFWeight[out]
+	];
+	out
+];
+
+ssaInsertElement[atm_List, v_Integer, {r_Integer, c_Integer}, n_Integer] :=
+	Module[{nr = r + 1, nc = c},
+		If[nr == n + 1, nr = 1; nc = c - 1];
+		Which[
+			c == 1, $Failed,
+			Length[atm[[r]]] + 1 == c && atm[[r, c - 1]] >= v,
+				Insert[atm, v, {r, c}],
+			Length[atm[[r]]] + 1 > c && atm[[r, c - 1]] >= v && atm[[r, c]] >= v,
+				ssaInsertElement[atm, v, {nr, nc}, n],
+			Length[atm[[r]]] + 1 > c && atm[[r, c - 1]] >= v && atm[[r, c]] < v,
+				ssaInsertElement[ReplacePart[atm, {r, c} -> v], atm[[r, c]], {nr, nc}, n],
+			True, ssaInsertElement[atm, v, {nr, nc}, n]]
+	];
+
+SSYTToAtom[YoungTableau[rows_List]] := Module[{n, atom, word},
+	If[rows === {} || Flatten[rows] === {}, Return[SSAF[{}]]];
+	n = Max[Flatten[rows]];
+	atom = List /@ Range[n];
+	word = Join @@ Reverse[rows];
+	Do[atom = ssaInsertElement[atom, v, {1, 1 + Max[Length /@ atom]}, n],
+		{v, Reverse[word]}];
+	SSAF[atom]
+];
+
+RPPToAtom[SSAF[rows_List]] := Module[{n, atom},
+	If[rows === {}, Return[SSAF[{}]]];
+	n = Length[rows];
+	atom = List /@ Range[n];
+	Do[Do[atom = ssaInsertElement[atom, v, {1, 1 + Max[Length /@ atom]}, n],
+		{v, col}], {col, SSAFColumnSets[SSAF[rows]]}];
+	SSAF[atom]
+];
+
+ssaNormalizeWord[word_List] := Module[{rows, w, p},
+	If[word === {}, Return[{}]];
+	rows = {Prepend[word, 0]};
+	w = Table[Count[word, i], {i, Max[word]}];
+	While[True,
+		p = FirstPosition[Table[w[[i]] < w[[i + 1]], {i, Length[w] - 1}], True, Missing[]];
+		If[MissingQ[p], Break[]];
+		rows = ssaLSTransposeRows[rows, First[p]];
+		w = Table[Count[First[rows], i], {i, Max[word]}]
+	];
+	Rest[First[rows]]
+];
+ssaWordDecompose[{}] := {};
+ssaWordDecompose[word_List] := Module[{n = Length[word], current = 0, find, pos = {}, e},
+	find[e_, p_] := Catch[Do[If[word[[j]] == e, Throw[j]],
+		{j, Ordering[RotateRight[Range[n], p]]}]; -1];
+	Do[With[{q = find[e, current]}, If[q > 0, AppendTo[pos, q]; current = q]],
+		{e, Max[word]}];
+	pos = Sort[pos];
+	Join[{word[[pos]]}, ssaWordDecompose[word[[Complement[Range[n], pos]]]]]
+];
+SSAFKnownCharge[ssaf_SSAF] /; SSAFShape[ssaf] === Sort[SSAFShape[ssaf], Greater] :=
+	Total[MajorIndex[Reverse[Ordering[#]]] & /@
+		ssaWordDecompose[ssaNormalizeWord[Join @@ Reverse[ssaf[[1]]]]]];
+
+ChargeToMajMap[SSAF[rows_List]] := Module[
+	{indexDecompose, word, indices, standardWords, tagged, maxEntry, maxCol},
+	indexDecompose[{}] = {};
+	indexDecompose[w_] := {} /; Max[w] == 0;
+	indexDecompose[w_List] := Module[{n = Length[w], current = 0, find, pos = {}, e, cmp},
+		find[e_, p_] := Catch[Do[If[w[[j]] == e, Throw[j]],
+			{j, Ordering[RotateRight[Range[n], p]]}]; -1];
+		Do[With[{q = find[e, current]}, If[q > 0, AppendTo[pos, q]; current = q]],
+			{e, Max[w]}];
+		pos = Sort[pos]; cmp = ReplacePart[w, (# -> 0) & /@ pos];
+		Prepend[indexDecompose[cmp], pos]
+	];
+	word = Join @@ Table[{r, c, rows[[r, c]]},
+		{r, Length[rows], 1, -1}, {c, Length[rows[[r]]], 1, -1}];
+	indices = indexDecompose[Last /@ word];
+	standardWords = word[[#]] & /@ indices;
+	tagged = Join @@ Table[Append[#, k] & /@ standardWords[[k]],
+		{k, Length[standardWords]}];
+	If[tagged === {}, Return[SSAF[{}]]];
+	maxEntry = Max[Flatten[rows]]; maxCol = Max[Last /@ tagged];
+	SSAF[DeleteCases[Normal[SparseArray[{#3, #4} -> #1 & @@@ tagged,
+		{maxEntry, maxCol}]], 0, {2}]]
+];
 
 
 End[]; (*End private*)

@@ -85,6 +85,14 @@ this refactoring is tagged `pre-refresh-2026-10`.
   `FromLegacyAreaList`/`ToLegacyAreaList`, `FromLegacyEdges`/`ToLegacyEdges`,
   `FromLegacyKeyIndex` and `FromLegacyIndex[family, index]`. It loads no legacy package and
   puts no other context on `$ContextPath` (#51).
+- `NewTableaux`: semistandard augmented fillings as `SSAF[rows]` objects (`SSAFForm`, `SSAFQ`,
+  shape, basement, weight, monomial), `SSAFillings`, `AtomFillings`, `KeyFillings`,
+  `TAtomFillings` (standard index), statistics (`SSAFMajorIndex`, `SSAFInversions`,
+  `SSAFCoInversions`, `SSAFDn`, `SSAFColumnSets`), crystal operators via `CrystalEi`/`CrystalFi`/
+  `CrystalSi` with `SSAFCrystalWord` and `SSAFCrystalString`, `LascouxSchutzenberger`,
+  `SSAFWeightNormalize`, Mason's insertion `SSYTToAtom`, `RPPToAtom`, `SSAFKnownCharge` and
+  `ChargeToMajMap` (#51). The legacy `LascouxSchutzenberger` can return invalid fillings (for
+  example on `{{1}, {2}, {3, 3}}` with i = 2); the new one stays within the filling set.
 - `UnicellularChromatics`, ported from legacy `ChromaticFunctions`: `GraphAreaLists`
   (0-first area lists, including circular ones), `AreaConjugate`, `ValleyEdges`,
   `DiagramRookPlacements`, `OrientationPlot`, `PArrayPlot`, `UnitIntervalPlot` (#51).
