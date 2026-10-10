@@ -1,6 +1,11 @@
 testRoot = DirectoryName[DirectoryName[$InputFileName]];
 If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
-Needs["SymmetricFunctions`"];
+
+VerificationTest[
+  Needs["SymmetricFunctions`"],
+  Null,
+  TestID -> "SymmetricFunctions-loads-cleanly"
+]
 
 VerificationTest[
   SymmetricFunctions`CylindricSchurSymmetric[{{1}, {}}, 0],

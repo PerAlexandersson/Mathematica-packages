@@ -1,10 +1,50 @@
 #!/usr/bin/env wolframscript
+(* Runs every Tests/*.wlt file in a separate kernel, so that results cannot depend
+   on which packages earlier test files happened to load. *)
 
 testDirectory = DirectoryName[$InputFileName];
-report = TestReport[FileNames["*.wlt", testDirectory]];
+runner = FileNameJoin[{testDirectory, "RunTestFile.wls"}];
 
-Print[
-  "Tests succeeded: ", report["TestsSucceededCount"],
-  "; failed: ", report["TestsFailedCount"]
+(* Locate a command that runs a script in a fresh kernel. *)
+scriptCommand = Module[{ws},
+  ws = Select[{
+      FileNameJoin[{$InstallationDirectory, "SystemFiles", "Kernel", "Binaries",
+        $SystemID, "wolframscript"}],
+      FileNameJoin[{$InstallationDirectory, "Executables", "wolframscript"}]},
+    FileExistsQ];
+  If[ws =!= {},
+    {First[ws], "-file"},
+    {First[Select[{FileNameJoin[{$InstallationDirectory, "Executables", "WolframKernel"}],
+      FileNameJoin[{$InstallationDirectory, "Contents", "MacOS", "WolframKernel"}]},
+      FileExistsQ], "wolframscript"], "-script"}
+  ]
 ];
-Exit[If[TrueQ[report["ReportSucceeded"]], 0, 1]];
+
+shellQuote[s_String] := "'" <> StringReplace[s, "'" -> "'\\''"] <> "'";
+
+files = FileNames["*.wlt", testDirectory];
+
+results = Table[
+  Module[{proc, lines, summary},
+    (* RunProcess is unavailable in some sandboxes, so use a shell pipe. *)
+    proc = ReadList["!" <> StringRiffle[shellQuote /@ Join[scriptCommand, {runner, file}]]
+      <> " 2>&1", String];
+    lines = If[ListQ[proc], proc, {}];
+    summary = Select[lines, StringStartsQ[#, "RESULT "] &];
+    Scan[Print[FileNameTake[file], ": ", #] &,
+      Select[lines, StringStartsQ[#, "FAILED: "] &]];
+    If[summary === {},
+      Print[FileNameTake[file], ": no result (kernel failed)"];
+      Scan[Print, lines];
+      {0, 1},
+      With[{counts = ToExpression /@ Rest[StringSplit[Last[summary]]]},
+        If[Total[counts] == 0,
+          Print[FileNameTake[file], ": contains no tests"]; {0, 1},
+          counts]]
+    ]
+  ],
+  {file, files}];
+
+{succeeded, failed} = Total[results];
+Print["Tests succeeded: ", succeeded, "; failed: ", failed];
+Exit[If[failed == 0 && Length[files] > 0, 0, 1]];
