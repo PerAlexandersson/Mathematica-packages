@@ -16,6 +16,7 @@ PacletObject[
         "Kernel",
         "Root" -> "Kernel",
         "Context" -> {
+          "AlgebraicBases`",
           "CombinatoricTools`",
           "NewTableaux`",
           "SymmetricFunctions`",

@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-BeginPackage["QuasiSymmetricFunctions`",{"CombinatoricTools`"}];
+BeginPackage["QuasiSymmetricFunctions`",{"AlgebraicBases`","CombinatoricTools`"}];
 
 
 Unprotect["`*"]
@@ -85,107 +85,29 @@ QMonomialProduct[alpha_List, beta_List, x_: None] := Module[
 ];
 
 
-defineBasisFormatting[bb_,symb_String]:=Module[{},
-	
-	bb /: Format[bb[a_List, x_]] := With[
-	{r = If[Max[a]<10, Row[a],Row[a,","]]}, 
-	
-		If[x === None, Subscript[symb, r], 
-			Row[{Subscript[symb, r], "(", ToString@x, ")"}]]
-	];
-	
-	(* Define traditional formatting. *)
-	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
-		With[{r = 
-			If[Max[a] <= 9, RowBox[ToString /@ a], 
-				RowBox[Riffle[ToString /@ a, ","]]]}, 
-		If[x === None, SubscriptBox[symb, r], 
-			RowBox[{SubscriptBox[symb, r], "(", ToString@x, ")"}]]];
-			
-];
-
-Options[createQSymBasis] = {
-		MultiplicationFunction -> None, 
-		SortFunction -> "Standard",
-		PowerFunction -> "Mult"
-};
-
-createQSymBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[
-	{sort,mult,pow},
-	
-	bb[lam_List] := bb[lam, None];
-	bb[i_Integer] := Which[i>0, bb[{i}, None], i==0, 1, True, 0];
-	bb[i_Integer, x_] := Which[i>0, bb[{i}, x], i==0, 1, True, 0];
-	
-	bb[{}, x_: None] := 1;
-	bb[{0}, x_: None] := 1;
-	bb[{lam__, 0..}, x_: None] := bb[{lam}, x];
-	
-	sort = OptionValue[SortFunction];
-	
-	Which[
-		sort === "Standard",
-				bb[lam_List, x_: None] := bb[DeleteCases[lam,0], x] /; Min[lam]==0;
-		,
-		sort =!= None,
-			bb[lam_List, x_: None] :=  (sort[lam, x]) /; Min[lam]==0;
-		,
-		True, Null
-	];
-	
-	mult = OptionValue[MultiplicationFunction];
-	If[mult =!= None,
-		bb /: Times[bb[a_List, x_], bb[b_List, x_]] := mult[a, b, x];
-	];
-	
-	bb /: Power[bb[a_List, x_], 0] := 1;
-	bb /: Power[bb[a_List, x_], 1] := bb[a, x];
-	
-	pow = OptionValue[PowerFunction];
-	Which[
-		(* Use recursion, via multiplication. *)
-		pow === "Mult",
-			bb /: Power[bb[a_List, x_], 2] := mult[a, a, x];
-			bb /: Power[bb[a_List, x_], n_Integer] := Expand@Which[
-			EvenQ[n],
-				Power[bb[a, x], n/2] * Power[bb[a, x], n/2],
-			True,
-				Power[bb[a, x], (n-1)/2] * Power[bb[a, x], (n-1)/2]*bb[a, x]
-			];
-		,
-		(* Use custom power function *)
-		pow =!= None,
-			bb /: Power[bb[a_List, x_], n_Integer] := pow[a,n,x];
-		,
-		True, Null
-	];
-	
-	(* Formatting *)
-	defineBasisFormatting[bb,symb];
-];
-
+(* Basis symbols are created with AlgebraicBases`CreateBasis, with composition indices. *)
 
 MonomialQSymbol::usage = "MonomialQSymbol[alpha, x] represents the monomial quasisymmetric-function basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
-createQSymBasis[MonomialQSymbol, "M", 
+CreateBasis[MonomialQSymbol, "M", IndexType -> "Composition",
 	MultiplicationFunction -> QMonomialProduct,
 	PowerFunction -> "Mult"
 ];
 
 
 FundamentalQSymbol::usage = "FundamentalQSymbol[alpha, x] represents the fundamental quasisymmetric-function basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
-createQSymBasis[FundamentalQSymbol, "F", 
+CreateBasis[FundamentalQSymbol, "F", IndexType -> "Composition",
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
 PowerSumQSymbol::usage = "PowerSumQSymbol[alpha, x] represents the quasisymmetric power-sum basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
-createQSymBasis[PowerSumQSymbol, "\[Psi]", 
+CreateBasis[PowerSumQSymbol, "\[Psi]", IndexType -> "Composition",
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
 ZPowerSumQSymbol::usage = "ZPowerSumQSymbol[alpha, x] represents the z-normalized quasisymmetric power-sum basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
-createQSymBasis[ZPowerSumQSymbol, "z\[Psi]", 
+CreateBasis[ZPowerSumQSymbol, "z\[Psi]", IndexType -> "Composition",
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];

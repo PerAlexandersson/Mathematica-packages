@@ -35,6 +35,11 @@ this refactoring is tagged `pre-refresh-2026-10`.
 
 ### Added
 
+- `AlgebraicBases`, an internal package with `CreateBasis`, shared by the algebra packages
+  for basis symbols (formatting, index normalization, products) (#51).
+- `CONVENTIONS.md` and `Tests/CompatibilityTests.m`: shared object representations
+  between packages (#51).
+
 - `ClearSymmetricFunctionsCache[]` (#23).
 - `CombinatoricTools`RunSortedPermutations` (from RunSortedWords, now a shim) (#39).
 - `GraphTools`RootedTreeGraphs` for n <= 10 (from TreesData) (#40).

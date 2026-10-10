@@ -28,7 +28,7 @@
 
 *)
 
-BeginPackage["SymmetricFunctions`",{"CombinatoricTools`","NewTableaux`"}];
+BeginPackage["SymmetricFunctions`",{"AlgebraicBases`","CombinatoricTools`","NewTableaux`"}];
 
 Unprotect["`*"]
 ClearAll["`*"]
@@ -176,86 +176,8 @@ conjugatePermutation[n_Integer]:=conjugatePermutation[n]=With[{ip=IntegerPartiti
 
 
 
-defineBasisFormatting[bb_,symb_String]:=Module[{},
-	
-	bb /: Format[bb[a_List, x_]] := With[
-	{r = If[Max[a]<10, Row[a],Row[a,","]]}, 
-	
-		If[x === None, Subscript[symb, r], 
-			Row[{Subscript[symb, r], "(", MakeBoxes[x], ")"}]]
-	];
-	
-	(* Define traditional formatting. *)
-	bb /: HoldPattern[MakeBoxes[bb[a_List, x_], TraditionalForm]] := 
-		With[{r = 
-			If[Max[a] <= 9, RowBox[ToString /@ a], 
-				RowBox[Riffle[ToString /@ a, ","]]]}, 
-		If[x === None, SubscriptBox[symb, r], 
-			RowBox[{SubscriptBox[symb, r], "(", MakeBoxes[x,TraditionalForm], ")"}]]];
-			
-];
-
-
-(* Abstract function for defining a symmetric function basis,
-	with formatting and basic multiplication. *)
-Options[createBasis] = {
-		MultiplicationFunction -> None, 
-		SortFunction -> "Standard",
-		PowerFunction -> "Mult"
-};
-
-createBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[{sort,mult,pow},
-	bb[lam_List] := bb[lam, None];
-	bb[i_Integer] := Which[i>0, bb[{i}, None], i==0, 1, True, 0];
-	bb[i_Integer, x_] := Which[i>0, bb[{i}, x], i==0, 1, True, 0];
-	
-	bb[{}, x_: None] := 1;
-	bb[{0}, x_: None] := 1;
-	bb[{lam__, 0..}, x_: None] := bb[{lam}, x];
-	bb[lam_List, x_: None] := 0 /; Min[lam]<0;
-	
-	sort = OptionValue[SortFunction];
-	
-	Which[
-		sort === "Standard",
-				bb[lam_List, x_: None] := bb[Sort[lam,Greater], x] /; Not[OrderedQ[Reverse@lam]];
-		,
-		sort =!= None,
-			bb[lam_List, x_: None] :=  (sort[lam, x]) /; Not[OrderedQ[Reverse@lam]];
-		,
-		True, Null
-	];
-	
-	mult = OptionValue[MultiplicationFunction];
-	If[mult =!= None,
-		bb /: Times[bb[a_List, x_], bb[b_List, x_]] := mult[a, b, x];
-	];
-	
-	bb /: Power[bb[a_List, x_], 0] := 1;
-	bb /: Power[bb[a_List, x_], 1] := bb[a, x];
-	
-	pow = OptionValue[PowerFunction];
-	Which[
-		(* Use recursion, via multiplication. *)
-		pow === "Mult",
-			bb /: Power[bb[a_List, x_], 2] := mult[a, a, x];
-			bb /: Power[bb[a_List, x_], n_Integer] := Expand@Which[
-			EvenQ[n],
-				Power[bb[a, x], n/2] * Power[bb[a, x], n/2],
-			True,
-				Power[bb[a, x], (n-1)/2] * Power[bb[a, x], (n-1)/2]*bb[a, x]
-			];
-		,
-		(* Use custom power function *)
-		pow =!= None,
-			bb /: Power[bb[a_List, x_], n_Integer] := pow[a,n,x];
-		,
-		True, Null
-	];
-	
-	(* Formatting. *)
-	defineBasisFormatting[bb,symb];
-];
+(* Basis symbols are created with AlgebraicBases`CreateBasis (shared with
+   QuasiSymmetricFunctions). *)
 
 
 (* This is a private helper function, for utilizing memoization. *)
@@ -333,7 +255,7 @@ MExpand[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
 
 (* Create the three classical multiplicative bases. *)
 ElementaryESymbol::usage = "ElementaryESymbol[lam, x] represents the elementary symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[ElementaryESymbol, "e", 
+CreateBasis[ElementaryESymbol, "e", 
 	MultiplicationFunction -> (ElementaryESymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction-> 
 		Function[{a,n,x},
@@ -341,7 +263,7 @@ createBasis[ElementaryESymbol, "e",
 ];
 
 PowerSumSymbol::usage = "PowerSumSymbol[lam, x] represents the power-sum symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[PowerSumSymbol, "p", 
+CreateBasis[PowerSumSymbol, "p", 
 	MultiplicationFunction -> (PowerSumSymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction-> 
 		Function[{a,n,x},
@@ -349,7 +271,7 @@ createBasis[PowerSumSymbol, "p",
 ];
 
 CompleteHSymbol::usage = "CompleteHSymbol[lam, x] represents the complete homogeneous symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[CompleteHSymbol, "h", 
+CreateBasis[CompleteHSymbol, "h", 
 	MultiplicationFunction -> (CompleteHSymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction->
 		Function[{a,n,x},
@@ -359,25 +281,25 @@ createBasis[CompleteHSymbol, "h",
 
 (* Use this if monomials should automatically multiply together. *)
 (*
-createBasis[MonomialSymbol, "m", 
+CreateBasis[MonomialSymbol, "m", 
 	MultiplicationFunction -> (monomialProduct),
 	PowerFunction->"Mult"
 ];
 
-createBasis[ForgottenSymbol, "f", 
+CreateBasis[ForgottenSymbol, "f", 
 	MultiplicationFunction -> (monomialProduct),
 	PowerFunction->"Mult"
 ];
 *)
 
 MonomialSymbol::usage = "MonomialSymbol[lam, x] represents the monomial symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[MonomialSymbol, "m", 
+CreateBasis[MonomialSymbol, "m", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
 ForgottenSymbol::usage = "ForgottenSymbol[lam, x] represents the forgotten symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[ForgottenSymbol, "f", 
+CreateBasis[ForgottenSymbol, "f", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
@@ -385,7 +307,7 @@ createBasis[ForgottenSymbol, "f",
 
 (* We use slinky rule for the Schur functions. *)
 SchurSymbol::usage = "SchurSymbol[lam, x] represents the Schur symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[SchurSymbol, "s", 
+CreateBasis[SchurSymbol, "s", 
 	MultiplicationFunction -> None,
 	PowerFunction -> None,
 	SortFunction -> (With[{slr=CompositionSlinky[#1]},
@@ -1432,7 +1354,7 @@ Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[HallLittlewoodPSymmetric[
 
 
 HallLittlewoodPSymbol::usage = "HallLittlewoodPSymbol[lam, x] represents a Hall-Littlewood P basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[HallLittlewoodPSymbol, "P", 
+CreateBasis[HallLittlewoodPSymbol, "P", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
@@ -1562,7 +1484,7 @@ ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] :=
 Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
 
 MacdonaldHSymbol::usage = "MacdonaldHSymbol[lam, x] represents a modified Macdonald H basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
-createBasis[MacdonaldHSymbol, "H", 
+CreateBasis[MacdonaldHSymbol, "H", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];

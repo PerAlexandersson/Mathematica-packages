@@ -24,6 +24,8 @@
   documented exception) and do not set usage messages on them.
 - Do not memoize with `f[x] := f[x] = ...` on symbols that are protected
   (SymmetricFunctions protects its public API; use its private `cached[key, expr]`).
+- Create basis symbols with `AlgebraicBases`CreateBasis` rather than defining
+  formatting and normalization by hand.
 - Use exact arithmetic for combinatorial quantities.
 - Every public symbol needs a usage string starting with its call signature; option
   names say which functions they belong to (`Tests/UsageTests.m` enforces this).
