@@ -3,6 +3,7 @@ title: Home
 nav_order: 1
 ---
 
+{% raw %}
 # Mathematica packages for symmetric functions
 
 Wolfram Language packages for symmetric functions and algebraic combinatorics:
@@ -47,3 +48,5 @@ Needs["SymmetricFunctions`"]
 Compatibility: tested with Wolfram Language 14.3 (the paclet requires 14.3 or later;
 earlier versions may work but are untested).
 
+
+{% endraw %}

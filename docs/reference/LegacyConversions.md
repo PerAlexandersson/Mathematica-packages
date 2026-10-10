@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 14
 ---
 
+{% raw %}
 # LegacyConversions
 
 Converters from the data of the legacy packages (GT patterns, tableaux, area lists, key indices) to the supported conventions.
@@ -52,3 +53,5 @@ ToLegacyGTPattern\[GTPatterns\`GTPattern\[rows\]\] converts bottom-to-top rows t
 
 ToLegacyYoungTableau\[NewTableaux\`YoungTableau\[rows\]\] converts None skew cells to OldYoungTableaux\`Private\`SKEW.
 
+
+{% endraw %}

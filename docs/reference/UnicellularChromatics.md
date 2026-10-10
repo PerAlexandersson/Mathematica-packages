@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 10
 ---
 
+{% raw %}
 # UnicellularChromatics
 
 Chromatic symmetric functions and LLT polynomials of unit interval graphs and area sequences, orientations and their statistics.
@@ -381,3 +382,5 @@ Background: [Unicellular LLT polynomials and twin manifolds](https://www.symmetr
 
 Option for AreaLists
 
+
+{% endraw %}

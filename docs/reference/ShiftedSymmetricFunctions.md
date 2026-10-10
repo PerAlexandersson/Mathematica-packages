@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 2
 ---
 
+{% raw %}
 # ShiftedSymmetricFunctions
 
 Okounkov–Olshanski shifted Schur and Jack polynomials, normalized characters, and Stanley–Feray–Sniady multirectangular character polynomials.
@@ -64,3 +65,5 @@ Background: [Shifted Schur polynomials](https://www.symmetricfunctions.com/schur
 
 StanleyCharacterPolynomial\[mu,p,q,d\] returns the Stanley--Feray--Sniady normalized character polynomial in multirectangular coordinates p\[1\],...,p\[d\] and q\[1\],...,q\[d\].
 
+
+{% endraw %}

@@ -45,7 +45,15 @@ usage[pkg_String, name_String] := With[{u = ToExpression[pkg <> "`" <> name, Inp
 frontMatter[assoc_Association] := "---\n" <> StringRiffle[
 	KeyValueMap[#1 <> ": " <> ToString[#2] &, assoc], "\n"] <> "\n---\n\n";
 
-writeFile[rel_String, text_String] := Module[{path = FileNameJoin[{out, rel}]},
+(* Jekyll runs Liquid over page content, and Wolfram code such as {{1, 2}} looks like Liquid,
+   so the body of every Markdown page is wrapped in raw tags (GitHub Pages uses Jekyll 3, which
+   has no per-page switch to turn Liquid off). *)
+liquidRaw[text_String] := Module[{parts = StringSplit[text, "\n---\n\n", 2]},
+	If[StringStartsQ[text, "---\n"] && Length[parts] == 2,
+		parts[[1]] <> "\n---\n\n{% raw %}\n" <> parts[[2]] <> "\n{% endraw %}\n", text]];
+
+writeFile[rel_String, textIn_String] := Module[{path = FileNameJoin[{out, rel}],
+		text = If[StringEndsQ[rel, ".md"], liquidRaw[textIn], textIn]},
 	Quiet[CreateDirectory[DirectoryName[path], CreateIntermediateDirectories -> True]];
 	Export[path, text, "Text", CharacterEncoding -> "UTF-8"]];
 

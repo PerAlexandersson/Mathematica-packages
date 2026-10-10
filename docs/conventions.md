@@ -3,6 +3,7 @@ title: Conventions
 nav_order: 4
 ---
 
+{% raw %}
 # Conventions
 
 Every supported package uses the representations below, so objects produced by one
@@ -58,3 +59,4 @@ a function needs a different representation internally, it converts at its bound
   analogues and `ToQuasiSymmetric`), not
   through ad hoc substitution rules.
 - Two supported packages never export the same name (`Tests/LoadOrderTests.m`).
+{% endraw %}

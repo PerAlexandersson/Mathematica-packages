@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 1
 ---
 
+{% raw %}
 # SymmetricFunctions
 
 Monomial, elementary, complete homogeneous, power-sum, Schur and forgotten bases with fast transition matrices; several alphabets; Hall and Jack inner products; plethysm; Kostka, inverse Kostka, Littlewood–Richardson and Kronecker coefficients; skew Schur, Schur P and Q, Jack, Hall–Littlewood, Macdonald P/J and modified Macdonald H~ (Haglund's convention), LLT, k-Schur, Lah and Petrie functions; the Delta and nabla operators.
@@ -400,3 +401,5 @@ ToPowerSumZBasis\[poly, x\] converts poly to the power-sum basis with each power
 
 ToSchurBasis\[poly, x\] converts poly to the Schur basis. The alphabet x defaults to None.
 
+
+{% endraw %}

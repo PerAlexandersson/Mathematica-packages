@@ -4,6 +4,7 @@ parent: Reference
 nav_order: 7
 ---
 
+{% raw %}
 # PolynomialTools
 
 Real-rootedness, interlacing, log-concavity, Eulerian and h*-polynomials, recurrence finding, Hilbert functions.
@@ -176,3 +177,5 @@ UltraLogConcaveQ\[poly,t\] returns true if coefficients form an ultra log-concav
 
 VariableDegree is an option for FindPolynomialRecurrence; its default is 1 and its value is a non-negative integer.
 
+
+{% endraw %}
