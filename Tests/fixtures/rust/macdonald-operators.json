@@ -1,0 +1,364 @@
+{
+  "convention": "B_terms list q^a' t^l' over English diagram boxes; nabla is q^(n(lambda')) t^(n(lambda)). Coefficients are [q-degree,t-degree,numerator,denominator].",
+  "family": "modified Macdonald operator eigenvalues",
+  "records": [
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        2
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          0,
+          1,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        1,
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          3,
+          0,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        3
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        2,
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          0,
+          3,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          3,
+          0,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          6,
+          0,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        4
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          3,
+          1,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        3,
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          2,
+          2,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        2,
+        2
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          1,
+          3,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "B_terms": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          3,
+          1
+        ]
+      ],
+      "nabla_convention": "[q_degree,t_degree,numerator/denominator]",
+      "nabla_terms": [
+        [
+          0,
+          6,
+          1,
+          1
+        ]
+      ],
+      "partition": [
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "rust_function": "sym_poly_sym::macdonald::{macdonald_b_eigenvalue,nabla_eigenvalue}"
+}
