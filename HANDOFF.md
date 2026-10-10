@@ -4,26 +4,26 @@
 
 - 2026-10-10: the repository refresh is complete (audit defects fixed with regression
   tests, paclet layout, documentation, MIT license, `CHANGELOG.md` for 0.1.0; PRs #22--#50).
-- Legacy port, issue #51 (milestone `Legacy port`), owner decisions D1--D7 recorded there.
-  Merged so far: P0 conventions and compatibility tests (#54), `AlgebraicBases` (#55),
+- Legacy port, issue #51 (milestone `Legacy port`), owner decisions D1--D7 recorded there:
+  implemented. Merged: P0 conventions and compatibility tests (#54), `AlgebraicBases` (#55),
   `NonsymmetricPolynomials` core (#56), ChromaticFunctions remainder (#57), polynomial
   bridges and quasisymmetric Schur (#58), GT-pattern extensions (#59), Grothendieck,
-  Lascoux, slide and lock polynomials (#60), small helpers (#61).
-- In progress (Codex workers in scratch copies, reviewed by the orchestrator before
-  integration): P4 nonsymmetric Macdonald E by operators (owns
-  `Kernel/NonsymmetricPolynomials.m` and its tests), P5 SSAF objects in NewTableaux (owns
-  `Kernel/NewTableaux.m` and its tests), P7 new `ShiftedSymmetricFunctions` (owns the new
-  package, `SymmetricFunctions.m` for moving `ShiftedJackPSymmetric`, `PacletInfo.wl`,
-  `UsageTests.m`, `LoadOrderTests.m`). Remaining: P9 (`Legacy/MIGRATION.md`, converters,
-  release).
+  Lascoux, slide and lock polynomials (#60), small helpers (#61), `ShiftedSymmetricFunctions`
+  (#63), `LegacyConversions` (#64), nonsymmetric Macdonald E by operators (#65), SSAF objects
+  in NewTableaux (#66), `Legacy/MIGRATION.md` (this checkpoint). No worker owns files.
 - Rust: `sym-poly` `lock_polynomial` indexed locks in reverse; fixed in
-  PerAlexandersson/polytool#8. Until the shared `/workspace/rust` checkout includes it,
-  `CrossCheck-Grothendieck-Lascoux-Slide-Lock` compares `LockPolynomial[Reverse[a]]` with
-  `lock_polynomial_terms`; after it does, regenerate the fixtures and drop the `Reverse`.
+  PerAlexandersson/polytool#8 (merged into its `master`). The fixture crate builds against the
+  shared `/workspace/rust` checkout, which is on another lane's feature branch without the
+  fix; when it includes it, regenerate `Tests/fixtures/rust/` and drop the `Reverse` in
+  `CrossCheck-Grothendieck-Lascoux-Slide-Lock`.
+- Running Wolfram: memory matters (owner request). Use a wrapper with `ulimit -v 6000000`,
+  `OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OMP_STACKSIZE=512k`, a small `JAVA_TOOL_OPTIONS` heap
+  (`-Xmx512m`), `nice`, and run one Wolfram job at a time (parallel runs also exhaust kernel
+  licenses, and a waiting `wolframscript` then hangs).
 - Open for the owner: legacy names that differ in meaning (PR #47), and when to release
   0.1.0 (`RELEASING.md`).
-- Verification: `wolframscript -file Tests/RunTests.m` (337 tests) and
-  `wolframscript -file Scripts/BuildPaclet.m` (all 20 contexts load from the archive).
+- Verification: `wolframscript -file Tests/RunTests.m` (390 tests) and
+  `wolframscript -file Scripts/BuildPaclet.m` (all 22 contexts load from the archive).
 
 ## Planned sequence (completed)
 

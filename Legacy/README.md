@@ -2,12 +2,13 @@
 
 These packages are kept loadable for existing notebooks (`Needs["OldYoungTableaux`"]`
 etc. still work after `PacletDirectoryLoad` or installation), but they are not maintained
-and no supported package loads them. Prefer the replacements below in new code.
+and no supported package loads them. Prefer the replacements below in new code; [`MIGRATION.md`](MIGRATION.md) lists every legacy name
+with its replacement, and `LegacyConversions` converts legacy data.
 
 | Package | Replacement |
 |---|---|
-| `OldYoungTableaux` | `NewTableaux` (tableaux, RSK, crystals), `GTPatterns`, `CombinatoricTools` (partitions, Kostka numbers), `SymmetricFunctions` |
-| `MacdonaldPolynomials` | `NonsymmetricPolynomials` (keys, atoms, t-keys, t-atoms, Schubert; the remaining families are being ported, #51). Note: its key functions index compositions in reverse; the new ones use the standard convention, `KeyPolynomial[alpha]` = old `KeyPolynomial[Reverse[alpha]]` |
+| `OldYoungTableaux` | `NewTableaux` (tableaux, RSK, crystals, TeX), `GTPatterns` (GT, BZ, Gog/Magog patterns, tiles, Ehrhart data), `CombinatoricTools` (partitions, Kostka numbers), `SymmetricFunctions`, `ShiftedSymmetricFunctions` (shifted Schur/Jack, normalized characters), `PolynomialTools` |
+| `MacdonaldPolynomials` | `NonsymmetricPolynomials` (operators; keys, atoms, t-keys, t-atoms, Schubert, Grothendieck, Lascoux, slides, locks, nonsymmetric Macdonald and Jack), `NewTableaux` (SSAF fillings, crystals, Mason insertion), `QuasiSymmetricFunctions` (polynomial bridges, quasisymmetric Schur). Keys and locks are indexed in reverse in the legacy package: new `KeyPolynomial[alpha]` = old `KeyPolynomial[Reverse[alpha]]` |
 | `ChromaticFunctions` | `UnicellularChromatics`, which contains its useful functions with the 0-first area-list convention of `CatalanObjects` (ChromaticFunctions area lists end with 0) |
 | `TreesData` | `GraphTools`TreeGraphs` (unrooted, n <= 20) and `GraphTools`RootedTreeGraphs` (n <= 10) |
 | `RunSortedWords` | `CombinatoricTools`RunSortedPermutations` and `SetPartitionToRunSortedPermutation`; the package is now a shim |

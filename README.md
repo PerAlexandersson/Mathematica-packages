@@ -55,8 +55,9 @@ and P-Eulerian polynomials), and `RookTools``.
 
 Legacy packages (in `Legacy/`) remain loadable for old notebooks; `Legacy/README.md`
 lists their replacements: `OldYoungTableaux``, `MacdonaldPolynomials``, `ChromaticFunctions``,
-`TreesData`` and `RunSortedWords``. Their content is being ported into the supported
-packages (plan: issue #51).
+`TreesData`` and `RunSortedWords``. Their content has been ported into the supported
+packages (issue #51); [`Legacy/MIGRATION.md`](Legacy/MIGRATION.md) maps every legacy name to
+its replacement, and `LegacyConversions` converts legacy data.
 
 Every public symbol has a usage message, e.g. `?SchurSymmetric`. Objects are shared
 between packages using the representations in `CONVENTIONS.md`.

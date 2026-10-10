@@ -12,6 +12,9 @@ this refactoring is tagged `pre-refresh-2026-10`.
 
 ### Breaking changes
 
+The legacy packages are frozen; [`Legacy/MIGRATION.md`](Legacy/MIGRATION.md) maps every legacy name to its
+supported replacement, and `LegacyConversions` converts legacy data.
+
 - `ShiftedJackPSymmetric` moved from `SymmetricFunctions` to the new
   `ShiftedSymmetricFunctions` package (unchanged behaviour); load that package to use it (#51).
 - `MacdonaldPolynomials` is a legacy package. Its key, atom and Schubert polynomials are in
