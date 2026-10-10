@@ -196,3 +196,13 @@ VerificationTest[
   True,
   TestID -> "CombinatoricTools-MacdonaldPsiPrime-exported"
 ]
+
+(* Previously documented but not exported. Type B set partitions are counted by the Dowling
+   numbers 1, 2, 6, 24, 116 (OEIS A007405); signed set partitions of {1, 2} without zero
+   block: 3. *)
+VerificationTest[
+  {Length[SetPartitionsTypeB[#]] & /@ Range[0, 4], Length[SetPartitionsNoZeroBlock[{1, 2}]],
+   Context[SetPartitionsTypeB]},
+  {{1, 2, 6, 24, 116}, 3, "CombinatoricTools`"},
+  TestID -> "CombinatoricTools-type-B-set-partitions-exported"
+]

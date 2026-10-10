@@ -98,6 +98,8 @@ SageForm;
 
 ZCoefficient;
 PartitionAddBox;
+SetPartitionsNoZeroBlock;
+SetPartitionsTypeB;
 PartitionRemoveBox;
 PartitionRemoveHorizontalStrip;
 PartitionRemoveVerticalStrip;

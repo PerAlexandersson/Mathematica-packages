@@ -27,6 +27,7 @@ GrothendieckPolynomial;
 LascouxPolynomial;
 FundamentalSlidePolynomial;
 LockPolynomial;
+DualGrothendieckPolynomial;
 MacdonaldEPolynomial;
 NonsymmetricJackPolynomial;
 IntegralMacdonaldE;

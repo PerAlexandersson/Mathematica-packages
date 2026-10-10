@@ -39,6 +39,8 @@ weight gives the multiplicity of the variables.";
 
 
 (***************** Switch to private context *********************************)
+PosetNaturalLabeling;
+
 Begin["`Private`"];
 
 
