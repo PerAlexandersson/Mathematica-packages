@@ -184,13 +184,14 @@ SyntaxInformation[UnimodalQ] = {"ArgumentsPattern" -> {{_...}}};
 UnimodalQ[list_List] := With[{dd = Reverse@DeleteCases[Sign@Differences[list], 0]}, dd === Sort[dd]];
 
 
-SyntaxInformation[UnimodalQ] = {"LatticeWordQ" -> {{_...}}};
+SyntaxInformation[LatticeWordQ] = {"ArgumentsPattern" -> {{_...}}};
 LatticeWordQ::usage="LatticeWordQ[w] returns true if w is a lattice word.";
 LatticeWordQ[word:iList] :=
   Module[{m = Max@word, tally, n = Length@word},
+   If[n == 0, Return[True]];
    tally[0] := ConstantArray[0, m];
    tally[i_Integer] := MapAt[# + 1 &, tally[i - 1], word[[i]]];
-   Table[
+   And @@ Table[
     GreaterEqual @@ tally[k]
     , {k, n}]
 ];
@@ -337,6 +338,7 @@ PackedWords[n_Integer] := PackedWords[n] = Union[WeakStandardize /@ Tuples[Range
 
 Derangements::usage = "Derangements[n] returns a list of all derangements of 1,2,...,n.";
 Derangements[n_Integer] := Derangements[n] = Derangements[Range@n];
+Derangements[{}] := {{}};
 Derangements[{i_Integer}] := If[i == 1, {}, {{i}}];
 Derangements[lst:iList] := With[{n = Length@lst},
    Join @@ Table[
@@ -490,6 +492,7 @@ SetPartitions::usage = "SetPartitions[n] returns all set partitions of {1,2,...,
 
 SetPartitions[0] := {{}};
 SetPartitions[1] := {{{1}}};
+SetPartitions[n_Integer /; n < 0] := {};
 SetPartitions[n_Integer] := SetPartitions[n] = Module[{sp},
     sp = SetPartitions[n - 1];
     Join @@ Table[
@@ -614,6 +617,8 @@ SetPartitionsTypeB[n_Integer] := SetPartitionsTypeB[n] = (
    
 
 IntegerCompositions::usage = "IntegerCompositions[n] returns all interger compositions of n. IntegerCompositions[n,k] gives all compositions with length k.";
+IntegerCompositions[0] := {{}};
+IntegerCompositions[0, 0] := {{}};
 IntegerCompositions[n_Integer] := Differences[Join[{0}, #, {n}]] & /@ Subsets[Range[n - 1]];
 IntegerCompositions[n_Integer,k_Integer]:=Select[IntegerCompositions[n], Length[#]==k&];
 
@@ -873,7 +878,8 @@ PartitionIntervalSize[lam_List, mu_List] := Module[
    If[!PartitionLessEqualQ[mu, lam], 0,
       a = PadRight[lam, n];
       b = PadRight[mu, n];
-      Det[Table[Binomial[a[[i]] - b[[j]] + 1, i - j + 1], {i, n}, {j, n}]]
+      Det[Table[With[{top = a[[i]] - b[[j]] + 1},
+         If[top < 0, 0, Binomial[top, i - j + 1]]], {i, n}, {j, n}]]
    ]
 ];
 
@@ -892,7 +898,7 @@ DiagramBoxes[{lam_List, mu_List}] :=
      , {r, Length@lam}];
 
 
-Durfee::usge = "Durfee[mu] or Durfee[{lam,mu}] returns the size of largest square that can fit in the diagram.";
+Durfee::usage = "Durfee[mu] or Durfee[{lam,mu}] returns the size of largest square that can fit in the diagram.";
 Durfee[lam_List] := Max[Length /@ GatherBy[DiagramBoxes[lam], # . {1, -1} &]];
 Durfee[{lam_List, mu_List}] := Max[Length /@ GatherBy[DiagramBoxes[{lam, mu}], # . {1, -1} &]];
 
@@ -909,7 +915,7 @@ JackPsi[{lam_List, mu_List}, a_] := JackPsi[{lam, mu}, a] = Module[
 	but no proper box somewhere below. *)
 	
 	rowOk[r_Integer]:=rowOk[r] = Count[stripBoxes, {r,_Integer}] > 0;
-	colOk[c_Integer]:=colOk[r] = Count[stripBoxes, {_Integer, c}] == 0;
+	colOk[c_Integer]:=colOk[c] = Count[stripBoxes, {_Integer, c}] == 0;
 	
 	Product[
 		Divide[
@@ -933,7 +939,7 @@ MacdonaldPsi[{lam_List, mu_List}, q_, t_] := MacdonaldPsi[{lam, mu}, q,t] = Modu
 	but no proper box somewhere below. *)
 	
 	rowOk[r_Integer]:=rowOk[r] = Count[stripBoxes, {r,_Integer}] > 0;
-	colOk[c_Integer]:=colOk[r] = Count[stripBoxes, {_Integer, c}] == 0;
+	colOk[c_Integer]:=colOk[c] = Count[stripBoxes, {_Integer, c}] == 0;
 	
 	(*p. 340, Macdonald *)
 	bb[nu_, s_List]:=If[
@@ -1465,7 +1471,8 @@ RefineBijection[setA_List, setB_List, stats_List] := Module[
 LinearlyIndependentRows::usage = "LinearlyIndependentRows[A] returns indices of rows that span the row space.";
 LinearlyIndependentRows[A_?MatrixQ] := Module[{ranks},
    ranks = Table[ MatrixRank[A[[1 ;; j]]], {j, Length@A} ];
-   First @ Table[ FirstPosition[ranks,j], {j, Max@ranks}]
+   Select[Range@Length@A,
+      Function[j, If[j == 1, ranks[[j]] > 0, ranks[[j]] > ranks[[j - 1]]]]]
 ];
 
 
