@@ -1529,12 +1529,14 @@ Sum[
 
 
 
-MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam, q, t, x] returns the modified Macdonald H symmetric function indexed by partition lam with parameters q and t. The alphabet x defaults to None.
-MacdonaldHSymmetric[{lam, mu}, q, t, x] returns the corresponding skew modified Macdonald symmetric function. The alphabet x defaults to None.";
+MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam, q, t, x] returns the modified Macdonald symmetric function H~_lam(x; q, t) in Haglund's convention, so that H~_{2} = s_2 + q s_11, H~_{1,1} = s_2 + t s_11, and H~_mu = t^n(mu) J_mu[X/(1 - 1/t); q, 1/t]. The alphabet x defaults to None.\nMacdonaldHSymmetric[{lam, mu}, q, t, x] gives the skew version.";
 MacdonaldHSymmetric[lam_List, q_, t_,x_: None] := MacdonaldHSymmetric[{lam, {}}, q, t,x];
 
+(* The cached internal form below has q and t interchanged relative to Haglund's
+   convention (it gives s_2 + t s_11 for mu = {2}); swap them here so that, as in the
+   literature, H_mu = t^n(mu) J_mu[X/(1 - 1/t); q, 1/t] and H_{2} = s_2 + q s_11. *)
 MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] :=
-ChangeFunctionAlphabet[MacdonaldHSymmetric[{lam, mu}, SPECIALQ, SPECIALT], x] /. {SPECIALQ -> q, SPECIALT -> t};
+ChangeFunctionAlphabet[MacdonaldHSymmetric[{lam, mu}, SPECIALQ, SPECIALT], x] /. {SPECIALQ -> t, SPECIALT -> q};
 
 (* This is computed via the F-expansion, using the slinky rule *)
 MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := cached[{MacdonaldHSymmetric, lam, mu}, Module[
@@ -1802,12 +1804,12 @@ SchurSuperSymmetric[lam_List, x_, y_] := Det@Table[
 
 
 
-DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
+DeltaOperator::usage = "DeltaOperator[f, g, q, t] applies the Garsia Delta operator Delta_f to g: it multiplies each modified Macdonald H~_mu by f[B_mu], where B_mu = sum over cells (r, c) of mu of q^(c-1) t^(r-1) (Haglund's convention).";
 
 DeltaOperator[f_, g_, q_, t_] := cached[{DeltaOperator, f, g, q, t}, Module[{x, val, inH, monoms},
 		
 		(* Monomials defined by shape. *)
-		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]);
+		monoms[mu_List] := (q^(#2 - 1) t^(#1 - 1) & @@@ DiagramBoxes[mu]);
 		
 		(* This correspond to f[B(mu)] -- it is quicker than plethysm *)
 		
@@ -1824,7 +1826,7 @@ DeltaPrimOperator::usage = "DeltaPrimOperator[f, g, q, t] applies the primed Del
 DeltaPrimOperator[f_, g_, q_, t_] := cached[{DeltaPrimOperator, f, g, q, t}, Module[{x, val, inH, monoms},
 
 		(* Monomials defined by shape. *)
-		monoms[mu_List] := Rest[q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]];
+		monoms[mu_List] := Rest[q^(#2 - 1) t^(#1 - 1) & @@@ DiagramBoxes[mu]];
 		
 		(* This correspond to f[B(mu)-1] -- it is quicker than plethysm *)
 		
