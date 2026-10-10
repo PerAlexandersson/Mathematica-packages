@@ -364,6 +364,36 @@ VerificationTest[
   TestID -> "CrossCheck-KeyAtomPolynomials"
 ]
 
+(* GitHub issue #51 (P3b): Grothendieck, Lascoux, slide and lock polynomials agree with
+   sym-poly. Rust indexes lock_polynomial in reverse; its Kohnert polynomial of the
+   right-justified diagram is the Assaf-Searles lock in the standard index. *)
+VerificationTest[
+  With[{data = fixture["nonsymmetric-k.json"], x = Unique["x"]},
+    And[
+      And @@ (Function[r, With[{w = Lookup[r, "permutation"], b = Lookup[r, "beta"]},
+          Expand[GrothendieckPolynomial[w, x, b] -
+              multiTermsExpression[Lookup[r, "terms"], x]] === 0 &&
+            Expand[GrothendieckPolynomial[w, x, b] -
+              Total[(#[[2]] LascouxPolynomial[#[[1]], x, b]) & /@
+                Lookup[r, "lascoux_expansion"]]] === 0]] /@ Lookup[data, "grothendieck"]),
+      And @@ (Function[r, With[{a = Lookup[r, "alpha"], b = Lookup[r, "beta"]},
+          Expand[LascouxPolynomial[a, x, b] -
+              multiTermsExpression[Lookup[r, "operator_terms"], x]] === 0 &&
+            Expand[LascouxPolynomial[a, x, b] -
+              multiTermsExpression[Lookup[r, "k_kohnert_terms"], x]] === 0]] /@
+        Lookup[data, "lascoux"]),
+      And @@ (Function[r, With[{a = Lookup[r, "alpha"]},
+          Expand[FundamentalSlidePolynomial[a, x] -
+              multiTermsExpression[Lookup[r, "slide_terms"], x]] === 0 &&
+            Expand[LockPolynomial[a, x] -
+              multiTermsExpression[Lookup[r, "right_kohnert_terms"], x]] === 0 &&
+            Expand[LockPolynomial[Reverse[a], x] -
+              multiTermsExpression[Lookup[r, "lock_polynomial_terms"], x]] === 0]] /@
+        Lookup[data, "slide_lock"])]],
+  True,
+  TestID -> "CrossCheck-Grothendieck-Lascoux-Slide-Lock"
+]
+
 VerificationTest[
   With[{data = fixture["nonsymmetric.json"], x = Unique["x"]},
     And @@ (schubertRecordQ[#, x] & /@ Lookup[data, "schubert"])],

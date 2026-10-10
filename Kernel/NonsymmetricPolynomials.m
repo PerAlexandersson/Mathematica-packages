@@ -23,16 +23,28 @@ AtomPolynomial;
 TKeyPolynomial;
 TAtomPolynomial;
 SchubertPolynomial;
+GrothendieckPolynomial;
+LascouxPolynomial;
+FundamentalSlidePolynomial;
+LockPolynomial;
 PermutationToCode;
 CodeToPermutation;
 
 KeySymbol;
 AtomSymbol;
 SchubertSymbol;
+LascouxSymbol;
+GrothendieckSymbol;
+FundamentalSlideSymbol;
+LockSymbol;
 NonsymmetricToPolynomial;
 ToKeyBasis;
 ToAtomBasis;
 ToSchubertBasis;
+ToLascouxBasis;
+ToGrothendieckBasis;
+ToFundamentalSlideBasis;
+ToLockBasis;
 ClearNonsymmetricPolynomialsCache;
 
 Begin["`Private`"];
@@ -144,6 +156,61 @@ SchubertPolynomial[w_?permutationQ, x_] := cached[{SchubertPolynomial, w},
 		   w s_i1 ... s_ik = w0, so S_w = d_i1 ... d_ik S_w0 (d_ik acting first). *)
 		DividedDifference[Times @@ Table[xx[i]^(n - i), {i, n}], xx, sortingWord[w]]]] /. xx -> x;
 
+GrothendieckPolynomial::usage = "GrothendieckPolynomial[w, x] returns the beta = -1 Grothendieck polynomial of the permutation w. GrothendieckPolynomial[w, x, beta] uses the K-divided differences KDividedDifference (the divided difference of (1 + beta x[i+1]) f), so beta = 0 is SchubertPolynomial and beta = -1 is the usual sign convention. Its expansion in Lascoux polynomials has coefficients beta^(|alpha| - length(w)) times nonnegative integers.";
+GrothendieckPolynomial[w_?permutationQ, x_] := GrothendieckPolynomial[w, x, -1];
+GrothendieckPolynomial[w_?permutationQ, x_, beta_] := cached[{GrothendieckPolynomial, w, x, beta},
+	Module[{n = Length[w]},
+		KDividedDifference[Times @@ Table[xx[i]^(n - i), {i, n}], xx, bb, sortingWord[w]] /. {xx -> x, bb -> beta}]];
+
+LascouxPolynomial::usage = "LascouxPolynomial[alpha, x] returns the beta = -1 Lascoux polynomial. LascouxPolynomial[alpha, x, beta] applies KDemazureOperator along sortingWord[alpha] to x^sort(alpha); beta = 0 is KeyPolynomial.";
+LascouxPolynomial[alpha_?weakCompositionQ, x_] := LascouxPolynomial[alpha, x, -1];
+LascouxPolynomial[alpha_?weakCompositionQ, x_, beta_] := cached[{LascouxPolynomial, alpha, x, beta},
+	KDemazureOperator[monomial[Sort[alpha, Greater], xx], xx, bb, sortingWord[alpha]] /. {xx -> x, bb -> beta}];
+
+(* A weak composition beta contributes to the slide indexed by alpha when its
+   nonzero flattening refines Flatten[alpha] and its prefixes dominate those of
+   alpha. This is the Assaf--Searles definition. *)
+FundamentalSlidePolynomial::usage = "FundamentalSlidePolynomial[alpha, x] returns the fundamental slide polynomial of the weak composition alpha, the sum of x^beta over weak compositions beta whose nonzero flattening refines alpha with every prefix sum at least that of alpha.";
+FundamentalSlidePolynomial[alpha_?weakCompositionQ, x_] := cached[{FundamentalSlidePolynomial, alpha, x},
+	Module[{n = Length[alpha], d = Total[alpha], flat = DeleteCases[alpha, 0], comps, refinements},
+		comps = Join @@ (Permutations /@ IntegerPartitions[d, {n}, Range[0, d]]);
+		refinements = If[flat === {}, {{}}, Join @@@ CompositionRefinements[flat]];
+		Total[monomial[#, xx] & /@ Select[comps,
+			And @@ Thread[Accumulate[alpha] <= Accumulate[#]] &&
+				MemberQ[refinements, DeleteCases[#, 0]] &]] /. xx -> x]];
+
+(* Lock polynomials (Assaf-Searles) are the Kohnert polynomials of right-justified diagrams.
+   They are generated here from lock fillings: a descending basement, entries bounded by the
+   basement, weak rows, and strictly decreasing entries above each column. The filling rows
+   are indexed in reverse, so the lock indexed by alpha uses the fillings of Reverse[alpha]
+   (as for keys; legacy MacdonaldPolynomials`LockPolynomial[alpha] and the Rust lock_polynomial
+   use the reversed index). *)
+lockFillingQ[tab_, r_Integer, c_Integer] := Module[{b = tab[[r, c]]},
+		Catch[
+			If[b > tab[[r, 1]], Throw[False]];
+			If[c > 2 && b < tab[[r, c - 1]], Throw[False]];
+			Do[If[Length[tab[[i]]] >= c && tab[[i, c]] <= b, Throw[False]], {i, r - 1}];
+			True]];
+
+lockFillings[alpha_List] := cached[{"lockFillings", alpha},
+		Module[{n = Length[alpha], rows, recurse, initial},
+			rows = Join @@ Table[ConstantArray[i, alpha[[i]]], {i, n}];
+			recurse[tab_List, {}] := {tab};
+			recurse[tab_List, remaining_List] := Module[{r = First[remaining], newTab},
+				Join @@ Table[
+					newTab = ReplacePart[tab, r -> Append[tab[[r]], b]];
+					If[lockFillingQ[newTab, r, Length[newTab[[r]]]],
+						recurse[newTab, Rest[remaining]], {}],
+					{b, n}]];
+			initial = If[n == 0, {}, Transpose[{Range[n, 1, -1]}]];
+			recurse[initial, rows]]];
+
+lockMonomial[tab_, x_] := Times @@ (x[#[[1]]]^#[[2]] & /@ Tally[Join @@ (Rest /@ tab)]);
+
+LockPolynomial::usage = "LockPolynomial[alpha, x] returns the lock polynomial of the weak composition alpha (Assaf-Searles): the Kohnert polynomial of the right-justified diagram with alpha[[i]] cells in row i. Trailing zeros of alpha do not matter, and a lock with one nonzero row is a key polynomial.";
+LockPolynomial[alpha_?weakCompositionQ, x_] := cached[{LockPolynomial, alpha, x},
+	Total[lockMonomial[#, xx] & /@ lockFillings[Reverse[alpha]]] /. xx -> x];
+
 
 (* ::Section:: *)
 (* Basis symbols and conversions *)
@@ -154,29 +221,52 @@ CreateBasis[AtomSymbol, "A", IndexType -> "WeakComposition",
 	MultiplicationFunction -> None, PowerFunction -> None];
 CreateBasis[SchubertSymbol, "\[GothicS]", IndexType -> "Permutation",
 	MultiplicationFunction -> None, PowerFunction -> None];
+CreateBasis[LascouxSymbol, "L", IndexType -> "WeakComposition",
+	MultiplicationFunction -> None, PowerFunction -> None];
+CreateBasis[GrothendieckSymbol, "G", IndexType -> "Permutation",
+	MultiplicationFunction -> None, PowerFunction -> None];
+CreateBasis[FundamentalSlideSymbol, "F", IndexType -> "WeakComposition",
+	MultiplicationFunction -> None, PowerFunction -> None];
+CreateBasis[LockSymbol, "Lock", IndexType -> "WeakComposition",
+	MultiplicationFunction -> None, PowerFunction -> None];
 
 KeySymbol::usage = "KeySymbol[alpha, x] represents the key polynomial kappa_alpha in the variables x[1], x[2], ... as a basis element; trailing zeros of alpha are removed. NonsymmetricToPolynomial expands it.";
 AtomSymbol::usage = "AtomSymbol[alpha, x] represents the Demazure atom A_alpha in the variables x[1], x[2], ... as a basis element; trailing zeros of alpha are removed. NonsymmetricToPolynomial expands it.";
 SchubertSymbol::usage = "SchubertSymbol[w, x] represents the Schubert polynomial of the permutation w in the variables x[1], x[2], ... as a basis element; trailing fixed points of w are removed. NonsymmetricToPolynomial expands it.";
+LascouxSymbol::usage = "LascouxSymbol[alpha, x] represents the beta = -1 Lascoux polynomial in the variables x[1], x[2], ...; trailing zeros of alpha are removed. NonsymmetricToPolynomial expands it.";
+GrothendieckSymbol::usage = "GrothendieckSymbol[w, x] represents the beta = -1 Grothendieck polynomial of w; trailing fixed points are removed. NonsymmetricToPolynomial expands it.";
+FundamentalSlideSymbol::usage = "FundamentalSlideSymbol[alpha, x] represents the fundamental slide polynomial indexed by alpha; trailing zeros are removed. NonsymmetricToPolynomial expands it.";
+LockSymbol::usage = "LockSymbol[alpha, x] represents the lock polynomial indexed by the weak composition alpha; trailing zeros are removed. NonsymmetricToPolynomial expands it.";
 
-NonsymmetricToPolynomial::usage = "NonsymmetricToPolynomial[expr, x] replaces KeySymbol, AtomSymbol and SchubertSymbol elements with alphabet x (or None) in expr by the corresponding polynomials in x[1], x[2], ..., and expands.";
+NonsymmetricToPolynomial::usage = "NonsymmetricToPolynomial[expr, x] replaces nonsymmetric basis symbols with alphabet x (or None) in expr by their corresponding polynomials in x[1], x[2], ..., and expands.";
 NonsymmetricToPolynomial[expr_, x_] := Expand[expr /. {
 	KeySymbol[a_List, x | None] :> KeyPolynomial[a, x],
 	AtomSymbol[a_List, x | None] :> AtomPolynomial[a, x],
-	SchubertSymbol[w_List, x | None] :> SchubertPolynomial[w, x]}];
+	SchubertSymbol[w_List, x | None] :> SchubertPolynomial[w, x],
+	LascouxSymbol[a_List, x | None] :> LascouxPolynomial[a, x],
+	GrothendieckSymbol[w_List, x | None] :> GrothendieckPolynomial[w, x],
+	FundamentalSlideSymbol[a_List, x | None] :> FundamentalSlidePolynomial[a, x],
+	LockSymbol[a_List, x | None] :> LockPolynomial[a, x]}];
 
 (* Transition data in degree d and n variables: the monomial expansions of the basis
    indexed by all weak compositions (or codes) of d with n parts. The matrix is
    unitriangular for a suitable order, hence invertible over the integers. *)
+weakCompositionIndices[d_Integer, n_Integer] := Join @@ (Permutations /@ IntegerPartitions[d, {n}, Range[0, d]]);
 transitionInverse[family_, d_Integer, n_Integer] := cached[{"transition", family, d, n},
-	Module[{indices, rows},
-		indices = Join @@ (Permutations /@ IntegerPartitions[d, {n}, Range[0, d]]);
-		rows = Table[expansionVector[family, alpha, indices, n], {alpha, indices}];
-		{indices, Inverse[rows]}]];
+	Module[{basisIndices, monomialIndices, rows},
+		basisIndices = weakCompositionIndices[d, n];
+		monomialIndices = weakCompositionIndices[d, n];
+		rows = Table[coefficientVector[familyPolynomial[family, alpha, n], xx, monomialIndices, n],
+			{alpha, basisIndices}];
+		{basisIndices, Inverse[rows]}]];
 
 familyPolynomial["Key", alpha_, n_] := KeyPolynomial[alpha, xx];
 familyPolynomial["Atom", alpha_, n_] := AtomPolynomial[alpha, xx];
 familyPolynomial["Schubert", code_, n_] := SchubertPolynomial[CodeToPermutation[code], xx];
+familyPolynomial["FundamentalSlide", alpha_, n_] := FundamentalSlidePolynomial[alpha, xx];
+familyPolynomial["Lock", alpha_, n_] := LockPolynomial[alpha, xx];
+familyPolynomial["Lascoux", alpha_, n_] := LascouxPolynomial[alpha, xx];
+familyPolynomial["Grothendieck", code_, n_] := GrothendieckPolynomial[CodeToPermutation[code], xx];
 
 (* Coefficients of the monomials x^beta, beta in indices, of the polynomial p in x[1..n]. *)
 coefficientVector[p_, x_, indices_, n_] := With[
@@ -189,6 +279,10 @@ expansionVector[family_, alpha_, indices_, n_] :=
 familySymbol["Key", alpha_, x_] := KeySymbol[alpha, x];
 familySymbol["Atom", alpha_, x_] := AtomSymbol[alpha, x];
 familySymbol["Schubert", code_, x_] := SchubertSymbol[CodeToPermutation[code], x];
+familySymbol["FundamentalSlide", alpha_, x_] := FundamentalSlideSymbol[alpha, x];
+familySymbol["Lock", alpha_, x_] := LockSymbol[alpha, x];
+familySymbol["Lascoux", alpha_, x_] := LascouxSymbol[alpha, x];
+familySymbol["Grothendieck", code_, x_] := GrothendieckSymbol[CodeToPermutation[code], x];
 
 toFamilyBasis[family_, poly_, x_, nIn_] := Module[{p = Expand[poly], vars, n, s, total = 0},
 	vars = Union@Cases[p, x[i_Integer] :> i, {0, Infinity}];
@@ -212,6 +306,41 @@ ToAtomBasis[poly_, x_, n_Integer: 0] := toFamilyBasis["Atom", poly, x, n];
 
 ToSchubertBasis::usage = "ToSchubertBasis[poly, x] writes the polynomial poly in x[1], x[2], ... in the Schubert basis, as a combination of SchubertSymbol[w, x] (Schubert polynomials whose Lehmer code has length at most the number of variables).\nToSchubertBasis[poly, x, n] uses n variables (default: the largest variable index occurring).";
 ToSchubertBasis[poly_, x_, n_Integer: 0] := toFamilyBasis["Schubert", poly, x, n];
+
+ToFundamentalSlideBasis::usage = "ToFundamentalSlideBasis[poly, x] writes a homogeneous polynomial in the fundamental slide basis. ToFundamentalSlideBasis[poly, x, n] uses n variables.";
+ToFundamentalSlideBasis[poly_, x_, n_Integer: 0] := toFamilyBasis["FundamentalSlide", poly, x, n];
+
+ToLockBasis::usage = "ToLockBasis[poly, x] writes a homogeneous polynomial in the lock basis. ToLockBasis[poly, x, n] uses n variables.";
+ToLockBasis[poly_, x_, n_Integer: 0] := toFamilyBasis["Lock", poly, x, n];
+
+(* Lascoux and Grothendieck polynomials are filtered, rather than homogeneous:
+   their lowest-degree pieces are respectively keys and Schubert polynomials.
+   Remove the lowest homogeneous component successively, expanding it in that
+   leading basis and subtracting the corresponding inhomogeneous elements. *)
+toFilteredBasis[family_, leading_, poly_, x_, nIn_] := Module[
+	{res = Expand[poly], vars, n, s, q, terms, degree, component, indices, inv, vec, coeffs, total = 0},
+	vars = Union@Cases[res, x[i_Integer] :> i, {0, Infinity}];
+	n = Max[Append[vars, 1], nIn];
+	While[res =!= 0,
+		q = Expand[res /. x[i_] :> s x[i]];
+		terms = If[Head[q] === Plus, List @@ q, {q}];
+		degree = Min[Exponent[#, s] & /@ terms];
+		component = Coefficient[q, s, degree];
+		{indices, inv} = transitionInverse[leading, degree, n];
+		vec = coefficientVector[component, x, indices, n];
+		coeffs = vec . inv;
+		Do[If[coeffs[[j]] =!= 0,
+			total += coeffs[[j]] familySymbol[family, indices[[j]], x];
+			res = Expand[res - coeffs[[j]] (familyPolynomial[family, indices[[j]], n] /. xx -> x)]],
+			{j, Length[indices]}]];
+	total
+];
+
+ToLascouxBasis::usage = "ToLascouxBasis[poly, x] writes poly in the beta = -1 Lascoux basis. It repeatedly expands the lowest-degree residual in the key basis and subtracts the corresponding Lascoux polynomials. ToLascouxBasis[poly, x, n] uses n variables.";
+ToLascouxBasis[poly_, x_, n_Integer: 0] := toFilteredBasis["Lascoux", "Key", poly, x, n];
+
+ToGrothendieckBasis::usage = "ToGrothendieckBasis[poly, x] writes poly in the beta = -1 Grothendieck basis. It repeatedly expands the lowest-degree residual in the Schubert basis and subtracts the corresponding Grothendieck polynomials. ToGrothendieckBasis[poly, x, n] uses n variables.";
+ToGrothendieckBasis[poly_, x_, n_Integer: 0] := toFilteredBasis["Grothendieck", "Schubert", poly, x, n];
 
 End[];
 

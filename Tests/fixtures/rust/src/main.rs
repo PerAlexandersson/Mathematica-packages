@@ -15,7 +15,10 @@ use polytool::{check_weak_interlacing, is_real_rooted};
 use serde_json::{json, Value};
 use sym_poly_core::UnivariatePolynomial;
 use sym_poly_multipoly::{
-    atom_polynomial, key_polynomial, schubert_polynomial, t_atom_polynomial, t_key_polynomial, MultiPoly,
+    atom_polynomial, beta_grothendieck_polynomial, beta_grothendieck_to_lascoux,
+    fundamental_slide_polynomial, key_polynomial, kohnert_polynomial, lascoux_polynomial,
+    lascoux_polynomial_by_operators, lock_polynomial, schubert_polynomial, t_atom_polynomial,
+    t_key_polynomial, Cell, Diagram, MultiPoly,
 };
 use sym_poly_qsym::QSymFunction;
 use sym_poly_sym::kostka::{kostka_coefficient, sn_character};
@@ -496,6 +499,112 @@ fn write_nonsymmetric(directory: &Path) {
             "convention": "exponent vectors are in x_1,...,x_n order; key(alpha) uses the standard weak-composition key convention; t-deformations are evaluated at the integers listed in t_specializations; Schubert permutations are one-line, one-indexed.",
             "key_atom": key_atom,
             "schubert": schubert
+        }),
+    );
+}
+
+fn weak_compositions_3(max_size: u32) -> Vec<Vec<u32>> {
+    let mut compositions = Vec::new();
+    for a in 0..=max_size {
+        for b in 0..=(max_size - a) {
+            for c in 0..=(max_size - a - b) {
+                compositions.push(vec![a, b, c]);
+            }
+        }
+    }
+    compositions
+}
+
+fn permutations_4() -> Vec<Vec<usize>> {
+    let mut permutations = Vec::new();
+    for a in 1..=4usize {
+        for b in 1..=4usize {
+            for c in 1..=4usize {
+                for d in 1..=4usize {
+                    let w = vec![a, b, c, d];
+                    let mut sorted = w.clone();
+                    sorted.sort();
+                    if sorted == vec![1, 2, 3, 4] {
+                        permutations.push(w);
+                    }
+                }
+            }
+        }
+    }
+    permutations
+}
+
+/// Right-justified diagram of a weak composition: alpha[i] cells in row i + 1, ending in
+/// column max(alpha). Its Kohnert polynomial is the Assaf-Searles lock polynomial.
+fn right_justified_diagram(alpha: &[u32]) -> Diagram {
+    let width = alpha.iter().copied().max().unwrap_or(0) as usize;
+    let mut diagram = Diagram::new();
+    for (idx, &row_len) in alpha.iter().enumerate() {
+        for col in (width + 1 - row_len as usize)..=width {
+            if row_len > 0 {
+                diagram.insert(Cell { col, row: idx + 1 });
+            }
+        }
+    }
+    diagram
+}
+
+fn write_nonsymmetric_k(directory: &Path) {
+    let betas: [i64; 2] = [-1, 1];
+    let grothendieck = permutations_4()
+        .into_iter()
+        .flat_map(|permutation| {
+            betas.iter().map(move |beta| {
+                let expansion = beta_grothendieck_to_lascoux::<i64>(&permutation, beta)
+                    .into_iter()
+                    .map(|(alpha, coefficient)| json!([alpha, coefficient]))
+                    .collect::<Vec<_>>();
+                json!({
+                    "permutation": permutation,
+                    "beta": beta,
+                    "terms": terms_multipoly(&beta_grothendieck_polynomial::<i64>(&permutation, beta)),
+                    "lascoux_expansion": expansion
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let mut lascoux = Vec::new();
+    for alpha in weak_compositions_3(3) {
+        for beta in &betas {
+            lascoux.push(json!({
+                "alpha": alpha,
+                "beta": beta,
+                "operator_terms": terms_multipoly(&lascoux_polynomial_by_operators::<i64>(&alpha, beta)),
+                "k_kohnert_terms": terms_multipoly(
+                    &lascoux_polynomial::<i64>(&alpha, beta, 100_000).expect("K-Kohnert diagrams")
+                )
+            }));
+        }
+    }
+    let slide_lock = weak_compositions_3(4)
+        .into_iter()
+        .map(|alpha| {
+            json!({
+                "alpha": alpha,
+                "slide_terms": terms_multipoly(&fundamental_slide_polynomial::<i64>(&alpha)),
+                "lock_polynomial_terms": terms_multipoly(&lock_polynomial::<i64>(&alpha)),
+                "right_kohnert_terms": terms_multipoly(
+                    &kohnert_polynomial::<i64>(&right_justified_diagram(&alpha), 100_000)
+                        .expect("Kohnert diagrams")
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    write_json(
+        directory,
+        "nonsymmetric-k.json",
+        json!({
+            "family": "Grothendieck, Lascoux, fundamental slide and lock polynomials",
+            "rust_function": "sym_poly_multipoly::{beta_grothendieck_polynomial,beta_grothendieck_to_lascoux,lascoux_polynomial_by_operators,lascoux_polynomial,fundamental_slide_polynomial,lock_polynomial,kohnert_polynomial}",
+            "convention": "exponent vectors are in x_1,...,x_n order (a Kohnert polynomial has as many variables as its highest nonempty row); permutations are one-line, one-indexed; beta is the connective-K parameter; lascoux_expansion maps weak compositions to coefficients; right_kohnert_terms is the Kohnert polynomial of the right-justified diagram (the Assaf-Searles lock); lock_polynomial_terms is sym-poly lock_polynomial, which indexes locks in reverse.",
+            "grothendieck": grothendieck,
+            "lascoux": lascoux,
+            "slide_lock": slide_lock
         }),
     );
 }
@@ -987,6 +1096,7 @@ fn main() {
     write_chromatic(directory);
     write_qsym(directory);
     write_nonsymmetric(directory);
+    write_nonsymmetric_k(directory);
     write_eulerian(directory);
     write_lah_petrie(directory);
     write_combinatorics(directory);
