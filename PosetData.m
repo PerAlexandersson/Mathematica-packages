@@ -66,7 +66,7 @@ SkewShapePoset[{lam_List, mu_List}] := Module[
 
 
 (* Poset on 17 elements,  with non-real-rooted W-polynomial. *)
-StembridgePoset[] := Poset[16, Join[
+StembridgePoset[] := Poset[17, Join[
     Partition[{1, 3, 5, 7, 9, 11, 13, 14, 16}, 2, 1]
     ,
     Partition[{2, 4, 6, 8, 10, 12, 15, 17}, 2, 1]
@@ -343,11 +343,11 @@ JordanHolderSet[pp_Poset] := JordanHolderSet[pp] = Ordering/@PosetLinearExtensio
 OrderPolynomial::usage = "OrderPolynomial[poset,t] returns the order polynomial in t.";
 
 OrderPolynomial[pp_Poset,t_]:=Expand@FunctionExpand[
-	With[{n=First@pp}, 
+	With[{n=First@pp, natural = PosetNaturalLabeling[pp]}, 
 		Sum[
 			(* The inner sum counts number of descents. *)
 			Binomial[t+n- Sum[Boole[pi[[i]] > pi[[i + 1]]], {i, Length[pi] - 1}] -1,n]
-		,{pi, JordanHolderSet[pp]}]
+		,{pi, JordanHolderSet[natural]}]
 	]
 ];
 
@@ -363,8 +363,8 @@ PEulerianPolynomial[pp_Poset,t_]:=
 ];
 
 
-GetPosets::usage = "GetPosets[k] gives all posets with k vertices, 3<=k<=8";
-GetPosets[k_Integer]:=toPosetObject/@posets[k];
+GetPosets::usage = "GetPosets[k] gives all connected posets with k vertices, 1<=k<=7";
+GetPosets[k_Integer]:=If[1 <= k <= 7, toPosetObject /@ posets[k], Missing["NotAvailable", k]];
 
 toPosetObject[poset_List] := Module[{n = Length[poset], nn},
 	Poset[n,

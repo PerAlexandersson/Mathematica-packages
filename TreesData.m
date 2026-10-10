@@ -15,7 +15,7 @@ Begin["Private`"];
 
 GetTrees[n_Integer]:=Select[ trees, Max[#]==n-1 &];
 
-GetRootedTrees[n_Integer]:=Select[ rootedTrees, Max[#]==n &];
+GetRootedTrees[n_Integer]:=Select[rootedTrees, If[# === {}, n == 1, Max[#] == n] &];
 
 trees= {
 {{0,3},  {1,3},  {2,3}},
@@ -112,8 +112,7 @@ trees= {
 {{0,4},  {0,6},  {1,5},  {1,8},  {2,6},  {2,7},  {3,7},  {3,8}}
 };
 
-rootedTrees = 
-trees={
+rootedTrees = {
 {},
 {{1, 2}},
 {{1, 2}, {2, 3}},

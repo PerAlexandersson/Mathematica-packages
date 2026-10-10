@@ -365,6 +365,7 @@ UnitTest[ToTableauShape]:=(
 
 (* Compute all possible nu s.t. |mu|+1=|nu|, mu<=nu, and nu<=top *)
 AddBoxToPartition[muIn_List, topIn_List: {}] := Module[{top, mu},
+   If[muIn === {}, Return[If[topIn === {} || First[topIn] > 0, {{1}}, {}]]];
    top = If[topIn === {}, mu + 1, topIn];
    mu = muIn;
    If[Last[mu] > 0, AppendTo[mu, 0]];
@@ -598,7 +599,7 @@ Module[{part1, part2, len, n, e, emat, det},
 	emat = Table[ e[ part1[[i]] - part2[[j]] + j - i ], {i, 1, len}, {j, 1, len}];
 	det = Det@emat;
 	
-	If[det === 0, 1, det]
+	det
 ];
 
 
@@ -854,6 +855,8 @@ GTMonomial[g_GTPattern, x_] := GTMonomial[g, x] = With[{w = Last[TableauShape[g]
 
 QuickGTPatterns[Null]:={};
 QuickGTPatterns[TableauShape[l_, mu_, {}]]:={GTPattern[{l}]} /; (l===mu);
+QuickGTPatterns[TableauShape[l_, mu_, {}]] :=
+	GTPatterns[TableauShape[l, mu, {}], Length[l]];
 
 (* This only works when all parts in w are positive! *)
 QuickGTPatterns[TableauShape[l_, mu_, w_]] := Module[{findPaths, w1, ip, cf, g, de, mid},
@@ -1588,7 +1591,7 @@ YoungTableau/:TeXForm[YoungTableau[diagram_],opts:OptionsPattern[]]:= Module[{st
 	 
 		MatrixTeXForm[YoungTableau[diagram], FilterRules[List[opts], Options[MatrixTeXForm]] ]
 	,
-		YoungTabTeXForm@YoungTableau[diagram]
+		YoungTableauTeX@YoungTableau[diagram]
 	]
 ];
 
@@ -2039,5 +2042,4 @@ Print["Done"];
 
 End[(* End private *)];
 EndPackage[];
-
 

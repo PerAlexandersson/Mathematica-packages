@@ -72,7 +72,6 @@ IntegralFormNonSymmetricJack::usage = "IntegralFormNonSymmetricJack[alpha,x,a] g
 
 ElementaryPolynomial::usage = "ElementaryPolynomial[alpha_, x_, qq_: 1] is a q-deformation of the elementary sym. func. e_(alpha'). ";
 
-PowerSumPolynomial::usage = "PowerSumPolynomial[lam,x] is the powersum symmetric polynomial.";
 
 IntegralFormFactor::usage="IntegralFormFactor[alpha,q,t] returns the factor to multiply the non-sym Macdonald polynomial with, to get the integral form.";
 
@@ -774,7 +773,7 @@ ElementaryPolynomial[alpha_List, x_, qq_: 1] := ElementaryPolynomial[alpha, x, q
 		GeneralTableauFillings[alpha, Range[Length@alpha, 1, -1], MacdonaldMonomial[#, x, q, t]& , Plus, CheckCoinversions, False] /. {t -> 0, q -> qq}
 ];
 
-PowerSumPolynomial[lam_List,x_]:=PowerSumPolynomial[lam,x]=Product[PowerSymmetricPolynomial[a, x/@Range[Length@lam]], {a, DeleteCases[lam,0]}];
+MacdonaldPowerSumPolynomial[lam_List,x_]:=MacdonaldPowerSumPolynomial[lam,x]=Product[PowerSymmetricPolynomial[a, x/@Range[Length@lam]], {a, DeleteCases[lam,0]}];
 
 
 (* TODO: Make the thing below better! This is not efficient, there should be a sorting algorithm. *)
@@ -1209,7 +1208,8 @@ ToPowerSumBasis[pol_, x_, pp_] := Module[{t, p, ips, nn, dd, c, xvars, tbz},
 
 
 (* Takes a permutation, and returns the unique permutation that is RSK-equivalent to w, and is a reading word. *)
-KnuthRepresentative[w_List] := KnuthRepresentative[w] = Join @@ Reverse[BiwordRSK[Transpose@{Range[Length@w], w}][[1]]];
+KnuthRepresentative[w_List] := KnuthRepresentative[w] =
+	Join @@ Reverse[NewTableaux`BiwordRSK[Range[Length@w], w][[1, 1]]];
 
 
 (* This assumes the RPP has a basement! *)
@@ -1360,9 +1360,9 @@ WordDecompose[word_List] := Module[{findPos, n = Length@word, currPos = 0, nPos,
 
 
 
-ChargeWordDecompose[{}] = {};
-ChargeWordDecompose[{},{}] = {};
-ChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
+MacdonaldChargeWordDecompose[{}] = {};
+MacdonaldChargeWordDecompose[{},{}] = {};
+MacdonaldChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
 	{findPos, n = Length@word, currPos = Length@word, nPos, subWordIdx = {}, swSize = Max@word},
 	
 	If[Length[subwordSizes]>0,
@@ -1391,7 +1391,7 @@ ChargeWordDecompose[word_List, subwordSizes_List:{}]:= Module[
 	subWordIdx = Sort[subWordIdx];
 	
 	Join[{word[[subWordIdx]]},
-		ChargeWordDecompose[ 
+		MacdonaldChargeWordDecompose[ 
 			word[[ Complement[Range[n], subWordIdx]  ]]
 			, 
 			If[Length@subwordSizes == 0,{},Rest[subwordSizes]] 
@@ -1670,7 +1670,8 @@ LascouxSchutzenbergerNormalizeWord[word_List]:=Module[{gam, pi, rWord, newWord},
 ];
 
 (* Decompose into permutations, and compute sum of charges. *)
-WordCharge[word_List] := WordCharge[word]=Tr[PermutationCharge /@ ChargeWordDecompose[LascouxSchutzenbergerNormalizeWord[word]]];
+MacdonaldWordCharge[word_List] := MacdonaldWordCharge[word]=
+	Tr[PermutationCharge /@ MacdonaldChargeWordDecompose[LascouxSchutzenbergerNormalizeWord[word]]];
 
 
 (* This is probably not the optimal reading word... *)
@@ -1800,7 +1801,7 @@ FundamentalSlide[alpha_List, x_] := FundamentalSlide[alpha, x] = Module[
 	comps = Join @@ (Permutations /@ IntegerPartitions[Tr@alpha, {n}, Range[0, Max[alpha]]]);
 	exp = Select[comps,
 		(And@@Thread[ Accumulate[alpha] <= Accumulate[#] ])  && 
-		MemberQ[CompositionRefinements[flatA], DeleteCases[#, 0]] &];
+		MemberQ[Join@@@CompositionRefinements[flatA], DeleteCases[#, 0]] &];
 	
 	Total[Times @@ ((x /@ Range[n])^#) & /@ exp]
 ];
@@ -1870,7 +1871,7 @@ QuasiSymmetricPowerSum[alpha_List, n_Integer, x_] :=
 
 QuasiSymmetricPowerSum2[alpha_List, n_Integer, x_] :=
 	QuasiSymmetricPowerSum2[alpha, n, x] = Module[{spi},
-	spi[comp_List] := Length[comp!] (Times @@ comp);
+	spi[comp_List] := Length[comp]! (Times @@ comp);
 	ZCoefficient[alpha] Sum[
 	1/(Times @@ (spi /@ beta)) QSymMonomial[Total /@ beta, n, x]
 	, {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
@@ -1975,4 +1976,3 @@ RefineSubsetsRelations[subsetRelations_List] := Module[{i, j, ii, s1, s2, m1, m2
 
 End[(* End private *)];
 EndPackage[];
-
