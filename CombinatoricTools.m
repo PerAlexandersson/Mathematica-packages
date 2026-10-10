@@ -63,6 +63,7 @@ SetPartitions;
 SetPartitionBlockIndex;
 RandomSetPartition;
 SetPartitionToRunSortedPermutation;
+RunSortedPermutations;
 OrderedSetPartitions;
 IntegerCompositions;
 WeakIntegerCompositions;
@@ -585,6 +586,11 @@ RandomSetPartition[n_Integer] := With[{
 
 SetPartitionToRunSortedPermutation::usage = "SetPartitionToRunSortedPermutation[sp] returns a flattened permutation of size n+1, where runs are in lexicographic order. Map due to O. Nabawanda.";
 SetPartitionToRunSortedPermutation[sp_List] := Prepend[Flatten[1 + (RotateLeft /@ sp)], 1];
+
+RunSortedPermutations::usage = "RunSortedPermutations[n] returns all run-sorted permutations of {1, ..., n}, that is, permutations whose maximal increasing runs have increasing first entries; there are BellB[n-1] of them for n >= 1. RunSortedPermutations[0] is {}.";
+RunSortedPermutations[0] := {};
+RunSortedPermutations[n_Integer?Positive] := RunSortedPermutations[n] =
+	SetPartitionToRunSortedPermutation /@ SetPartitions[n - 1];
 
 OrderedSetPartitions::usage = "OrderedSetPartitions[n] returns all ordered set partitions of {1,2,...,n}. See A000670.";
 OrderedSetPartitions[0] := {{}};

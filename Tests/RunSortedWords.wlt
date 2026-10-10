@@ -20,3 +20,10 @@ VerificationTest[
   {1, 1, 2, 5, 15, 52},
   TestID -> "RunSortedWords-RunSortedPermutations-Bell-counts"
 ]
+
+(* GitHub issue #9: the deprecated package still provides its old names. *)
+VerificationTest[
+  {SetPartitionToRSP[{{1, 2}, {3}}], Context[RunSortedPermutations]},
+  {{1, 3, 2, 4}, "CombinatoricTools`"},
+  TestID -> "RunSortedWords-deprecated-shim"
+]

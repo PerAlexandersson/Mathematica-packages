@@ -89,3 +89,14 @@ VerificationTest[
   {{1, 2}, {1, 3}},
   TestID -> "CombinatoricTools-LinearlyIndependentRows-indices"
 ]
+
+(* GitHub issue #9: RunSortedPermutations moved here from RunSortedWords.
+   Run-sorted permutations of [n] are counted by BellB[n - 1]. *)
+VerificationTest[
+  {Table[Length[RunSortedPermutations[n]], {n, 1, 7}],
+   And @@ (Function[p, Sort[p] === Range[Length[p]] &&
+       OrderedQ[First /@ Split[p, Less]]] /@ RunSortedPermutations[5]),
+   Length@Union@RunSortedPermutations[5]},
+  {BellB /@ Range[0, 6], True, 15},
+  TestID -> "CombinatoricTools-RunSortedPermutations-Bell"
+]
