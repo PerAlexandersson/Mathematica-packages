@@ -1,6 +1,11 @@
 testRoot = DirectoryName[DirectoryName[$InputFileName]];
 If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
-Needs["GTPatterns`"];
+
+VerificationTest[
+  Needs["GTPatterns`"],
+  Null,
+  TestID -> "GTPatterns-loads-cleanly"
+]
 
 VerificationTest[
   SameQ[First[First[Options[GTPatterns]]], RowFlags],
