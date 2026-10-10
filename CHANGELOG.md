@@ -21,6 +21,7 @@ versioning as described in `RELEASING.md`. Issue and pull-request numbers refer 
 - Test files follow the Wolfram conventions: `Tests/<Name>.wlt` (were `Tests/<Name>Tests.m`),
   run by `Tests/RunTests.wls` (was `RunTests.m`), which sets `testRoot` and loads the paclet.
   A test taking more than 120 seconds fails, and the runner prints per-file times.
+- `Scripts/BuildPaclet.m` takes an optional output directory (default `build/`).
 
 ## [0.1.0] - 2026-10-10
 

@@ -12,7 +12,8 @@ functionality bumps the minor version, and fixes bump the patch version.
 3. `wolframscript -file Scripts/BuildPaclet.m` builds
    `build/PerAlexandersson__MathematicaPackages-<version>.paclet` and verifies that every
    registered context loads from the extracted archive in a fresh kernel and that the
-   `Data/` assets are found.
+   `Data/` assets are found. An optional argument sets the output directory instead of
+   `build/`; use one outside the checkout when it lives in a synced folder (Dropbox).
 4. Tag the release commit `v<version>` and attach the archive to the GitHub release.
 
 `build/` and `*.paclet` are ignored by Git.
