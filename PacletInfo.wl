@@ -20,6 +20,7 @@ PacletObject[
           "CombinatoricTools`",
           "NewTableaux`",
           "SymmetricFunctions`",
+          "ShiftedSymmetricFunctions`",
           "GTPatterns`",
           "PolynomialTools`",
           "PermutationTools`",

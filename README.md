@@ -37,6 +37,7 @@ Supported packages (in `Kernel/`):
 | Context | Contents |
 |---|---|
 | `SymmetricFunctions`` | Monomial, elementary, complete homogeneous, power-sum, Schur and forgotten bases with fast transition matrices; several alphabets; Hall and Jack inner products; plethysm; Kostka, inverse Kostka, Littlewood–Richardson and Kronecker coefficients; skew Schur, Schur P and Q, Jack, Hall–Littlewood, Macdonald P/J and modified Macdonald H~ (Haglund's convention), LLT, k-Schur, Lah and Petrie functions; the Delta and nabla operators |
+| `ShiftedSymmetricFunctions`` | Okounkov–Olshanski shifted Schur and Jack polynomials, normalized characters, and Stanley–Feray–Sniady multirectangular character polynomials |
 | `CombinatoricTools`` | Partitions, compositions, set partitions, permutation statistics, q-analogs, characters of the symmetric group, Kostka numbers |
 | `NewTableaux`` | Standard and semistandard (skew) Young tableaux, RSK, promotion, evacuation, crystal operators, border strips |
 | `GTPatterns`` | Gelfand–Tsetlin patterns, including skew, row-flagged and cylindric patterns |

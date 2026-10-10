@@ -21,7 +21,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-  Quiet[Scan[Needs, {"CombinatoricTools`", "NewTableaux`", "SymmetricFunctions`",
+  Quiet[Scan[Needs, {"CombinatoricTools`", "NewTableaux`", "SymmetricFunctions`", "ShiftedSymmetricFunctions`",
     "PolynomialTools`", "PermutationTools`", "QuasiSymmetricFunctions`",
     "GraphTools`", "MatroidTools`", "CatalanObjects`", "UnicellularChromatics`",
     "RookTools`", "PosetData`"}], General::shdw];
@@ -34,7 +34,7 @@ VerificationTest[
    WeakEdges are shared options owned by CombinatoricTools; the CatalanObjects grid
    is RookPlacementGrid, distinct from RookTools`RookPlacementPlot. *)
 VerificationTest[
-  Module[{supported = {"AlgebraicBases", "CombinatoricTools", "NewTableaux", "SymmetricFunctions",
+  Module[{supported = {"AlgebraicBases", "CombinatoricTools", "NewTableaux", "SymmetricFunctions", "ShiftedSymmetricFunctions",
       "GTPatterns", "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions",
       "GraphTools", "MatroidTools", "CatalanObjects", "UnicellularChromatics",
       "RookTools", "PosetData", "NonsymmetricPolynomials"}, short},

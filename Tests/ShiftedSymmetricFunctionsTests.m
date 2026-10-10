@@ -1,0 +1,517 @@
+(* ::Package:: *)
+
+testRoot = DirectoryName[DirectoryName[$InputFileName]];
+PacletDirectoryLoad[testRoot];
+
+VerificationTest[
+  Needs["ShiftedSymmetricFunctions`"],
+  Null,
+  TestID -> "ShiftedSymmetricFunctions-loads-cleanly"
+]
+
+(* GitHub issue #51: shifted Schur's tableau formula is an independent oracle for
+   the falling-factorial determinant. *)
+reverseSSYTOracle[mu_List, n_Integer, x_] := Module[{words, tableau, validQ},
+  words = If[Total[mu] == 0, {{}}, Tuples[Range[n], Total[mu]]];
+  tableauFromWord[shape_List, word_List] := Module[{cuts = Accumulate[shape]},
+    Table[word[[If[r == 1, 1, cuts[[r - 1]] + 1] ;; cuts[[r]]]],
+      {r, Length[shape]}]];
+  validQ[tab_] := And[
+    And @@ Flatten[Map[
+      Function[r, Map[Function[c, tab[[r, c]] >= tab[[r, c + 1]]],
+        If[mu[[r]] > 1, Range[mu[[r]] - 1], {}]]], Range[Length[tab]]]],
+    And @@ Flatten[Map[
+      Function[r, Map[Function[c, tab[[r, c]] > tab[[r + 1, c]]],
+      Range[Min[mu[[r]], mu[[r + 1]]]]]],
+      If[Length[mu] > 1, Range[Length[mu] - 1], {}]]]
+  ];
+  Total[(tableau = #;
+      Product[x[tableau[[r, c]]] - (c - r),
+        {r, Length[mu]}, {c, mu[[r]]}]) & /@
+    Select[tableauFromWord[mu, #] & /@ words, validQ]]
+];
+
+smallParts = Join[{{}}, Flatten[IntegerPartitions /@ Range[1, 3], 1]];
+legacyParts = Flatten[IntegerPartitions /@ Range[1, 4], 1];
+
+VerificationTest[
+  Expand[
+    ShiftedSchurPolynomial[{2, 1}, 3, x] -
+      reverseSSYTOracle[{2, 1}, 3, x]],
+  0,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedSchurPolynomial-tableau-oracle"
+]
+
+VerificationTest[
+  And[
+    And @@ (Function[{mu, lam},
+        !PartitionLessEqualQ[mu, lam] \[Implies]
+          ShiftedSchurEvaluate[mu, lam] === 0] @@@
+      Tuples[{smallParts, smallParts}]),
+    And @@ (Function[mu,
+        ShiftedSchurEvaluate[mu, mu] === Times @@ Flatten[HookLengths[mu]]] /@
+      smallParts)],
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedSchurEvaluate-vanishing-and-diagonal"
+]
+
+VerificationTest[
+  And @@ Flatten[Map[
+    Function[mu, Map[Function[i,
+      With[{poly = ShiftedSchurPolynomial[mu, 3, x], j = i},
+        Expand[(poly /. {x[j] -> x[j + 1] - 1,
+            x[j + 1] -> x[j] + 1}) - poly] === 0]], Range[2]]],
+    {{2, 1}, {3}}]],
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedSchurPolynomial-shifted-symmetry"
+]
+
+topHomogeneous[poly_, vars_List, degree_Integer] :=
+  Coefficient[poly /. Thread[vars -> (t # & /@ vars)], t, degree];
+
+VerificationTest[
+  And @@ (Function[mu,
+      Expand[topHomogeneous[ShiftedSchurPolynomial[mu, 3, x], x /@ Range[3], Tr[mu]] -
+        SymmetricFunctionToPolynomial[SchurSymmetric[mu], x, 3]] === 0] /@
+    {{1}, {2}, {1, 1}, {2, 1}}),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedSchurPolynomial-top-degree-schur"
+]
+
+VerificationTest[
+  And @@ (Function[mu,
+      Together[Expand[topHomogeneous[ShiftedJackPPolynomial[mu, 3, x, a],
+          x /@ Range[3], Tr[mu]] -
+        SymmetricFunctionToPolynomial[JackPSymmetric[mu, a], x, 3]]] === 0] /@
+    {{1}, {2}, {1, 1}, {2, 1}}),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedJackPPolynomial-top-degree-jack"
+]
+
+VerificationTest[
+  And @@ (Function[{mu, lam},
+      If[PartitionLessEqualQ[mu, lam],
+        ShiftedJackPEvaluate[mu, lam, a] =!= 0,
+      ShiftedJackPEvaluate[mu, lam, a] === 0]] @@@
+    Tuples[{{{1}, {2}, {1, 1}, {2, 1}},
+      {{1}, {2}, {1, 1}, {2, 1}}}]),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedJackPEvaluate-vanishing"
+]
+
+VerificationTest[
+  Quiet[Needs["OldYoungTableaux`"], General::shdw];
+  And @@ (Function[{mu, lam, a},
+      ShiftedSymmetricFunctions`ShiftedJackPEvaluate[mu, lam, a] ===
+          OldYoungTableaux`ShiftedJackPEvaluate[mu, lam, a] &&
+        ShiftedSymmetricFunctions`ShiftedJackJEvaluate[mu, lam, a] ===
+        OldYoungTableaux`ShiftedJackJEvaluate[mu, lam, a]] @@@
+    Tuples[{legacyParts, legacyParts, {1, 2}}]),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-shifted-Jack-legacy-oracle"
+]
+
+VerificationTest[
+  {Names["SymmetricFunctions`ShiftedJackPSymmetric"],
+   ShiftedSymmetricFunctions`ShiftedJackPSymmetric[{1}, 1],
+   ShiftedSymmetricFunctions`ShiftedJackPSymmetric[{2}, 1]},
+  {{}, 1 + MonomialSymbol[{1}], 2 + 3 MonomialSymbol[{1}] +
+      MonomialSymbol[{2}] + MonomialSymbol[{1, 1}]},
+  TestID -> "ShiftedSymmetricFunctions-ShiftedJackPSymmetric-moved"
+]
+
+VerificationTest[
+  Quiet[Needs["OldYoungTableaux`"], General::shdw];
+  And @@ (Function[{mu, d},
+      (-1)^(Tr[mu] - Length[mu]) StanleyCharacterPolynomial[mu, p, q, d] ===
+        OldYoungTableaux`ChNormalizedCharacter[mu, d][p, q]] @@@
+    Tuples[{legacyParts, {1, 2}}]),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-StanleyCharacterPolynomial-legacy-oracle"
+]
+
+VerificationTest[
+  Quiet[Needs["OldYoungTableaux`"], General::shdw];
+  And @@ (Function[{mu, lam},
+      With[{coords = PartitionToMultirectangular[lam],
+        d = Length[PartitionToMultirectangular[lam][[1]]]},
+        (StanleyCharacterPolynomial[mu, p, q, d] /.
+          {p[i_] :> coords[[1, i]], q[i_] :> coords[[2, i]]}) ===
+          NormalizedCharacter[mu, lam]]] @@@
+    Tuples[{legacyParts, legacyParts}]),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-StanleyCharacterPolynomial-multirectangular-evaluation"
+]
+
+(* Rust sym-poly shifted_lr.rs oracle generated by scratch/rust-oracle. *)
+rustShiftedSchurValues = {
+  {{}, {}, 1},
+  {{}, {1}, 1},
+  {{}, {2}, 1},
+  {{}, {1, 1}, 1},
+  {{}, {3}, 1},
+  {{}, {2, 1}, 1},
+  {{}, {1, 1, 1}, 1},
+  {{}, {4}, 1},
+  {{}, {3, 1}, 1},
+  {{}, {2, 2}, 1},
+  {{}, {2, 1, 1}, 1},
+  {{}, {1, 1, 1, 1}, 1},
+  {{}, {5}, 1},
+  {{}, {4, 1}, 1},
+  {{}, {3, 2}, 1},
+  {{}, {3, 1, 1}, 1},
+  {{}, {2, 2, 1}, 1},
+  {{}, {2, 1, 1, 1}, 1},
+  {{}, {1, 1, 1, 1, 1}, 1},
+  {{1}, {}, 0},
+  {{1}, {1}, 1},
+  {{1}, {2}, 2},
+  {{1}, {1, 1}, 2},
+  {{1}, {3}, 3},
+  {{1}, {2, 1}, 3},
+  {{1}, {1, 1, 1}, 3},
+  {{1}, {4}, 4},
+  {{1}, {3, 1}, 4},
+  {{1}, {2, 2}, 4},
+  {{1}, {2, 1, 1}, 4},
+  {{1}, {1, 1, 1, 1}, 4},
+  {{1}, {5}, 5},
+  {{1}, {4, 1}, 5},
+  {{1}, {3, 2}, 5},
+  {{1}, {3, 1, 1}, 5},
+  {{1}, {2, 2, 1}, 5},
+  {{1}, {2, 1, 1, 1}, 5},
+  {{1}, {1, 1, 1, 1, 1}, 5},
+  {{2}, {}, 0},
+  {{2}, {1}, 0},
+  {{2}, {2}, 2},
+  {{2}, {1, 1}, 0},
+  {{2}, {3}, 6},
+  {{2}, {2, 1}, 3},
+  {{2}, {1, 1, 1}, 0},
+  {{2}, {4}, 12},
+  {{2}, {3, 1}, 8},
+  {{2}, {2, 2}, 6},
+  {{2}, {2, 1, 1}, 4},
+  {{2}, {1, 1, 1, 1}, 0},
+  {{2}, {5}, 20},
+  {{2}, {4, 1}, 15},
+  {{2}, {3, 2}, 12},
+  {{2}, {3, 1, 1}, 10},
+  {{2}, {2, 2, 1}, 8},
+  {{2}, {2, 1, 1, 1}, 5},
+  {{2}, {1, 1, 1, 1, 1}, 0},
+  {{1, 1}, {}, 0},
+  {{1, 1}, {1}, 0},
+  {{1, 1}, {2}, 0},
+  {{1, 1}, {1, 1}, 2},
+  {{1, 1}, {3}, 0},
+  {{1, 1}, {2, 1}, 3},
+  {{1, 1}, {1, 1, 1}, 6},
+  {{1, 1}, {4}, 0},
+  {{1, 1}, {3, 1}, 4},
+  {{1, 1}, {2, 2}, 6},
+  {{1, 1}, {2, 1, 1}, 8},
+  {{1, 1}, {1, 1, 1, 1}, 12},
+  {{1, 1}, {5}, 0},
+  {{1, 1}, {4, 1}, 5},
+  {{1, 1}, {3, 2}, 8},
+  {{1, 1}, {3, 1, 1}, 10},
+  {{1, 1}, {2, 2, 1}, 12},
+  {{1, 1}, {2, 1, 1, 1}, 15},
+  {{1, 1}, {1, 1, 1, 1, 1}, 20},
+  {{3}, {}, 0},
+  {{3}, {1}, 0},
+  {{3}, {2}, 0},
+  {{3}, {1, 1}, 0},
+  {{3}, {3}, 6},
+  {{3}, {2, 1}, 0},
+  {{3}, {1, 1, 1}, 0},
+  {{3}, {4}, 24},
+  {{3}, {3, 1}, 8},
+  {{3}, {2, 2}, 0},
+  {{3}, {2, 1, 1}, 0},
+  {{3}, {1, 1, 1, 1}, 0},
+  {{3}, {5}, 60},
+  {{3}, {4, 1}, 30},
+  {{3}, {3, 2}, 12},
+  {{3}, {3, 1, 1}, 10},
+  {{3}, {2, 2, 1}, 0},
+  {{3}, {2, 1, 1, 1}, 0},
+  {{3}, {1, 1, 1, 1, 1}, 0},
+  {{2, 1}, {}, 0},
+  {{2, 1}, {1}, 0},
+  {{2, 1}, {2}, 0},
+  {{2, 1}, {1, 1}, 0},
+  {{2, 1}, {3}, 0},
+  {{2, 1}, {2, 1}, 3},
+  {{2, 1}, {1, 1, 1}, 0},
+  {{2, 1}, {4}, 0},
+  {{2, 1}, {3, 1}, 8},
+  {{2, 1}, {2, 2}, 12},
+  {{2, 1}, {2, 1, 1}, 8},
+  {{2, 1}, {1, 1, 1, 1}, 0},
+  {{2, 1}, {5}, 0},
+  {{2, 1}, {4, 1}, 15},
+  {{2, 1}, {3, 2}, 24},
+  {{2, 1}, {3, 1, 1}, 20},
+  {{2, 1}, {2, 2, 1}, 24},
+  {{2, 1}, {2, 1, 1, 1}, 15},
+  {{2, 1}, {1, 1, 1, 1, 1}, 0},
+  {{1, 1, 1}, {}, 0},
+  {{1, 1, 1}, {1}, 0},
+  {{1, 1, 1}, {2}, 0},
+  {{1, 1, 1}, {1, 1}, 0},
+  {{1, 1, 1}, {3}, 0},
+  {{1, 1, 1}, {2, 1}, 0},
+  {{1, 1, 1}, {1, 1, 1}, 6},
+  {{1, 1, 1}, {4}, 0},
+  {{1, 1, 1}, {3, 1}, 0},
+  {{1, 1, 1}, {2, 2}, 0},
+  {{1, 1, 1}, {2, 1, 1}, 8},
+  {{1, 1, 1}, {1, 1, 1, 1}, 24},
+  {{1, 1, 1}, {5}, 0},
+  {{1, 1, 1}, {4, 1}, 0},
+  {{1, 1, 1}, {3, 2}, 0},
+  {{1, 1, 1}, {3, 1, 1}, 10},
+  {{1, 1, 1}, {2, 2, 1}, 12},
+  {{1, 1, 1}, {2, 1, 1, 1}, 30},
+  {{1, 1, 1}, {1, 1, 1, 1, 1}, 60},
+  {{4}, {}, 0},
+  {{4}, {1}, 0},
+  {{4}, {2}, 0},
+  {{4}, {1, 1}, 0},
+  {{4}, {3}, 0},
+  {{4}, {2, 1}, 0},
+  {{4}, {1, 1, 1}, 0},
+  {{4}, {4}, 24},
+  {{4}, {3, 1}, 0},
+  {{4}, {2, 2}, 0},
+  {{4}, {2, 1, 1}, 0},
+  {{4}, {1, 1, 1, 1}, 0},
+  {{4}, {5}, 120},
+  {{4}, {4, 1}, 30},
+  {{4}, {3, 2}, 0},
+  {{4}, {3, 1, 1}, 0},
+  {{4}, {2, 2, 1}, 0},
+  {{4}, {2, 1, 1, 1}, 0},
+  {{4}, {1, 1, 1, 1, 1}, 0},
+  {{3, 1}, {}, 0},
+  {{3, 1}, {1}, 0},
+  {{3, 1}, {2}, 0},
+  {{3, 1}, {1, 1}, 0},
+  {{3, 1}, {3}, 0},
+  {{3, 1}, {2, 1}, 0},
+  {{3, 1}, {1, 1, 1}, 0},
+  {{3, 1}, {4}, 0},
+  {{3, 1}, {3, 1}, 8},
+  {{3, 1}, {2, 2}, 0},
+  {{3, 1}, {2, 1, 1}, 0},
+  {{3, 1}, {1, 1, 1, 1}, 0},
+  {{3, 1}, {5}, 0},
+  {{3, 1}, {4, 1}, 30},
+  {{3, 1}, {3, 2}, 24},
+  {{3, 1}, {3, 1, 1}, 20},
+  {{3, 1}, {2, 2, 1}, 0},
+  {{3, 1}, {2, 1, 1, 1}, 0},
+  {{3, 1}, {1, 1, 1, 1, 1}, 0},
+  {{2, 2}, {}, 0},
+  {{2, 2}, {1}, 0},
+  {{2, 2}, {2}, 0},
+  {{2, 2}, {1, 1}, 0},
+  {{2, 2}, {3}, 0},
+  {{2, 2}, {2, 1}, 0},
+  {{2, 2}, {1, 1, 1}, 0},
+  {{2, 2}, {4}, 0},
+  {{2, 2}, {3, 1}, 0},
+  {{2, 2}, {2, 2}, 12},
+  {{2, 2}, {2, 1, 1}, 0},
+  {{2, 2}, {1, 1, 1, 1}, 0},
+  {{2, 2}, {5}, 0},
+  {{2, 2}, {4, 1}, 0},
+  {{2, 2}, {3, 2}, 24},
+  {{2, 2}, {3, 1, 1}, 0},
+  {{2, 2}, {2, 2, 1}, 24},
+  {{2, 2}, {2, 1, 1, 1}, 0},
+  {{2, 2}, {1, 1, 1, 1, 1}, 0},
+  {{2, 1, 1}, {}, 0},
+  {{2, 1, 1}, {1}, 0},
+  {{2, 1, 1}, {2}, 0},
+  {{2, 1, 1}, {1, 1}, 0},
+  {{2, 1, 1}, {3}, 0},
+  {{2, 1, 1}, {2, 1}, 0},
+  {{2, 1, 1}, {1, 1, 1}, 0},
+  {{2, 1, 1}, {4}, 0},
+  {{2, 1, 1}, {3, 1}, 0},
+  {{2, 1, 1}, {2, 2}, 0},
+  {{2, 1, 1}, {2, 1, 1}, 8},
+  {{2, 1, 1}, {1, 1, 1, 1}, 0},
+  {{2, 1, 1}, {5}, 0},
+  {{2, 1, 1}, {4, 1}, 0},
+  {{2, 1, 1}, {3, 2}, 0},
+  {{2, 1, 1}, {3, 1, 1}, 20},
+  {{2, 1, 1}, {2, 2, 1}, 24},
+  {{2, 1, 1}, {2, 1, 1, 1}, 30},
+  {{2, 1, 1}, {1, 1, 1, 1, 1}, 0},
+  {{1, 1, 1, 1}, {}, 0},
+  {{1, 1, 1, 1}, {1}, 0},
+  {{1, 1, 1, 1}, {2}, 0},
+  {{1, 1, 1, 1}, {1, 1}, 0},
+  {{1, 1, 1, 1}, {3}, 0},
+  {{1, 1, 1, 1}, {2, 1}, 0},
+  {{1, 1, 1, 1}, {1, 1, 1}, 0},
+  {{1, 1, 1, 1}, {4}, 0},
+  {{1, 1, 1, 1}, {3, 1}, 0},
+  {{1, 1, 1, 1}, {2, 2}, 0},
+  {{1, 1, 1, 1}, {2, 1, 1}, 0},
+  {{1, 1, 1, 1}, {1, 1, 1, 1}, 24},
+  {{1, 1, 1, 1}, {5}, 0},
+  {{1, 1, 1, 1}, {4, 1}, 0},
+  {{1, 1, 1, 1}, {3, 2}, 0},
+  {{1, 1, 1, 1}, {3, 1, 1}, 0},
+  {{1, 1, 1, 1}, {2, 2, 1}, 0},
+  {{1, 1, 1, 1}, {2, 1, 1, 1}, 30},
+  {{1, 1, 1, 1}, {1, 1, 1, 1, 1}, 120},
+  {{5}, {}, 0},
+  {{5}, {1}, 0},
+  {{5}, {2}, 0},
+  {{5}, {1, 1}, 0},
+  {{5}, {3}, 0},
+  {{5}, {2, 1}, 0},
+  {{5}, {1, 1, 1}, 0},
+  {{5}, {4}, 0},
+  {{5}, {3, 1}, 0},
+  {{5}, {2, 2}, 0},
+  {{5}, {2, 1, 1}, 0},
+  {{5}, {1, 1, 1, 1}, 0},
+  {{5}, {5}, 120},
+  {{5}, {4, 1}, 0},
+  {{5}, {3, 2}, 0},
+  {{5}, {3, 1, 1}, 0},
+  {{5}, {2, 2, 1}, 0},
+  {{5}, {2, 1, 1, 1}, 0},
+  {{5}, {1, 1, 1, 1, 1}, 0},
+  {{4, 1}, {}, 0},
+  {{4, 1}, {1}, 0},
+  {{4, 1}, {2}, 0},
+  {{4, 1}, {1, 1}, 0},
+  {{4, 1}, {3}, 0},
+  {{4, 1}, {2, 1}, 0},
+  {{4, 1}, {1, 1, 1}, 0},
+  {{4, 1}, {4}, 0},
+  {{4, 1}, {3, 1}, 0},
+  {{4, 1}, {2, 2}, 0},
+  {{4, 1}, {2, 1, 1}, 0},
+  {{4, 1}, {1, 1, 1, 1}, 0},
+  {{4, 1}, {5}, 0},
+  {{4, 1}, {4, 1}, 30},
+  {{4, 1}, {3, 2}, 0},
+  {{4, 1}, {3, 1, 1}, 0},
+  {{4, 1}, {2, 2, 1}, 0},
+  {{4, 1}, {2, 1, 1, 1}, 0},
+  {{4, 1}, {1, 1, 1, 1, 1}, 0},
+  {{3, 2}, {}, 0},
+  {{3, 2}, {1}, 0},
+  {{3, 2}, {2}, 0},
+  {{3, 2}, {1, 1}, 0},
+  {{3, 2}, {3}, 0},
+  {{3, 2}, {2, 1}, 0},
+  {{3, 2}, {1, 1, 1}, 0},
+  {{3, 2}, {4}, 0},
+  {{3, 2}, {3, 1}, 0},
+  {{3, 2}, {2, 2}, 0},
+  {{3, 2}, {2, 1, 1}, 0},
+  {{3, 2}, {1, 1, 1, 1}, 0},
+  {{3, 2}, {5}, 0},
+  {{3, 2}, {4, 1}, 0},
+  {{3, 2}, {3, 2}, 24},
+  {{3, 2}, {3, 1, 1}, 0},
+  {{3, 2}, {2, 2, 1}, 0},
+  {{3, 2}, {2, 1, 1, 1}, 0},
+  {{3, 2}, {1, 1, 1, 1, 1}, 0},
+  {{3, 1, 1}, {}, 0},
+  {{3, 1, 1}, {1}, 0},
+  {{3, 1, 1}, {2}, 0},
+  {{3, 1, 1}, {1, 1}, 0},
+  {{3, 1, 1}, {3}, 0},
+  {{3, 1, 1}, {2, 1}, 0},
+  {{3, 1, 1}, {1, 1, 1}, 0},
+  {{3, 1, 1}, {4}, 0},
+  {{3, 1, 1}, {3, 1}, 0},
+  {{3, 1, 1}, {2, 2}, 0},
+  {{3, 1, 1}, {2, 1, 1}, 0},
+  {{3, 1, 1}, {1, 1, 1, 1}, 0},
+  {{3, 1, 1}, {5}, 0},
+  {{3, 1, 1}, {4, 1}, 0},
+  {{3, 1, 1}, {3, 2}, 0},
+  {{3, 1, 1}, {3, 1, 1}, 20},
+  {{3, 1, 1}, {2, 2, 1}, 0},
+  {{3, 1, 1}, {2, 1, 1, 1}, 0},
+  {{3, 1, 1}, {1, 1, 1, 1, 1}, 0},
+  {{2, 2, 1}, {}, 0},
+  {{2, 2, 1}, {1}, 0},
+  {{2, 2, 1}, {2}, 0},
+  {{2, 2, 1}, {1, 1}, 0},
+  {{2, 2, 1}, {3}, 0},
+  {{2, 2, 1}, {2, 1}, 0},
+  {{2, 2, 1}, {1, 1, 1}, 0},
+  {{2, 2, 1}, {4}, 0},
+  {{2, 2, 1}, {3, 1}, 0},
+  {{2, 2, 1}, {2, 2}, 0},
+  {{2, 2, 1}, {2, 1, 1}, 0},
+  {{2, 2, 1}, {1, 1, 1, 1}, 0},
+  {{2, 2, 1}, {5}, 0},
+  {{2, 2, 1}, {4, 1}, 0},
+  {{2, 2, 1}, {3, 2}, 0},
+  {{2, 2, 1}, {3, 1, 1}, 0},
+  {{2, 2, 1}, {2, 2, 1}, 24},
+  {{2, 2, 1}, {2, 1, 1, 1}, 0},
+  {{2, 2, 1}, {1, 1, 1, 1, 1}, 0},
+  {{2, 1, 1, 1}, {}, 0},
+  {{2, 1, 1, 1}, {1}, 0},
+  {{2, 1, 1, 1}, {2}, 0},
+  {{2, 1, 1, 1}, {1, 1}, 0},
+  {{2, 1, 1, 1}, {3}, 0},
+  {{2, 1, 1, 1}, {2, 1}, 0},
+  {{2, 1, 1, 1}, {1, 1, 1}, 0},
+  {{2, 1, 1, 1}, {4}, 0},
+  {{2, 1, 1, 1}, {3, 1}, 0},
+  {{2, 1, 1, 1}, {2, 2}, 0},
+  {{2, 1, 1, 1}, {2, 1, 1}, 0},
+  {{2, 1, 1, 1}, {1, 1, 1, 1}, 0},
+  {{2, 1, 1, 1}, {5}, 0},
+  {{2, 1, 1, 1}, {4, 1}, 0},
+  {{2, 1, 1, 1}, {3, 2}, 0},
+  {{2, 1, 1, 1}, {3, 1, 1}, 0},
+  {{2, 1, 1, 1}, {2, 2, 1}, 0},
+  {{2, 1, 1, 1}, {2, 1, 1, 1}, 30},
+  {{2, 1, 1, 1}, {1, 1, 1, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {}, 0},
+  {{1, 1, 1, 1, 1}, {1}, 0},
+  {{1, 1, 1, 1, 1}, {2}, 0},
+  {{1, 1, 1, 1, 1}, {1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {3}, 0},
+  {{1, 1, 1, 1, 1}, {2, 1}, 0},
+  {{1, 1, 1, 1, 1}, {1, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {4}, 0},
+  {{1, 1, 1, 1, 1}, {3, 1}, 0},
+  {{1, 1, 1, 1, 1}, {2, 2}, 0},
+  {{1, 1, 1, 1, 1}, {2, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {1, 1, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {5}, 0},
+  {{1, 1, 1, 1, 1}, {4, 1}, 0},
+  {{1, 1, 1, 1, 1}, {3, 2}, 0},
+  {{1, 1, 1, 1, 1}, {3, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {2, 2, 1}, 0},
+  {{1, 1, 1, 1, 1}, {2, 1, 1, 1}, 0},
+  {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, 120}
+
+};
+
+VerificationTest[
+  And @@ (ShiftedSymmetricFunctions`ShiftedSchurEvaluate[#[[1]], #[[2]]] === #[[3]] & /@
+    rustShiftedSchurValues),
+  True,
+  TestID -> "ShiftedSymmetricFunctions-ShiftedSchurEvaluate-rust-oracle-size-five"
+]

@@ -96,7 +96,6 @@ SkewSchurSymmetric;
 
 JackPSymmetric;
 JackJSymmetric;
-ShiftedJackPSymmetric;
 
 HallLittlewoodMSymmetric;
 HallLittlewoodTSymmetric;
@@ -1455,41 +1454,6 @@ Together@Sum[
    , {ssyt, SemiStandardYoungTableaux[{mu, {}}, Tr@mu]
  }];
 
-
-ShiftedJackPSymmetric::usage = "ShiftedJackPSymmetric[lam, a, x] returns the shifted Jack P symmetric function indexed by partition lam with parameter a. The alphabet x defaults to None.";
-ShiftedJackPSymmetric[lam_List, a_, x_: None] := ChangeFunctionAlphabet[
-	ShiftedJackPSymmetricHelper[lam, SPECIALA], x] /. {SPECIALA -> a};
-
-ShiftedJackPSymmetricHelper[mu_List, a_]:=ShiftedJackPSymmetricHelper[mu,a]=Module[{asPoly,n=Tr@mu,z,r},
-
-(* This is now non-homogeneous in z. *)
-	asPoly = Sum[
-			(* Product over all boxes in the ssyt *)
-			Product[
-				( z[ n+1-Extract[ssyt[[1]],s] ] - (s[[2]]-1) + (s[[1]]-1)/a )
-			, {s, DiagramBoxes[mu]}]
-			*
-			With[{ribbons = Table[YoungTableauShape[ssyt, i], {i, Max[ssyt]}]},
-				Product[
-					JackPsi[rib, a]
-					, {rib, Partition[ Reverse@ribbons , 2, 1]}]
-			]
-		, {w, WeakIntegerCompositions[n,n]}
-		, {ssyt, SemiStandardYoungTableaux[{mu, {}}, w]}
-	];
-	
-	(* We do the following shift, and the result should be a symmetric function. *)
-	asPoly = asPoly/. z[i_]:>(z[i] + i)/a;
-	
-(* Extract the coefficients. This is symmetric so only take the partitions *)
-Sum[
-	With[{nu=r[[1]],c=r[[2]]},
-		Boole[OrderedQ[nu]] MonomialSymmetric[nu] c
-	]
-	,{r,CoefficientRules[asPoly, z/@Range[n]]}]
- 
-];
- 
 
 (****************************************************************************************************)
 (****************************************************************************************************)
