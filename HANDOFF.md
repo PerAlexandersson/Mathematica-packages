@@ -13,10 +13,21 @@
   differences are preserved in separate cosmetic and semantic commits, row-flag
   endpoint handling is corrected, `RowFlags` is public, and focused regression
   tests pass.
-- Claude Opus 5.5 session `agent-mathematica-mathem-c-eaac064b` is conducting
-  a read-only deep audit of the full repository. It owns no files and must not
-  mutate GitHub state. The next implementation work remains the supported
-  context and public-API inventory in issue #2.
+- The 2026-10-10 deep audit is complete. Its confirmed defects are tracked in
+  #13--#20 (one issue per group of files) and missing usage strings in #21;
+  audit corrections were added to #3, #4, #5 and #11.
+- PR #22 runs every `Tests/*.wlt` file in a fresh kernel; see `Tests/README.md`.
+- Orchestrator: Claude session `agent-mathematica-mathem-c-eaac064b`. It owns
+  `SymmetricFunctions.m` (#5 hotfix: private result cache, no alias block),
+  `Tests/SymmetricFunctions.wlt`, `Tests/RunTests.wls`, `HANDOFF.md`, and all
+  integration, commits and PRs.
+- Codex `gpt-5.6-luna` workers fix bugs in scratch copies and never touch the
+  repository; the orchestrator reviews and integrates their patches:
+  - A (#13): `CombinatoricTools.m`, `PolynomialTools.m` and their tests.
+  - B (#14): `NewTableaux.m`, `GTPatterns.m`, `Tests/GTPatterns.wlt`, `Tests/NewTableaux.wlt`.
+  - C (#15): `GraphTools.m`, `MatroidTools.m`, `RookTools.m` and their tests.
+  - D (#16): `CatalanObjects.m`, `PermutationTools.m`, `QuasiSymmetricFunctions.m` and their tests.
+  - Queued: E (#17, chromatic packages), F (#18, legacy packages), #20 after the #5 hotfix.
 
 ## Planned sequence
 

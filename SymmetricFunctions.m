@@ -139,6 +139,7 @@ HookFilterMap;
 
 PrecomputeBasisMatrices;
 LoadBasisMatrices;
+ClearSymmetricFunctionsCache;
 
 
 SnModuleCharacters;
@@ -147,6 +148,17 @@ SnModuleCharacters;
 Begin["`Private`"];
 
 sortToPartition[mu_List]:=Sort[Select[mu,Positive],Greater];
+
+
+(* Results of memoized public functions are stored here rather than as down-values,
+   since the public symbols are protected. Keys start with the function symbol. *)
+sfCache = <||>;
+
+SetAttributes[cached, HoldRest];
+cached[key_, expr_] := If[KeyExistsQ[sfCache, key], sfCache[key], sfCache[key] = expr];
+
+ClearSymmetricFunctionsCache::usage = "ClearSymmetricFunctionsCache[] removes all stored results of memoized symmetric functions, such as SkewSchurSymmetric, MacdonaldHSymmetric and KroneckerCoefficient. Transition matrices between the classical bases are kept.";
+ClearSymmetricFunctionsCache[] := (sfCache = <||>;);
 
 
 coreBasesList=(MonomialSymbol|SchurSymbol|ElementaryESymbol|CompleteHSymbol|ForgottenSymbol|PowerSumSymbol);
@@ -465,13 +477,17 @@ LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 
 SkewKostkaCoefficient::usage = "SkewKostkaCoefficient[lam,mu,nu] returns the skew Kostka coefficient associated with shape lam/mu and type nu.";
 SkewKostkaCoefficient[lam_List, mu_List, w_List] :=
-  Module[{inM, n = Tr[lam] - Tr[mu]},
-   inM = ToMonomialBasis[SkewSchurSymmetric[{lam, mu}]];
-   Do[
-    SkewKostkaCoefficient[lam, mu, nu] =
-      Coefficient[inM, MonomialSymbol[nu, None]];
-    , {nu, IntegerPartitions[n]}];
-   SkewKostkaCoefficient[lam, mu, w]
+  With[{nu = sortToPartition[w], n = Tr[lam] - Tr[mu]},
+   If[Tr[nu] != n, 0,
+    cached[{SkewKostkaCoefficient, lam, mu, nu},
+     With[{inM = ToMonomialBasis[SkewSchurSymmetric[{lam, mu}]]},
+      (* Store the coefficients for all partitions of n. *)
+      Do[
+       sfCache[{SkewKostkaCoefficient, lam, mu, kappa}] =
+         Coefficient[inM, MonomialSymbol[kappa, None]];
+       , {kappa, IntegerPartitions[n]}];
+      sfCache[{SkewKostkaCoefficient, lam, mu, nu}]
+      ]]]
    ];
 
 (********************************************************************)
@@ -1157,18 +1173,21 @@ Plethysm[f_, g_, xx_: None] := Module[
 
 
 KroneckerCoefficient::usage = "KroneckerCoefficient[lam,mu,nu] returns the Kronecker coefficient.";
-KroneckerCoefficient[lam_List, mu_List, nu_List] := Module[{pleth, n = Tr@lam, x, y},
+KroneckerCoefficient[lam_List, mu_List, nu_List] := Module[{pleth, n = Tr@lam, x, y,
+	lamP = sortToPartition[lam], muP = sortToPartition[mu], nuP = sortToPartition[nu]},
    If[Not[Tr[lam] == Tr[mu] == Tr[nu]], 0,
-    pleth =
-     ToSchurBasis[
-      Plethysm[SchurSymbol[lam, x],
-       PowerSumSymbol[1, x] PowerSumSymbol[1, y], {x}], {x, y}];
-    (*Memoize*)
-    Do[
-     KroneckerCoefficient[lam, muP, nuP] = Coefficient[
-        pleth, SchurSymbol[muP, x] SchurSymbol[nuP, y]];
-     , {muP, IntegerPartitions@n}, {nuP, IntegerPartitions@n}];
-    KroneckerCoefficient[lam, mu, nu]
+    cached[{KroneckerCoefficient, lamP, muP, nuP},
+     pleth =
+      ToSchurBasis[
+       Plethysm[SchurSymbol[lamP, x],
+        PowerSumSymbol[1, x] PowerSumSymbol[1, y], {x}], {x, y}];
+     (* Store the coefficients for all pairs of partitions of n. *)
+     Do[
+      sfCache[{KroneckerCoefficient, lamP, a, b}] = Coefficient[
+         pleth, SchurSymbol[a, x] SchurSymbol[b, y]];
+      , {a, IntegerPartitions@n}, {b, IntegerPartitions@n}];
+     sfCache[{KroneckerCoefficient, lamP, muP, nuP}]
+     ]
     ]
 ];
 
@@ -1241,7 +1260,7 @@ SkewSchurSymmetric[lam_List]:=SkewSchurSymmetric[{lam, {}}, None];
 SkewSchurSymmetric[lam_List, x_]:=SkewSchurSymmetric[{lam, {}}, x];
 SkewSchurSymmetric[{lam_List, mu_List}]:=SkewSchurSymmetric[{lam, mu}, None];
 
-SkewSchurSymmetric[{lam_List, mu_List},None] := SkewSchurSymmetric[{lam, mu}, None] = Module[
+SkewSchurSymmetric[{lam_List, mu_List},None] := cached[{SkewSchurSymmetric, lam, mu}, Module[
 	{bb, mup = PadRight[mu, Length@lam]},
 	
 Expand@Which[
@@ -1260,7 +1279,7 @@ Expand@Which[
 				, bb, d]
 		] /. bb[v_] :> ElementaryESymbol[v]
 	]
-];
+]];
 
 SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeFunctionAlphabet[ SkewSchurSymmetric[{lam, mu}, None],  x];
 
@@ -1268,9 +1287,9 @@ SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeFunctionAlphabet[ SkewSchur
 
 (* This uses https://doi.org/10.37236/1539  *)
 JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
-JackPSymmetric[lam_List,a_, x_: None] := JackPSymmetric[lam,a,x] = Sum[
+JackPSymmetric[lam_List,a_, x_: None] := cached[{JackPSymmetric, lam, a, x}, Sum[
 	KostkaCoefficient[lam,mu,a] MonomialSymbol[mu,x]
-,{mu,IntegerPartitions[Tr@lam]}];
+,{mu,IntegerPartitions[Tr@lam]}]];
 
 JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization of Jack functions.";
 JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Product[
@@ -1285,7 +1304,7 @@ http://igm.univ-mlv.fr/~fpsac/FPSAC02/ARTICLES/Tudose.pdf
 *)
 HallLittlewoodTSymmetric::usage = "HallLittlewoodTSymmetric is the transformed Hall-Littlewood polynomial.";
 HallLittlewoodTSymmetric[lam_List, q_, x_: None] := 
-HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
+cached[{HallLittlewoodTSymmetric, lam, q, x}, Module[{Rij,
 	res, operators, n = Tr@lam, applyIJ, hh, qq},
 	
 	Rij[vec_List, i_Integer, j_Integer, k_Integer] := 
@@ -1313,7 +1332,7 @@ HallLittlewoodTSymmetric[lam, q, x] = Module[{Rij,
 	(* Replace with complete homogeneous sym funcs.*)
 	
 	Expand[res /. {hh[a_] :> CompleteHSymbol[a, x], qq -> q}]
-];
+]];
 
 
 kSchurSymmetric::usage = "kSchurSymmetric[mu,k returns the k-Schur function. Note that one must have mu1<=k.";
@@ -1390,11 +1409,11 @@ createBasis[HallLittlewoodPSymbol, "P",
 
 
 SchursQSymmetric::usage = "SchursQSymmetric[lam]";
-SchursQSymmetric[lam_List, x_: None]:=SchursQSymmetric[lam,x] = ToMonomialBasis@Module[{q},
+SchursQSymmetric[lam_List, x_: None]:=cached[{SchursQSymmetric, lam, x}, ToMonomialBasis@Module[{q},
 	Plethysm[
 	HallLittlewoodTSymmetric[lam, q,x]
 	, (1 - q) PowerSumSymmetric[{1},x]
-] /. q -> -1];
+] /. q -> -1]];
 
 SchursPSymmetric[lam_List, x_: None]:=Together[SchursQSymmetric[lam,x]/2^Length[lam]];
 
@@ -1479,16 +1498,15 @@ Sum[
 MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam,q,t] is the modified Macdonald polynomial.";
 MacdonaldHSymmetric[lam_List, q_, t_,x_: None] := MacdonaldHSymmetric[{lam, {}}, q, t,x];
 
-MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] := MacdonaldHSymmetric[{lam,mu},q,t,x] =
+MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] :=
 ChangeFunctionAlphabet[MacdonaldHSymmetric[{lam, mu}, SPECIALQ, SPECIALT], x] /. {SPECIALQ -> q, SPECIALT -> t};
 
 (* This is computed via the F-expansion, using the slinky rule *)
-MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := Module[
+MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := cached[{MacdonaldHSymmetric, lam, mu}, Module[
 	{template, n = Tr[lam] - Tr[mu], tab, p, inv, maj, rw, desSet, alpha},
 	
 	template = SuperStandardTableau[{lam, mu}];
 	
-	MacdonaldHSymmetric[{lam,mu}, SPECIALQ, SPECIALT] = 
 	Expand@Sum[
 		tab = template /. Thread[Range[n] -> p];
 		{inv, maj} = InvMajStatistic[tab];
@@ -1498,10 +1516,8 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := Module[
 		
 		SchurSymbol[alpha]
 		SPECIALQ^inv SPECIALT^maj
-	, {p, Permutations[Range[n]]}];
-	
-	MacdonaldHSymmetric[{lam,mu}, SPECIALQ, SPECIALT]
-];
+	, {p, Permutations[Range[n]]}]
+]];
 
 
 ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] := 
@@ -1534,7 +1550,7 @@ ChangeFunctionAlphabet[SkewMacdonaldESymmetric[{lam, mu}, q,None],x];
 SkewMacdonaldESymmetric[{lam_List, mu_List}, q_,None] := 
 SkewMacdonaldESymmetric[{lam, mu}, SPECIALQ] /. {SPECIALQ -> q};
 
-SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := SkewMacdonaldESymmetric[{lam,mu},SPECIALQ]=
+SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := cached[{SkewMacdonaldESymmetric, lam, mu},
   Module[{alpha, n = Tr[lam] - Tr[mu],t,
     nn = Tr[lam], muc = ConjugatePartition[mu]},
    alpha = PadRight[ConjugatePartition[lam], nn] - PadRight[muc, nn];
@@ -1546,7 +1562,7 @@ SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := SkewMacdonaldESymmetri
        SemiStandardYoungTableaux[{ConjugatePartition@nu, {}}, 
         alpha]}]
     , {nu, IntegerPartitions[n]}]
-];
+]];
 
 
 (****************************************************************************************************)
@@ -1559,7 +1575,7 @@ SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := SkewMacdonaldESymmetri
 LLTSymmetric::usage = "LLTSymmetric[nu,q] returns the LLT polynomial associated with the tuple of skew shapes.";
 
 LLTSymmetric[nu_List, q_,x_:None]:=ChangeFunctionAlphabet[LLTSymmetric[nu,q,None],x];
-LLTSymmetric[nu_List, q_,None] := Module[
+LLTSymmetric[nu_List, q_,None] := cached[{LLTSymmetric, nu, q}, Module[
 {rwWithContent, ttInv, sizes, lam, mu, templateList, tableauList,
 	tabValues, perms, p, contentRW, rwPerm, n,
 	tabTuples, desSet, alpha, inv
@@ -1620,10 +1636,7 @@ LLTSymmetric[nu_List, q_,None] := Module[
 		, {tv, tabValues},
 		{template, templateList}];
 
-	(* We do the memoization here. *)
-	Unprotect[LLTSymmetric];
-	
-	LLTSymmetric[nu,q,None] = Expand@Sum[
+	Expand@Sum[
 		contentRW = Join @@ MapIndexed[rwWithContent[#1, #2[[1]]] &, tt];
 		rwPerm = 
 		First /@ SortBy[contentRW, {#[[2]] &, #[[4]] &, #[[3]] &}];
@@ -1632,12 +1645,8 @@ LLTSymmetric[nu_List, q_,None] := Module[
 		
 		inv = Total[ttInv @@@ Subsets[tt, {2}]];
 		q^inv SchurSymbol[alpha]
-		, {tt, tabTuples}];
-	
-	Protect[LLTSymmetric];
-		
-	LLTSymmetric[nu,q,None]
-];
+		, {tt, tabTuples}]
+]];
 
 
 
@@ -1695,23 +1704,23 @@ CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:= Sum[
 
 
 (* Based on 7.10c in https://arxiv.org/pdf/1907.02645.pdf *)
-LahSymmetricFunction[n_Integer, k_Integer,x_:None] := LahSymmetricFunction[n, k,x] = Expand[
+LahSymmetricFunction[n_Integer, k_Integer,x_:None] := cached[{LahSymmetricFunction, n, k, x}, Expand[
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
 				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
 				Product[(CompleteHSymbol[j,x]/(j + 1))^ll[[j]], {j, n - k}]
 				]
 			, {alpha, IntegerPartitions[n - k]}]
-];
+]];
 
-LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := LahSymmetricFunctionNegative[n, k,x] = Expand[
+LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := cached[{LahSymmetricFunctionNegative, n, k, x}, Expand[
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
 				(-1)^Tr[ll - 1] (Multinomial @@ Append[ll, n - 1])
 				Product[(ElementaryESymbol[j,x]/(j + 1))^ll[[j]], {j, n - k}]
 				]
 			, {alpha, IntegerPartitions[n - k]}]
-];
+]];
 
 
 
@@ -1754,7 +1763,7 @@ SchurSuperSymmetric[lam_List, x_, y_] := Det@Table[
 
 DeltaOperator::usage = "DeltaOperator[f,g,q,t] is the Garsia Delta operator.";
 
-DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH, monoms},
+DeltaOperator[f_, g_, q_, t_] := cached[{DeltaOperator, f, g, q, t}, Module[{x, val, inH, monoms},
 		
 		(* Monomials defined by shape. *)
 		monoms[mu_List] := (q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]);
@@ -1765,11 +1774,11 @@ DeltaOperator[f_, g_, q_, t_] := DeltaOperator[f, g, q, t] = Module[{x, val, inH
 		
 		inH = Expand[ToMacdonaldHBasis[g, q, t]];
 		Together[inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
-];
+]];
 
 NablaOperator[g_, q_, t_] := DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
 
-DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, val, inH, monoms},
+DeltaPrimOperator[f_, g_, q_, t_] := cached[{DeltaPrimOperator, f, g, q, t}, Module[{x, val, inH, monoms},
 
 		(* Monomials defined by shape. *)
 		monoms[mu_List] := Rest[q^(#1 - 1) t^(#2 - 1) & @@@ DiagramBoxes[mu]];
@@ -1781,7 +1790,7 @@ DeltaPrimOperator[f_, g_, q_, t_] := DeltaPrimOperator[f, g, q, t] = Module[{x, 
 		inH = Expand[ToMacdonaldHBasis[g, q, t]];
 		Together[
 		inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
-];
+]];
 
 
 PrecomputeBasisMatrices::usage = "PrecomputeBasisMatrices[Dimensions->n] computes the transition matrices for
@@ -1946,17 +1955,6 @@ UnitTest[HookFilterMap] := And[
 End[(* End private *)];
 
 
-(* Automatically expose all capitalized symbols from Private context *)
-Evaluate[
-  Block[{$ContextPath},
-    Select[
-      Names["SymmetricFunctions`Private`*"],
-      StringMatchQ[#, ___ ~~ "`" ~~ LetterCharacter?UpperCaseQ ~~ ___] &
-    ] /. 
-    (name : ("SymmetricFunctions`Private`" ~~ rest__)) :> 
-      (ToExpression["SymmetricFunctions`" <> rest] = ToExpression[name])
-  ]
-];
 
 
 
