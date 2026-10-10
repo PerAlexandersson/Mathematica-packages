@@ -433,3 +433,34 @@ VerificationTest[
   True,
   TestID -> "NonsymmetricPolynomials-expanded-operators-match-quotients"
 ]
+
+(* Issue #51: dual Grothendieck polynomials from fillings. Checks: the legacy
+   MacdonaldPolynomials`DualGrothendieckPolynomial (index reversed, as for keys); for weakly
+   increasing alpha, an independent reverse-plane-partition formula for the Lam-Pylyavskyy g_lambda
+   (rows and columns weakly increasing, weight = number of columns containing i), whose
+   top-degree part is the Schur polynomial; and g_(1,1)(x1, x2) = x1 + x2 + x1 x2. *)
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"]; Needs["SymmetricFunctions`"], General::shdw];
+  Module[{comps, rpp, gl, top},
+    comps = Select[Flatten[Table[Tuples[Range[0, 3], n], {n, 1, 3}], 1], Total[#] <= 4 &];
+    (* reverse plane partitions of shape lam with entries in 1..n *)
+    rpp[lam_, n_] := Module[{cells = Flatten[Table[{r, c}, {r, Length[lam]}, {c, lam[[r]]}], 1]},
+      Select[Tuples[Range[n], Length[cells]], Function[v, With[{f = AssociationThread[cells -> v]},
+        AllTrue[cells, (#[[2]] == 1 || f[#] >= f[# - {0, 1}]) && (#[[1]] == 1 || f[#] >= f[# - {1, 0}]) &]]]]];
+    gl[lam_, n_] := Module[{cells = Flatten[Table[{r, c}, {r, Length[lam]}, {c, lam[[r]]}], 1]},
+      Expand@Total[Function[v, With[{f = AssociationThread[cells -> v]},
+        Times @@ Flatten[Table[x /@ Union[f /@ Select[cells, #[[2]] == c &]],
+          {c, If[lam === {}, 0, First[lam]]}]]]] /@ rpp[lam, n]]];
+    top[p_, d_] := Expand[Coefficient[Expand[p /. x[i_] :> s x[i]], s, d]];
+    And[
+      And @@ (Expand[NonsymmetricPolynomials`DualGrothendieckPolynomial[#, x] -
+          MacdonaldPolynomials`DualGrothendieckPolynomial[Reverse[#], x]] === 0 & /@ comps),
+      And @@ (With[{lam = Reverse@DeleteCases[#, 0], n = Length[#]},
+          Expand[NonsymmetricPolynomials`DualGrothendieckPolynomial[#, x] - gl[lam, n]] === 0 &&
+          Expand[top[NonsymmetricPolynomials`DualGrothendieckPolynomial[#, x], Total[#]] -
+            SymmetricFunctionToPolynomial[SchurSymbol[lam], x, n]] === 0] & /@
+        Select[comps, OrderedQ]),
+      Expand[NonsymmetricPolynomials`DualGrothendieckPolynomial[{1, 1}, x] - (x[1] + x[2] + x[1] x[2])] === 0]],
+  True,
+  TestID -> "NonsymmetricPolynomials-dual-Grothendieck-fillings"
+]

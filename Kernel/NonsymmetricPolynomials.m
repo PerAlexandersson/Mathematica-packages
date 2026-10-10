@@ -423,6 +423,33 @@ IntegralMacdonaldE[alpha_?weakCompositionQ, x_, q_, t_] :=
 		Together[macdonaldIntegralFormFactor[alpha, q, t] MacdonaldEPolynomial[alpha, x, q, t]]];
 
 
+(* Dual Grothendieck polynomials from fillings. A filling of the composition shape gamma
+   (row r has gamma_r cells, rows read top to bottom) has entries in 1..n, rows weakly
+   decreasing from left to right, and each entry at most the entry above it whenever that row
+   is long enough. Its weight counts each value once per column (as for reverse plane
+   partitions). The polynomial indexed by alpha uses gamma = Reverse[alpha], as for keys: for
+   weakly increasing alpha it is the symmetric dual Grothendieck polynomial g_lambda of
+   Lam-Pylyavskyy in x[1..n], lambda the nonzero parts of alpha sorted. *)
+dualGrothendieckFillings[gamma_List] := cached[{"dualGrothendieckFillings", gamma},
+	Module[{n = Length[gamma], rec},
+		rec[tab_, {}] := {tab};
+		rec[tab_, rem_] := Module[{r = First[rem], c, top},
+			c = Length[tab[[r]]] + 1;
+			top = If[c == 1, n, tab[[r, c - 1]]];
+			Join @@ Table[
+				If[AllTrue[Range[r - 1], Length[tab[[#]]] < c || tab[[#, c]] >= b &],
+					rec[ReplacePart[tab, r -> Append[tab[[r]], b]], Rest[rem]], {}],
+				{b, top}]];
+		rec[ConstantArray[{}, n], Join @@ Table[ConstantArray[r, gamma[[r]]], {r, n}]]]];
+
+dualGrothendieckMonomial[tab_, x_] := Times @@ Flatten[Table[
+	x /@ Union[Cases[tab, row_ /; Length[row] >= c :> row[[c]]]],
+	{c, Max[0, Max[Length /@ tab]]}]];
+
+DualGrothendieckPolynomial::usage = "DualGrothendieckPolynomial[alpha, x] returns the dual Grothendieck polynomial indexed by the weak composition alpha, in x[1], ..., x[Length[alpha]]: the sum over fillings of the shape Reverse[alpha] (entries in 1..n, rows weakly decreasing, each entry at most the entry above it) of the column weight (each value counted once per column). For weakly increasing alpha it is the symmetric dual Grothendieck polynomial g_lambda (Lam-Pylyavskyy) of the sorted nonzero parts lambda.";
+DualGrothendieckPolynomial[alpha_?weakCompositionQ, x_] := cached[{DualGrothendieckPolynomial, alpha, x},
+	Expand[Total[dualGrothendieckMonomial[#, xx] & /@ dualGrothendieckFillings[Reverse[alpha]]]] /. xx -> x];
+
 (* ::Section:: *)
 (* Basis symbols and conversions *)
 
