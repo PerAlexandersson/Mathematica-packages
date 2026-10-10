@@ -2,14 +2,12 @@ testRoot = DirectoryName[DirectoryName[$InputFileName]];
 PacletDirectoryLoad[testRoot];
 
 (* Contract tests for CONVENTIONS.md (issue #51): objects produced by one package are
-   accepted by the others, and the same quantity computed through different packages
-   agrees. Further bridges are added as the legacy port proceeds:
-   TODO P2: polynomial <-> symmetric/quasisymmetric function round trips;
-   s_lam = sum over SYT of fundamental quasisymmetric functions.
+   accepted by the others, and the same quantity computed through different packages.
    TODO P3/P5: key and atom polynomials versus augmented fillings in NewTableaux. *)
 
 VerificationTest[
-  Scan[Needs, {"CombinatoricTools`", "NewTableaux`", "SymmetricFunctions`", "GTPatterns`",
+  Scan[Needs, {"CombinatoricTools`", "NewTableaux`", "SymmetricFunctions`",
+    "QuasiSymmetricFunctions`", "GTPatterns`",
     "PermutationTools`", "CatalanObjects`", "UnicellularChromatics`", "GraphTools`"}],
   Null,
   TestID -> "Compatibility-packages-load-together"
@@ -69,4 +67,151 @@ VerificationTest[
     {area, DyckAreaLists[4]}],
   True,
   TestID -> "Compatibility-LLT-symbols-are-SymmetricFunctions-symbols"
+]
+
+(* GitHub issue #51: every symmetric core basis round-trips through n variables. *)
+VerificationTest[
+  And @@ Flatten@Table[
+    With[{f = basis[lam], p = SymmetricFunctionToPolynomial[basis[lam], x, n]},
+      Expand[PolynomialToSymmetricFunction[p, x, basis, n] - f] === 0],
+    {basis, {MonomialSymbol, SchurSymbol, ElementaryESymbol, CompleteHSymbol,
+      PowerSumSymbol, ForgottenSymbol}}, {d, 0, 4}, {n, Max[1, d], 5},
+    {lam, Select[IntegerPartitions[d], Length[#] <= n &]}],
+  True,
+  TestID -> "Compatibility-symmetric-polynomial-round-trips"
+]
+
+(* GitHub issue #51: every QSym core basis round-trips through n variables. *)
+VerificationTest[
+  And @@ Flatten@Table[
+    With[{f = basis[alpha], p = QuasiSymmetricFunctionToPolynomial[basis[alpha], x, n]},
+      Expand[PolynomialToQuasiSymmetricFunction[p, x, basis, n] - f] === 0],
+    {basis, {MonomialQSymbol, FundamentalQSymbol}}, {d, 0, 4},
+    {n, Max[1, d], 5}, {alpha, Select[IntegerCompositions[d], Length[#] <= n &]}],
+  True,
+  TestID -> "Compatibility-quasisymmetric-polynomial-round-trips"
+]
+
+(* GitHub issue #51: s_lam is the sum of F_D(T) over standard Young tableaux. *)
+VerificationTest[
+  And @@ Table[
+    Expand[ToQuasiSymmetric[SchurSymbol[lam]] -
+      Total[FundamentalQSymmetric[
+          DescentSetToComposition[SYTDescentSet[#], Total[lam]]] & /@
+        StandardYoungTableaux[lam]]] === 0,
+    {lam, IntegerPartitions[4]}],
+  True,
+  TestID -> "Compatibility-Schur-SYT-fundamental-identity"
+]
+
+(* GitHub issue #51: the legacy polynomial APIs agree with their new bridges. *)
+VerificationTest[
+  Quiet[Scan[Needs, {"MacdonaldPolynomials`", "OldYoungTableaux`"}]];
+  And[
+    Expand[MacdonaldPolynomials`QSymMonomial[{2, 1}, 3, x] -
+      QuasiSymmetricFunctionToPolynomial[MonomialQSymbol[{2, 1}], x, 3]] === 0,
+    Expand[MacdonaldPolynomials`QSymSchur[{2, 1}, 3, x] -
+      QuasiSymmetricFunctionToPolynomial[QuasiSchurQSymmetric[{2, 1}], x, 3]] === 0,
+    Expand[MacdonaldPolynomials`QuasiSymmetricPowerSum[{2, 1}, 3, x] -
+      QuasiSymmetricFunctionToPolynomial[PowerSumQSymbol[{2, 1}], x, 3]] === 0,
+    Expand[MacdonaldPolynomials`QuasiSymmetricPowerSum2[{2, 1}, 3, x] -
+      QuasiSymmetricFunctionToPolynomial[PowerSumAltQSymmetric[{2, 1}], x, 3]] === 0,
+    Expand[MacdonaldPolynomials`GesselFundamental[{1}, 3, x] -
+      QuasiSymmetricFunctionToPolynomial[FundamentalQSymbol[{1, 2}], x, 3]] === 0,
+    Expand[OldYoungTableaux`SchurPolynomial[{2, 1}, {}, 3][x] -
+      SymmetricFunctionToPolynomial[SchurSymbol[{2, 1}], x, 3]] === 0,
+    Expand[OldYoungTableaux`SchurPolynomial[{2, 1}, {1}, 3][x] -
+      SymmetricFunctionToPolynomial[SkewSchurSymmetric[{{2, 1}, {1}}], x, 3]] === 0,
+    Expand[OldYoungTableaux`MonomialSymmetricPolynomial[{2, 1}, 3][x] -
+      SymmetricFunctionToPolynomial[MonomialSymbol[{2, 1}], x, 3]] === 0,
+    Expand[OldYoungTableaux`PowerSumPolynomial[{2, 1}, 3][x] -
+      SymmetricFunctionToPolynomial[PowerSumSymbol[{2, 1}], x, 3]] === 0,
+    Expand[OldYoungTableaux`HallLittlewoodP[{2, 1}, 3, x, t] -
+      SymmetricFunctionToPolynomial[HallLittlewoodPSymmetric[{2, 1}, t], x, 3]] === 0,
+    Together[OldYoungTableaux`JackPPolynomial[{2, 1}, 3, x, a] -
+      SymmetricFunctionToPolynomial[JackPSymmetric[{2, 1}, a], x, 3]] === 0,
+    Together[OldYoungTableaux`JackJPolynomial[{2, 1}, 3, x, a] -
+      SymmetricFunctionToPolynomial[JackJSymmetric[{2, 1}, a], x, 3]] === 0,
+    (MacdonaldPolynomials`ToGesselSubsetBasis[x[1]^2 + x[1] x[2] + x[2]^2, x, ff] /.
+        ff[{}] :> QuasiSymmetricFunctionToPolynomial[FundamentalQSymbol[{2}], x, 2]) ===
+      QuasiSymmetricFunctionToPolynomial[
+        PolynomialToQuasiSymmetricFunction[x[1]^2 + x[1] x[2] + x[2]^2, x,
+          FundamentalQSymbol, 2], x, 2],
+    (MacdonaldPolynomials`ToElementaryBasis[x[1]^2 + x[2]^2 + x[3]^2, x, ee] /.
+        ee[lam_List] :> ElementaryESymbol[DeleteCases[lam, 0]]) ===
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, ElementaryESymbol, 3],
+    (MacdonaldPolynomials`ToCompleteHomogeneousBasis[x[1]^2 + x[2]^2 + x[3]^2, x, hh] /.
+        hh[lam_List] :> CompleteHSymbol[DeleteCases[lam, 0]]) ===
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, CompleteHSymbol, 3],
+    (MacdonaldPolynomials`ToPowerSumBasisMacdonald[x[1]^2 + x[2]^2 + x[3]^2, x, pp] /. 
+        pp[lam_List] :> PowerSumSymbol[DeleteCases[lam, 0]]) ===
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, PowerSumSymbol, 3],
+    And @@ Flatten@Table[
+      Expand[MacdonaldPolynomials`QSymMonomial[alpha, n, x] -
+        QuasiSymmetricFunctionToPolynomial[MonomialQSymbol[alpha], x, n]] === 0,
+      {d, 1, 4}, {alpha, Select[IntegerCompositions[d], Length[#] <= 4 &]},
+      {n, Max[1, Length[alpha]], 4}],
+    And @@ Flatten@Table[
+      Expand[MacdonaldPolynomials`QSymSchur[alpha, n, x] -
+        QuasiSymmetricFunctionToPolynomial[QuasiSchurQSymmetric[alpha], x, n]] === 0,
+      {d, 1, 4}, {alpha, Select[IntegerCompositions[d], Length[#] <= 4 &]},
+      {n, Max[1, Length[alpha]], 4}],
+    And @@ Flatten@Table[
+      Expand[MacdonaldPolynomials`QuasiSymmetricPowerSum[alpha, n, x] -
+        QuasiSymmetricFunctionToPolynomial[PowerSumQSymbol[alpha], x, n]] === 0,
+      {d, 1, 4}, {alpha, Select[IntegerCompositions[d], Length[#] <= 4 &]},
+      {n, Max[1, Length[alpha]], 4}],
+    And @@ Flatten@Table[
+      Expand[MacdonaldPolynomials`QuasiSymmetricPowerSum2[alpha, n, x] -
+        QuasiSymmetricFunctionToPolynomial[PowerSumAltQSymmetric[alpha], x, n]] === 0,
+      {d, 1, 4}, {alpha, Select[IntegerCompositions[d], Length[#] <= 4 &]},
+      {n, Max[1, Length[alpha]], 4}],
+    And @@ Flatten@Table[
+      Expand[MacdonaldPolynomials`GesselFundamental[des, d, n, x] -
+        QuasiSymmetricFunctionToPolynomial[
+          FundamentalQSymbol[DescentSetToComposition[des, d]], x, n]] === 0,
+      {d, 1, 4}, {des, Subsets[Range[d - 1]]}, {n, 1, 4}],
+    And @@ Flatten@Table[
+      Expand[OldYoungTableaux`SchurPolynomial[lam, {}, n][x] -
+        SymmetricFunctionToPolynomial[SchurSymbol[lam], x, n]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}],
+    And @@ Flatten@Table[
+      Expand[OldYoungTableaux`MonomialSymmetricPolynomial[lam, n][x] -
+        SymmetricFunctionToPolynomial[MonomialSymbol[lam], x, n]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}],
+    And @@ Flatten@Table[
+      Expand[OldYoungTableaux`PowerSumPolynomial[lam, n][x] -
+        SymmetricFunctionToPolynomial[PowerSumSymbol[lam], x, n]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}],
+    And @@ Flatten@Table[
+      Expand[OldYoungTableaux`HallLittlewoodP[lam, n, x, t] -
+        SymmetricFunctionToPolynomial[HallLittlewoodPSymmetric[lam, t], x, n]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}],
+    And @@ Flatten@Table[
+      Expand[Together[OldYoungTableaux`JackPPolynomial[lam, n, x, a] -
+        SymmetricFunctionToPolynomial[JackPSymmetric[lam, a], x, n]]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}],
+    And @@ Flatten@Table[
+      Expand[Together[OldYoungTableaux`JackJPolynomial[lam, n, x, a] -
+        SymmetricFunctionToPolynomial[JackJSymmetric[lam, a], x, n]]] === 0,
+      {d, 1, 4}, {lam, IntegerPartitions[d]}, {n, Max[1, Length[lam]], 4}]],
+  True,
+  TestID -> "Compatibility-legacy-polynomial-oracles"
+]
+
+(* GitHub issue #51: old symmetric-basis reducers agree after returning to polynomials. *)
+VerificationTest[
+  Quiet[Needs["MacdonaldPolynomials`"]];
+  And[
+    Expand[SymmetricFunctionToPolynomial[
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, ElementaryESymbol, 3], x, 3] -
+      (x[1]^2 + x[2]^2 + x[3]^2)] === 0,
+    Expand[SymmetricFunctionToPolynomial[
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, CompleteHSymbol, 3], x, 3] -
+      (x[1]^2 + x[2]^2 + x[3]^2)] === 0,
+    Expand[SymmetricFunctionToPolynomial[
+      PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, PowerSumSymbol, 3], x, 3] -
+      (x[1]^2 + x[2]^2 + x[3]^2)] === 0],
+  True,
+  TestID -> "Compatibility-legacy-symmetric-basis-bridges"
 ]
