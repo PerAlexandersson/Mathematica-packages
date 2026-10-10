@@ -1,0 +1,420 @@
+{
+  "convention": "Lah records use the Rust L_(n,k) convention and list both e and m bases. Petrie G(k,n) is the sum of m_lambda over lambda_1<k.",
+  "family": "Lah and Petrie symmetric functions",
+  "lah": [
+    {
+      "elementary_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "k": 1,
+      "monomial_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "n": 1
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1
+          ],
+          1
+        ]
+      ],
+      "k": 1,
+      "monomial_terms": [
+        [
+          [
+            1
+          ],
+          1
+        ]
+      ],
+      "n": 2
+    },
+    {
+      "elementary_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "k": 2,
+      "monomial_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "n": 2
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2
+          ],
+          2
+        ]
+      ],
+      "k": 1,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1
+          ],
+          4
+        ],
+        [
+          [
+            2
+          ],
+          1
+        ]
+      ],
+      "n": 3
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1
+          ],
+          3
+        ]
+      ],
+      "k": 2,
+      "monomial_terms": [
+        [
+          [
+            1
+          ],
+          3
+        ]
+      ],
+      "n": 3
+    },
+    {
+      "elementary_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "k": 3,
+      "monomial_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "n": 3
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            1
+          ],
+          8
+        ],
+        [
+          [
+            3
+          ],
+          6
+        ]
+      ],
+      "k": 1,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1,
+            1
+          ],
+          36
+        ],
+        [
+          [
+            2,
+            1
+          ],
+          11
+        ],
+        [
+          [
+            3
+          ],
+          1
+        ]
+      ],
+      "n": 4
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1,
+            1
+          ],
+          7
+        ],
+        [
+          [
+            2
+          ],
+          8
+        ]
+      ],
+      "k": 2,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1
+          ],
+          22
+        ],
+        [
+          [
+            2
+          ],
+          7
+        ]
+      ],
+      "n": 4
+    },
+    {
+      "elementary_terms": [
+        [
+          [
+            1
+          ],
+          6
+        ]
+      ],
+      "k": 3,
+      "monomial_terms": [
+        [
+          [
+            1
+          ],
+          6
+        ]
+      ],
+      "n": 4
+    },
+    {
+      "elementary_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "k": 4,
+      "monomial_terms": [
+        [
+          [],
+          1
+        ]
+      ],
+      "n": 4
+    }
+  ],
+  "petrie": [
+    {
+      "k": 2,
+      "monomial_terms": [
+        [
+          [
+            1
+          ],
+          1
+        ]
+      ],
+      "n": 1,
+      "schur_terms": [
+        [
+          [
+            1
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "k": 2,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          1
+        ]
+      ],
+      "n": 4,
+      "schur_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "k": 3,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            2
+          ],
+          1
+        ]
+      ],
+      "n": 4,
+      "schur_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          -1
+        ],
+        [
+          [
+            2,
+            2
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "k": 4,
+      "monomial_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            1,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            2,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            3,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            3,
+            2
+          ],
+          1
+        ]
+      ],
+      "n": 5,
+      "schur_terms": [
+        [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            2,
+            2,
+            1
+          ],
+          -1
+        ],
+        [
+          [
+            3,
+            2
+          ],
+          1
+        ]
+      ]
+    }
+  ],
+  "rust_function": "sym_poly_sym::{lah_symmetric_elementary,lah_symmetric_monomial,petrie_symmetric}"
+}

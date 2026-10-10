@@ -1,0 +1,105 @@
+{
+  "convention": "Eulerian coefficient vectors are ascending powers of t; the sequence is A_1 through A_6. Interlacing is directed and follows check_weak_interlacing(left,right).",
+  "eulerian": [
+    [
+      1
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      4,
+      1
+    ],
+    [
+      1,
+      11,
+      11,
+      1
+    ],
+    [
+      1,
+      26,
+      66,
+      26,
+      1
+    ],
+    [
+      1,
+      57,
+      302,
+      302,
+      57,
+      1
+    ]
+  ],
+  "family": "Eulerian and real-rootedness checks",
+  "interlacing_cases": [
+    {
+      "left": [
+        1,
+        4,
+        1
+      ],
+      "right": [
+        1,
+        11,
+        11,
+        1
+      ],
+      "value": true
+    },
+    {
+      "left": [
+        1,
+        1
+      ],
+      "right": [
+        -1,
+        1
+      ],
+      "value": true
+    },
+    {
+      "left": [
+        -1,
+        1
+      ],
+      "right": [
+        1,
+        1
+      ],
+      "value": false
+    }
+  ],
+  "root_cases": [
+    {
+      "coefficients": [
+        1,
+        11,
+        11,
+        1
+      ],
+      "real_rooted": true
+    },
+    {
+      "coefficients": [
+        1,
+        0,
+        1
+      ],
+      "real_rooted": false
+    },
+    {
+      "coefficients": [
+        1,
+        2,
+        1
+      ],
+      "real_rooted": true
+    }
+  ],
+  "rust_function": "polytool::{sequences::eulerian_polynomials_bigint,is_real_rooted,check_weak_interlacing}"
+}
