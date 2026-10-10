@@ -17,17 +17,19 @@
   #13--#20 (one issue per group of files) and missing usage strings in #21;
   audit corrections were added to #3, #4, #5 and #11.
 - PR #22 runs every `Tests/*.wlt` file in a fresh kernel; see `Tests/README.md`.
-- Orchestrator: Claude session `agent-mathematica-mathem-c-eaac064b`. It owns
-  `SymmetricFunctions.m` (#5 hotfix: private result cache, no alias block),
-  `Tests/SymmetricFunctions.wlt`, `Tests/RunTests.wls`, `HANDOFF.md`, and all
-  integration, commits and PRs.
-- Codex `gpt-5.6-luna` workers fix bugs in scratch copies and never touch the
-  repository; the orchestrator reviews and integrates their patches:
-  - A (#13): `CombinatoricTools.m`, `PolynomialTools.m` and their tests.
-  - B (#14): `NewTableaux.m`, `GTPatterns.m`, `Tests/GTPatterns.wlt`, `Tests/NewTableaux.wlt`.
-  - C (#15): `GraphTools.m`, `MatroidTools.m`, `RookTools.m` and their tests.
-  - D (#16): `CatalanObjects.m`, `PermutationTools.m`, `QuasiSymmetricFunctions.m` and their tests.
-  - Queued: E (#17, chromatic packages), F (#18, legacy packages), #20 after the #5 hotfix.
+- Merged on 2026-10-10: #5 hotfix (PR #23), runner (PR #22), and fix batches
+  #13 (PR #24), #14 (PR #25), #15 (PR #26), #20 (PR #27), #17 (PR #28),
+  #18 (PR #29), #19 (PR #30). `RunTests.wls`: 148 succeeded, 0 failed.
+- Orchestrator: Claude session `agent-mathematica-mathem-c-eaac064b`; it owns
+  all integration, commits and PRs, and `HANDOFF.md`.
+- Active Codex `gpt-5.6-luna` workers (scratch copies only; never the repository):
+  - D (#16): `CatalanObjects.m`, `PermutationTools.m`, `QuasiSymmetricFunctions.m`
+    and their tests.
+  - R: Rust cross-check fixtures in `Tests/fixtures/rust/` and `Tests/CrossCheck.wlt`
+    (read-only use of `/workspace/rust`, i.e. `sym-poly`, `combinatoric-core`,
+    `polytool`). Next: extend to combinatorics and matroids; fix genuine Rust bugs
+    in the Rust workspace through a reviewed branch there.
+- Package status and canonical owners for duplicated names are proposed in #2.
 
 ## Planned sequence
 
