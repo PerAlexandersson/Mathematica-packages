@@ -383,53 +383,66 @@ ClawFreeQ[g_Graph] := Catch[
 ];
 
 
-GraphAcyclicOrientations::usage = "GraphAcyclicOrientations[Graph[g]] returns all acyclic orientations of g, as directed graphs.";
-GraphAcyclicOrientations[gg_Graph] := With[
-	{n = VertexCount@gg,
-	verts = VertexList@gg,
-		(* Pretend all edges are directed. *)
-	edges = DirectedEdge[#1, #2] & @@@ (EdgeList@gg)
-	},
-	(*
-	Try all colorings with different colors. 
-	Such colorings can only result in acyclic orientations.
-	*)
-	Union@Table[
-		With[{rule = Thread[c -> Range@n]},
-		Graph[verts,
-			(If[
-					Less @@ (# /. rule),
-					#,
-					Reverse@#]
-				) & /@ (edges)
-			]
+GraphAcyclicOrientations::usage = "GraphAcyclicOrientations[g] returns all acyclic orientations of an edge list or graph g.";
+Options[GraphAcyclicOrientations] = {StrictEdges -> {}};
+GraphAcyclicOrientations[edges_List, opts : OptionsPattern[]] :=
+	GraphAcyclicOrientations[edges, opts] = Module[
+		{n = Max[edges, 0], orients, strict, strictIndices},
+		orients = Union@Table[
+			(If[Less @@ col[[#]], #, Reverse@#] &) /@ edges,
+			{col, Permutations@Range@n}];
+		strict = OptionValue[StrictEdges];
+		strictIndices = Select[Range[Length@edges], MemberQ[strict, edges[[#]]] &];
+		If[Length@strict > 0,
+			orients = Select[orients,
+				And @@ Table[edges[[i]] == #[[i]], {i, strictIndices}] &]
+		];
+		orients
+	];
+
+GraphAcyclicOrientations[gg_Graph, opts : OptionsPattern[]] :=
+	Module[{verts = VertexList@gg, edges = List @@@ EdgeList@gg,
+		rule, inverseRule, mappedStrict},
+		rule = Thread[verts -> Range[Length@verts]];
+		inverseRule = Thread[Range[Length@verts] -> verts];
+		mappedStrict = OptionValue[StrictEdges] /. rule;
+		(Graph[verts, DirectedEdge @@@ (# /. inverseRule)] &) /@
+			GraphAcyclicOrientations[edges /. rule,
+				StrictEdges -> mappedStrict]
 		]
-		, {c, Permutations@verts}]
-];
 
-GraphOrientations::usage = "GraphOrientations[Graph[g]] returns all orientations of g, as directed graphs.";
-GraphOrientations[gg_Graph] := With[
-	{
-	verts = VertexList@gg,(*Pretend all edges are directed.*)
-	edges = DirectedEdge[#1, #2] & @@@ (EdgeList@gg)
-	},
-	Table[
-		Graph[verts,
-			MapThread[If[#1, #2, Reverse@#2] &, {or, edges}, 1]
-		]
-	, {or, Tuples[{True, False}, Length@edges]}
-	]
-];
+GraphOrientations::usage = "GraphOrientations[g] returns all orientations of an edge list or graph g.";
+Options[GraphOrientations] = {StrictEdges -> {}, WeakEdges -> {}};
+GraphOrientations[edges_List, opts : OptionsPattern[]] := Module[
+		{nEdges = Length@edges, orients, strict, weak, strictIndicator, weakIndicator},
+		strict = OptionValue[StrictEdges];
+		weak = OptionValue[WeakEdges];
+		strictIndicator = Table[Boole@MemberQ[strict, e], {e, edges}];
+		weakIndicator = Table[Boole@MemberQ[weak, e], {e, edges}];
+		orients = Tuples[{0, 1}, nEdges];
+		If[Length@strict > 0,
+			orients = Select[orients, (# . strictIndicator) == Tr[strictIndicator] &]
+		];
+		If[Length@weak > 0,
+			orients = Select[orients, ((1 - #) . weakIndicator) == Tr[weakIndicator] &]
+		];
+		Table[
+			Table[If[or[[i]] == 1, edges[[i]], Reverse@edges[[i]]], {i, nEdges}],
+			{or, orients}]
+	];
 
+GraphOrientations[gg_Graph, opts : OptionsPattern[]] := With[
+	{verts = VertexList@gg, edges = List @@@ EdgeList@gg},
+		(Graph[verts, DirectedEdge @@@ #] &) /@
+			GraphOrientations[edges, opts]
+	];
 
-OrientationSinks::usage = "OrientationSinks[Graph[g]] returns the list of vertices which are sinks";
-OrientationSinks[gg_Graph] := With[
-	{verts = VertexList@gg,
-	outVerts = First /@ EdgeList@gg},
-	(*Sinks are vertices with no outgoing edges.*)
-	
-	Complement[verts, outVerts]
-];
+OrientationSinks::usage = "OrientationSinks[g] returns the vertices which are sinks of an edge list or graph g.";
+OrientationSinks[edges_List, n_Integer : 0] := Module[
+		{verts = If[edges === {}, {}, Union[Join @@ edges]]},
+		Complement[Join[verts, Range[1, n]], First /@ edges]
+	];
+OrientationSinks[gg_Graph] := Complement[VertexList@gg, First /@ EdgeList@gg];
 
 AcyclicSinkPolynomial::usage = "AcyclicSinkPolynomial[g,t] returns the polynomial whose coefficient of t^k counts acyclic orientations of g with k sinks.";
 AcyclicSinkPolynomial[g_Graph,t_] := AcyclicSinkPolynomial[g,t] = Sum[t^Length[OrientationSinks@ao], {ao, GraphAcyclicOrientations[g]}];
