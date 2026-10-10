@@ -5,11 +5,12 @@
 
 Clear["MacdonaldPolynomials`*"];
 
-BeginPackage["MacdonaldPolynomials`",{"OldYoungTableaux`","CombinatoricTools`","PermutationTools`"}];
+BeginPackage["MacdonaldPolynomials`", {
+  "CombinatoricTools`", "NewTableaux`", "PermutationTools`",
+  "QuasiSymmetricFunctions`"
+}];
 
 
-
-KnuthRepresentative::usage="KnuthRepresentative[w] returns a permutation w which is Knuth-equivalent to w, and is the reading word of an SYT.";
 
 (*
 WordDecompose::usage="WordDecompose[word] takes a word with partition shape, and returns a list of permutations.";
@@ -88,7 +89,7 @@ ToKeyBasis::usage = "ToKeyBasis[pol,x,kk]";
 
 ToElementaryBasis::usage = "ToElementaryBasis[pol, x, ee] expresses the polynomial in the elementary symmetric functions. Note, the polynomial must be symmetric.";
 ToCompleteHomogeneousBasis::usage = "ToCompleteHomogeneousBasis[pol, x, ee] expresses the polynomial in the complete homogeneous symmetric functions. Note, the polynomial must be symmetric.";
-ToPowerSumBasis::usage = "ToPowerSumBasis[pol,x,pp] expresses the polynomial in the powersum basis. Note, the polynomial must be symmetric.";
+ToPowerSumBasisMacdonald::usage = "ToPowerSumBasisMacdonald[pol,x,pp] expresses the symmetric polynomial pol in formal power-sum symbols pp[partition].";
 ToLockBasis::usage = "ToLockBasis[pol,x,pp] writes the polynomial in lock basis.";
 
 
@@ -136,8 +137,6 @@ QSymSchur::usage="QSymSchur[alpha,n,x]";
 (* See https : // arxiv.org/pdf/1710.11613.pdf for definition *)
 QuasiSymmetricPowerSum::usage="QuasiSymmetricPowerSum[alpha,n,x] gives qsym power-sum.";
 QuasiSymmetricPowerSum2::usage="QuasiSymmetricPowerSum2[alpha,n,x] gives qsym power-sum, version 2.";
-
-PartitionedCompositionCoarsenings::usage = "";
 
 QuasiSymmetricCompleteHomogeneous::usage="QuasiSymmetricCompleteHomogeneous[alpha,n,x]"; 
 
@@ -987,9 +986,9 @@ SkewMacdonaldDescents[s1_List, s2_List] :=
 SkewMacdonaldE[lam_List, mu_List, nvars_Integer, x_, q_] := 
   Module[{lamc, muc, cols, combinations, p},
    
-   lamc = ConjugatePartition[lam];
+   lamc = CombinatoricTools`ConjugatePartition[lam];
    cols = Length@lamc;
-   muc = PadRight[ConjugatePartition[mu], cols];
+   muc = PadRight[CombinatoricTools`ConjugatePartition[mu], cols];
    
    combinations = Flatten@Outer[p,
       Sequence @@ Table[
@@ -1192,7 +1191,7 @@ ToCompleteHomogeneousBasis[pol_, x_, hh_] :=  Module[{CompleteHomogeneousPolynom
     ]
 ];
 
-ToPowerSumBasis[pol_, x_, pp_] := Module[{t, p, ips, nn, dd, c, xvars, tbz},
+ToPowerSumBasisMacdonald[pol_, x_, pp_] := Module[{t, p, ips, nn, dd, c, xvars, tbz},
 	nn = Max[First /@ Cases[Variables[pol], x[_]], 0];
 	dd = Exponent[pol /. x[_] :> t, t];
 	
@@ -1207,11 +1206,6 @@ ToPowerSumBasis[pol_, x_, pp_] := Module[{t, p, ips, nn, dd, c, xvars, tbz},
 
 
 
-(* Takes a permutation, and returns the unique permutation that is RSK-equivalent to w, and is a reading word. *)
-KnuthRepresentative[w_List] := KnuthRepresentative[w] =
-	Join @@ Reverse[NewTableaux`BiwordRSK[Range[Length@w], w][[1, 1]]];
-
-
 (* This assumes the RPP has a basement! *)
 RPPToAtom[rpp_List] := 
   Module[{n = Max[rpp], atom, cols = 1, col, rWord, insertElement},
@@ -1223,7 +1217,7 @@ RPPToAtom[rpp_List] :=
    insertElement[atmFil_List, v_Integer, {r_Integer, c_Integer}] := 
     Module[{nn = Length@atmFil, nr, nc},
      (*
-     Print["Insering ",v," in ",YoungTableauForm@atmFil, 
+     Print["Insering ",v," in ",NewTableaux`YoungTableauForm@atmFil, 
      " ",{r,c}];
      *)
      nr = r + 1;
@@ -1269,7 +1263,7 @@ Do[
     SSAFColumnSets@atom];
   If[
    RPPToAtom[rpp] =!= atom,
-   Print[YoungTableauForm@atom, " ", YoungTableauForm@rpp, " ", 
+   Print[NewTableaux`YoungTableauForm@atom, " ", NewTableaux`YoungTableauForm@rpp, " ", 
     RPPToAtom[rpp]];
    Abort[]
    ];
@@ -1292,7 +1286,7 @@ SSYTToAtom[ssyt_List] :=   Module[{n = Max[ssyt], atom, cols = 1, rWord, insertE
    insertElement[atmFil_List, v_Integer, {r_Integer, c_Integer}] := 
     Module[{nn = Length@atmFil, nr, nc},
      (*
-     Print["Insering ",v," in ",YoungTableauForm@atmFil, 
+     Print["Insering ",v," in ",NewTableaux`YoungTableauForm@atmFil, 
      " ",{r,c}];
      *)
      nr = r + 1;
@@ -1844,37 +1838,21 @@ QSymSchur[alpha_List, n_Integer, x_] := Module[{ss, args},
 
 
 
-(* This takes a list of lists! *)
-PartitionedCompositionCoarsenings[{{a_Integer}}] := {{{a}}};
-PartitionedCompositionCoarsenings[alpha_List] := 
-  Module[{rest, first},
-   rest = Rest[alpha];
-   first = alpha[[1]];
-   Join[
-    (* Either first block is separate, 
-    or joined with the thing on the right. *)
-    
-    Prepend[#, first] & /@ PartitionedCompositionCoarsenings[rest],
-    {Join[first, #1], ##2} & @@@ 
-     PartitionedCompositionCoarsenings[rest]
-    ]
-];
-
 QuasiSymmetricPowerSum[alpha_List, n_Integer, x_] :=
 	QuasiSymmetricPowerSum[alpha, n, x] = Module[{pi},
 	pi[comp_List] := Times @@ Accumulate[comp];
-	ZCoefficient[alpha] Sum[
+	CombinatoricTools`ZCoefficient[alpha] Sum[
 	1/(Times @@ (pi /@ beta)) QSymMonomial[Total /@ beta, n, x]
-	, {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
+	, {beta, QuasiSymmetricFunctions`PartitionedCompositionCoarsenings[List /@ alpha]}]
 ];
 
 
 QuasiSymmetricPowerSum2[alpha_List, n_Integer, x_] :=
 	QuasiSymmetricPowerSum2[alpha, n, x] = Module[{spi},
 	spi[comp_List] := Length[comp]! (Times @@ comp);
-	ZCoefficient[alpha] Sum[
+	CombinatoricTools`ZCoefficient[alpha] Sum[
 	1/(Times @@ (spi /@ beta)) QSymMonomial[Total /@ beta, n, x]
-	, {beta, PartitionedCompositionCoarsenings[List /@ alpha]}]
+	, {beta, QuasiSymmetricFunctions`PartitionedCompositionCoarsenings[List /@ alpha]}]
 ];
 
 
@@ -1933,7 +1911,7 @@ RefineSubsetsRelations[subsetRelations_List] := Module[{i, j, ii, s1, s2, m1, m2
       
       relations[[j]] = {Complement[s2, s1], m2 - m1};
       (*
-      Print[ "New rule:",YoungTableauForm/@Complement[s2,s1],
+      Print[ "New rule:",NewTableaux`YoungTableauForm/@Complement[s2,s1],
       SparseArrayToMultiSet[m2-m1]];
       *)
       foundNew = True;
