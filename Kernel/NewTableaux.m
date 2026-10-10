@@ -33,6 +33,7 @@ YoungTableau;
 YoungTableauWeight;
 YoungTableauSize;
 YoungTableauShape;
+HasOuterCornerQ;
 StandardYoungTableaux;
 SemiStandardYoungTableaux;
 YoungTableauForm;
@@ -48,6 +49,8 @@ SpecialRimHookTableaux;
 
 TableauShortTeX;
 YTableauTeX;
+LineBreaks;
+UseArray;
 RowLatticePaths;
 ColumnLatticePaths;
 
@@ -121,6 +124,20 @@ YoungTableauShape::usage = "YoungTableauShape[tab] returns the outer shape of th
 YoungTableauShape[YoungTableau[syt_]]:=Length/@syt;
 
 YoungTableauShape[syt_YoungTableau, v_Integer]:=YoungTableauShape[syt/.{i_Integer /; i>v :> Nothing}];
+
+hasOuterCorner[lambda_List, mu_List] := Module[{mup},
+   mup = PadRight[mu, Length[lambda]];
+   AnyTrue[Range[2, Length[lambda]],
+      lambda[[#]] - mup[[#]] >= 2 && mup[[# - 1]] < lambda[[#]] &]
+];
+
+HasOuterCornerQ::usage = "HasOuterCornerQ[tab] returns True when the skew shape of tab has an outer corner in the legacy OldYoungTableaux sense.
+HasOuterCornerQ[{lam, mu}] applies the same test to a skew shape.";
+HasOuterCornerQ[YoungTableau[diagram_]] := hasOuterCorner[
+   Length /@ diagram,
+   Length[TakeWhile[#, SameQ[#, None] &]] & /@ diagram
+];
+HasOuterCornerQ[{lambda_List, mu_List}] := hasOuterCorner[lambda, mu];
 
 
 SYTDescentSet::usage = "SYTDescentSet[syt] returns the descent set of the standard Young tableau.";
@@ -489,6 +506,9 @@ YoungDiagramForm[{lam:iList,mu:iList}, opts:OptionsPattern[]]:= Module[{is,tab,r
 	YoungTableauForm[tab,ItemSize->is]
 ];
 
+LineBreaks::usage = "LineBreaks is an option for YTableauTeX; its default is True.";
+UseArray::usage = "UseArray is an option for YTableauTeX; its default is True and False selects the legacy \\young representation.";
+
 TableauShortTeX::usage = "TableauShortTeX[tab] returns the \\tableaushort{..} TeX string for the tableau.";
 
 (* TeX form of Young diagrams. *)
@@ -501,10 +521,16 @@ TableauShortTeX[YoungTableau[diagram_]]:= Module[{str, strTbl, tex},
 ];
 
 
-YTableauTeX::usage = "YTableauTeX[tab, options] returns a ytableau TeX string for tab. The LineBreaks option defaults to True.";
-Options[YTableauTeX] = {LineBreaks->True};
+YTableauTeX::usage = "YTableauTeX[tab, options] returns a TeX string for tab. LineBreaks defaults to True and UseArray selects the legacy \\young representation when False.";
+Options[YTableauTeX] = {LineBreaks -> True, UseArray -> True};
 YTableauTeX[YoungTableau[diagram_],opts:OptionsPattern[]]:= Module[
 	{str, strTbl, strLines, texString, lb},
+
+	If[!TrueQ[OptionValue[UseArray]],
+		strTbl = diagram /. {None -> ":", n_Integer :> ToString[n]};
+		str = StringJoin @@ Riffle[StringJoin /@ strTbl, ","];
+		Return[StringJoin["\\young(", str, ")"]]
+	];
 	
 	
 	lb = If[OptionValue[LineBreaks],"\n",""];
@@ -1103,6 +1129,3 @@ CrystalSi[w_List, i_Integer] := With[
 End[]; (*End private*)
 
 EndPackage[];
-
-
-

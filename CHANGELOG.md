@@ -62,6 +62,12 @@ this refactoring is tagged `pre-refresh-2026-10`.
   `ContainingFaceDimension`), `GTPatternForm` options `GTPartition` (string values) and
   `EnableSkew`, `GTPatternTikz`, `LatticePathForm`, `LatticePathTikz`,
   `UpperBoundKostkaDegree` and `GTEhrhartPolynomial` (stretched Kostka counts) (#51).
+- Helpers ported from `OldYoungTableaux`: `SkewShapeQ`, `ShapeUnion`, `YoungLatticePaths`,
+  `PermutationOfType`, `SetPartitionRefinementQ`, `SageForm`, `MacdonaldPsiPrime` and
+  bounded `PartitionAddBox[lam, top]`/`PartitionRemoveBox[lam, bot]` (CombinatoricTools);
+  `ShapeTriplets` and `BoxCountMatrix` (GTPatterns); `SequenceToPolynomial` (with a degree
+  bound) and `HVector` (PolynomialTools); `HasOuterCornerQ` and the `YTableauTeX` options
+  `LineBreaks` and `UseArray` (NewTableaux) (#51).
 - `UnicellularChromatics`, ported from legacy `ChromaticFunctions`: `GraphAreaLists`
   (0-first area lists, including circular ones), `AreaConjugate`, `ValleyEdges`,
   `DiagramRookPlacements`, `OrientationPlot`, `PArrayPlot`, `UnitIntervalPlot` (#51).

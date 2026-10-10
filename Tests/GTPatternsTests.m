@@ -13,6 +13,25 @@ VerificationTest[
   TestID -> "GTPatterns-public-row-flags-option"
 ]
 
+(* GitHub issue #51, review round 2: migrated symbols have one supported
+   package owner, and all three option symbols live with GT patterns. *)
+VerificationTest[
+  Length /@ {
+    Names["CombinatoricTools`ShapeTriplets"],
+    Names["CombinatoricTools`BoxCountMatrix"],
+    Names["CombinatoricTools`EnableSkew"],
+    Names["CombinatoricTools`WeightRange"],
+    Names["CombinatoricTools`KostkaRange"],
+    Names["GTPatterns`ShapeTriplets"],
+    Names["GTPatterns`BoxCountMatrix"],
+    Names["GTPatterns`EnableSkew"],
+    Names["GTPatterns`WeightRange"],
+    Names["GTPatterns`KostkaRange"]
+  },
+  {0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
+  TestID -> "GTPatterns-migration-symbols-have-single-owner"
+]
+
 VerificationTest[
   GTPatterns[{2}, {}, {1, 0, 1}],
   {GTPattern[{{0}, {1}, {1}, {2}}]},
@@ -349,4 +368,45 @@ VerificationTest[
   Length[DownValues[GTPatterns`Private`gtFloodFillTile]],
   1,
   TestID -> "GTPatterns-flood-fill-has-one-three-argument-definition"
+]
+
+VerificationTest[
+  {
+    GTPatterns`ShapeTriplets[{2, 1}, GTPatterns`EnableSkew -> False],
+    Sort[GTPatterns`ShapeTriplets[{2, 1}, GTPatterns`WeightRange -> {2, 2}]]
+  },
+  {
+    {{{2, 1}, {0, 0}, {3}}, {{2, 1}, {0, 0}, {2, 1}},
+      {{2, 1}, {0, 0}, {1, 1, 1}}},
+    {{{2, 1}, {0}, {2, 1}}, {{2, 1}, {1}, {1, 1}}}
+  },
+  TestID -> "GTPatterns-ShapeTriplets-weight-range"
+]
+
+VerificationTest[
+  Module[{cases, independentMatrix, patterns},
+    cases = {
+      {{2, 1}, {}, {1, 1, 1}},
+      {{3, 1}, {1}, {1, 1}},
+      {{3, 2, 1}, {1, 1}, {1, 1, 1, 1}}
+    };
+    independentMatrix[g_GTPatterns`GTPattern] := Module[{tab, maxEntry},
+      tab = First[NewTableaux`YoungTableau[g]];
+      maxEntry = Max[DeleteCases[Flatten[tab], None]];
+      Table[Count[tab[[i]], j], {i, Length[tab]}, {j, maxEntry}]
+    ];
+    And @@ Flatten[
+      Function[shape,
+        patterns = GTPatterns`GTPatterns @@ shape;
+        (Function[g,
+          GTPatterns`BoxCountMatrix[g] ===
+              OldYoungTableaux`BoxCountMatrix[
+                OldYoungTableaux`GTPattern[Reverse[g[[1]]]] ] &&
+            GTPatterns`BoxCountMatrix[g] === independentMatrix[g]
+        ] /@ patterns)
+      ] /@ cases
+    ]
+  ],
+  True,
+  TestID -> "GTPatterns-BoxCountMatrix-orientation-and-tableau-counts"
 ]

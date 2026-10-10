@@ -75,3 +75,23 @@ VerificationTest[
   {2, 1},
   TestID -> "NewTableaux-CylindricTableaux-counts-unchanged"
 ]
+
+(* GitHub issue #51: merge the legacy TeX options and outer-corner behavior
+   into the supported YoungTableau representation. *)
+VerificationTest[
+  {
+    YTableauTeX[YoungTableau[{{1, 2}, {None, 3}}], LineBreaks -> False],
+    YTableauTeX[YoungTableau[{{1, 2}, {None, 3}}], UseArray -> False],
+    TableauShortTeX[YoungTableau[{{1, 2}, {None, 3}}]],
+    HasOuterCornerQ[YoungTableau[{{None, 1, 2}, {4, 5}}]],
+    HasOuterCornerQ[YoungTableau[{{1, 2}, {3}}]]
+  },
+  {
+    StringJoin["\\begin{ytableau}", "1 & 2", "\\\\", "\\none & 3", "\\\\", "\\end{ytableau}"],
+    "\\young(12,:3)",
+    "\\ytableaushort{12,{\\none}3}",
+    True,
+    False
+  },
+  TestID -> "NewTableaux-TeX-options-and-outer-corner"
+]

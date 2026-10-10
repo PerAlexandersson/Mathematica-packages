@@ -10,6 +10,7 @@ Interleaving2x2MinorQ;
 
 GammaPolynomial;
 HStarPolynomial;
+HVector;
 HStarVectorToEhrhart;
 HVectorInequalitiesQ;
 
@@ -47,6 +48,8 @@ CompleteHomogeneousPolynomial;
 ElementarySymmetricPolynomial;
 
 HilbertFunctionValues;
+
+SequenceToPolynomial;
 
 Begin["`Private`"];
 
@@ -378,6 +381,36 @@ HStarPolynomial[poly_, k_] := Expand@Module[
 	{cl = CoefficientList[poly, k],j},
 		cl.Table[ (1 - k)^(Length[cl] - 1 - j) If[j == 0, 1, k] EulerianAPolynomial[j, k]
 	,{j, 0, Length[cl] - 1}]];
+
+HVector::usage = "HVector[poly, x] returns the h-vector associated with the polynomial poly in x, with trailing zero entries retained through the degree of poly.";
+HVector[poly_, x_] := If[poly === 0,
+   {},
+   PadRight[CoefficientList[HStarPolynomial[poly, x], x], Exponent[poly, x] + 1]
+];
+
+SequenceToPolynomial::usage = "SequenceToPolynomial[f, x] returns a polynomial in x interpolating the sequence f[1], f[2], ...; it samples one value beyond the candidate degree. SequenceToPolynomial[f, x, maxDegree] limits the search to degree maxDegree (default 30).";
+SequenceToPolynomial::degree = "No polynomial of degree at most `1` was detected.";
+SequenceToPolynomial[func_, x_] := SequenceToPolynomial[func, x, 30];
+SequenceToPolynomial[func_, x_, maxDegree_Integer /; maxDegree >= 0] := Module[
+   {values = {func[1]}, candidate, n, next, result = $Failed, found = False},
+   While[Length[values] <= maxDegree + 1 && !found,
+      n = Length[values];
+      candidate = InterpolatingPolynomial[
+         Table[{i, values[[i]]}, {i, n}], x];
+      next = Check[func[n + 1], Return[$Failed]];
+      If[Exponent[candidate, x] == n - 1 &&
+         Expand[(candidate /. x -> n + 1) - next] === 0,
+         result = Expand[candidate];
+         found = True,
+         AppendTo[values, next]
+      ];
+   ];
+   If[found, Return[result]];
+   (* The zero interpolant has no degree n - 1, so the loop never accepts it. *)
+   If[AllTrue[values, Expand[#] === 0 &], Return[0]];
+   Message[SequenceToPolynomial::degree, maxDegree];
+   $Failed
+];
 
 HStarVectorToEhrhart::usage = "HStarVectorToEhrhart[vec,t] returns the Ehrhart polynomial associated with the h-vector.";
 HStarVectorToEhrhart[vec_List, t_] := Module[{d = Length[vec] - 1},
