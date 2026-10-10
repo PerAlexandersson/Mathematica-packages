@@ -51,7 +51,7 @@ The generated families are:
 - lattice-path matroid bases from Dyck area sequences; and
 - Schur plethysms.
 
-The Mathematica consumer is `../../CrossCheck.wlt`, which imports each file
+The Mathematica consumer is `../../CrossCheckTests.m`, which imports each file
 relative to the test file and records one verification per family. Ordinary
 Hall--Littlewood/Kostka--Foulkes expansions and full modified Macdonald Schur
 expansions remain omitted because this Rust revision exposes only

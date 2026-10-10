@@ -1,9 +1,9 @@
 #!/usr/bin/env wolframscript
-(* Runs every Tests/*.wlt file in a separate kernel, so that results cannot depend
+(* Runs every Tests/*Tests.m file in a separate kernel, so that results cannot depend
    on which packages earlier test files happened to load. *)
 
 testDirectory = DirectoryName[$InputFileName];
-runner = FileNameJoin[{testDirectory, "RunTestFile.wls"}];
+runner = FileNameJoin[{testDirectory, "RunTestFile.m"}];
 
 (* Locate a command that runs a script in a fresh kernel. *)
 scriptCommand = Module[{ws},
@@ -22,7 +22,9 @@ scriptCommand = Module[{ws},
 
 shellQuote[s_String] := "'" <> StringReplace[s, "'" -> "'\\''"] <> "'";
 
-files = FileNames["*.wlt", testDirectory];
+(* Test files are named <Name>Tests.m; this runner (RunTests.m) must not run itself. *)
+files = Select[FileNames["*Tests.m", testDirectory],
+  !MemberQ[{"RunTests.m", "RunTestFile.m"}, FileNameTake[#]] &];
 
 results = Table[
   Module[{proc, lines, summary},

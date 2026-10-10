@@ -2,7 +2,7 @@
 (* Builds build/<Name>-<Version>.paclet from PacletInfo.wl, Kernel/, Legacy/ and Data/,
    then verifies the archive: it is extracted to a temporary directory and every context
    registered in PacletInfo.wl is loaded in a fresh kernel. Exits non-zero on failure.
-   Usage: wolframscript -file Scripts/BuildPaclet.wls *)
+   Usage: wolframscript -file Scripts/BuildPaclet.m *)
 
 root = ParentDirectory[DirectoryName[$InputFileName]];
 build = FileNameJoin[{root, "build"}];
@@ -29,7 +29,7 @@ scriptCommand = Module[{ws = Select[{
       FileNameJoin[{$InstallationDirectory, "Executables", "wolframscript"}]}, FileExistsQ]},
   If[ws =!= {}, {First[ws], "-file"}, {"wolframscript", "-file"}]];
 shellQuote[s_String] := "'" <> StringReplace[s, "'" -> "'\\''"] <> "'";
-loadCheck = FileNameJoin[{root, "Scripts", "LoadCheck.wls"}];
+loadCheck = FileNameJoin[{root, "Scripts", "LoadCheck.m"}];
 (* A context passes when it loads without messages; shadowing messages from legacy
    packages that still export duplicated names (issue #9) are reported but tolerated. *)
 failures = Select[contexts, Function[ctx,

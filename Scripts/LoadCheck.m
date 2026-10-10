@@ -1,5 +1,5 @@
 #!/usr/bin/env wolframscript
-(* Usage: wolframscript -file Scripts/LoadCheck.wls <paclet directory> <context> [expression]
+(* Usage: wolframscript -file Scripts/LoadCheck.m <paclet directory> <context> [expression]
    Loads the context from the given paclet directory in this fresh kernel and prints
    "LOADED <True|False> <messages> <shadowing messages>"; an optional expression is then
    evaluated and printed as "VALUE <InputForm>". *)
