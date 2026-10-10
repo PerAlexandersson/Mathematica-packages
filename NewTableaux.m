@@ -335,10 +335,13 @@ SemiStandardYoungTableaux[{lam:iList, mu:iList}]:=SemiStandardYoungTableaux[{lam
 SemiStandardYoungTableaux[{lambdaIn:iList, muIn:iList}, w:iList]/;(Tr[lambdaIn]-Tr[muIn]-Tr[w]!=0):={};
 
 SemiStandardYoungTableaux[{lambdaIn:iList, muIn:iList}, w:iList] := Module[{isEdgeQ,
-	partitionLevels, directedEdges, mid,lam,mu,wAcc,ssytPaths,q},
+	partitionLevels, directedEdges, mid,lam,mu,wAcc,ssytPaths,q,g,pathToSSYT},
 	
 	lam = lambdaIn;
 	mu = PadRight[muIn,Length@lam];
+	If[lam === mu,
+		Return[{YoungTableau[ConstantArray[None, #] & /@ lam]}]
+	];
 	
 	wAcc = Accumulate@w;
 	
@@ -590,8 +593,8 @@ CylindricTableaux[{lam:iList, mu:iList}, k_Integer: 0] := Module[{
      And @@ Table[
        Or[
         ! (minShift + k + j <= Length[firstCol]),
-        firstCol[[minShift + k + j]] == None,
-        lastCol[[j]] == None,
+        firstCol[[minShift + k + j]] === None,
+        lastCol[[j]] === None,
         firstCol[[minShift + k + j]] >= lastCol[[j]]
         ]
        , {j, lastBoxes}]
@@ -614,7 +617,7 @@ CylindricSYT[{lam:iList, mu:iList}, k_Integer: 0] :=  Module[{isValidQ, firstSke
      lastCol = Last[tt];
      And @@ 
       Table[Or[! (minShift + k + j <= Length[firstCol]), 
-        firstCol[[minShift + k + j]] == None, lastCol[[j]] == None, 
+        firstCol[[minShift + k + j]] === None, lastCol[[j]] === None, 
         firstCol[[minShift + k + j]] >= lastCol[[j]]], {j, 
         lastBoxes}]];
    
@@ -734,7 +737,7 @@ BorderStripTableaux[{sh1:iList, sh2:iList}, type:iList] := Module[{res},
    ];
 
 BSTHeightVector::usage = "BSTHeightVector[bst] returns a vector where vi is the height of strip i.";
-BSTHeightVector[strips:iList] := Table[
+BSTHeightVector[strips_List] := Table[
 	Sort[(First /@ s)][[{-1, 1}]].{1, -1}
 , {s, strips}]
 
@@ -887,7 +890,8 @@ BiwordRSK[{a_Integer, b_Integer}, {YoungTableau[pTab_], YoungTableau[qTab_]}] :=
 ];
 
 (* Performs the RSK insertion algorithm on the biword, and returns two SSYT of the same shape. *)
-BiwordRSK[w1_List, w2_List] := Fold[BiwordRSK[#2, #1] &, YoungTableau/@{{}, {}}, Transpose@{w1,w2}];
+BiwordRSK[w1:{___Integer}, w2:{___Integer}] /; Length[w1] == Length[w2] :=
+	Fold[BiwordRSK[#2, #1] &, YoungTableau/@{{}, {}}, Transpose@{w1,w2}];
 
 (* Add increasing recording word. *)
 BiwordRSK[w1_List]:=BiwordRSK[Range[Length@w1],w1];
@@ -925,14 +929,16 @@ BiwordRSKDual[{a_Integer,b_Integer},{YoungTableau[pTab_],YoungTableau[qTab_]}]:=
 ];
 
 (*Performs the RSK insertion algorithm on the biword,and returns two SSYT of the same shape.*)
-BiwordRSKDual[w1_List,w2_List]:=Fold[BiwordRSKDual[#2,#1]&,YoungTableau/@{{},{}},Transpose@{w1,w2}];
+BiwordRSKDual[w1:{___Integer},w2:{___Integer}] /; Length[w1] == Length[w2] :=
+	Fold[BiwordRSKDual[#2,#1]&,YoungTableau/@{{},{}},Transpose@{w1,w2}];
 
 
 (* Add increasing recording word. *)
 BiwordRSKDual[w1_List]:=BiwordRSKDual[Range[Length@w1],w1];
 
 KnuthRepresentative::usage = "KnuthRepresentative[pi] returns the unique permutation which is Knuth equivalent to pi, and is the reading word of some SYT.";
-KnuthRepresentative[w_List] := KnuthRepresentative[w] = Join @@ Reverse[BiwordRSK[Transpose@{Range[Length@w], w}][[1]]];
+KnuthRepresentative[w_List] := KnuthRepresentative[w] =
+	SYTReadingWord[BiwordRSK[w][[1]]];
 
 
 
@@ -1071,7 +1077,7 @@ transposition operator si on the tableau. It also works on words.";
 CrystalSi[YoungTableau[ssyt_], i_Integer] := 
   CrystalOp[YoungTableau@ssyt, i, Function[{w}, Reverse[w]/.{i+1->i,i->i+1}]];
 CrystalSi[w_List, i_Integer] := With[
-{out = CrystalSi[YoungTableau[{w}], i,k]},
+	{out = CrystalSi[YoungTableau[{w}], i]},
 	If[out === Undefined, out, out[[1, 1]] ]
 ];
 

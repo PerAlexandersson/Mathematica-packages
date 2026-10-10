@@ -134,6 +134,7 @@ GTShape[GTPattern[gtp_]]:=With[
 GTPatterns::usage = "GTPatterns[lam,mu,w] returns a list of all GT-patterns with outer shape lam, inner shape mu (default {}), and weight vector w (default {}), corresponding to SSYT of skew shape lam/mu with content w.
 Optional argument cylindricShift (default Infinity) restricts to cylindric GT-patterns with the given column shift.
 Option RowFlags->{{a1,b1},{a2,b2},...} constrains entries in SSYT row r to the range [ar,br] (default {1,Infinity} = no constraint).";
+GTPatterns::rowflags = "The value of RowFlags must be Automatic or a list of pairs {a,b}, with integer a >= 1 and integer or Infinity b.";
 RowFlags::usage = "RowFlags is an option for GTPatterns that restricts the entries in tableau row r to a specified inclusive interval {ar,br}.";
 
 Options[GTPatterns] = {RowFlags -> Automatic};
@@ -147,13 +148,17 @@ GTPatterns[lam_List, mu_List, w_List, opts:OptionsPattern[]] :=
 GTPatterns[lam_List, mu_List, w_List,
 		cylindricShift:(Infinity | _Integer), opts:OptionsPattern[]] :=
 	With[{lamMu = PadRight[{lam, mu}]},
-		Module[{flags, n = Length[lamMu[[1]]]},
-			flags = With[{rf = OptionValue[RowFlags]},
-				If[rf === Automatic,
-					ConstantArray[{1, Infinity}, n],
-					PadRight[rf, n, {1, Infinity}]
-				]
+		Module[{flags, n = Length[lamMu[[1]]], rf = OptionValue[RowFlags]},
+			If[rf =!= Automatic &&
+				(!MatchQ[rf, {{_Integer, (_Integer | Infinity)}...}] ||
+					!AllTrue[rf, #[[1]] >= 1 &]),
+				Message[GTPatterns::rowflags, rf];
+				Return[{}]
 			];
+			flags = If[rf === Automatic,
+					ConstantArray[{1, Infinity}, n],
+					PadRight[rf, n, {{1, Infinity}}]
+				];
 			Which[
 				!(Tr[lamMu[[1]]] - Tr[lamMu[[2]]] == Tr[w]), {},
 				lamMu[[1]] === {},
@@ -184,7 +189,7 @@ quickGTPatterns[l_List, mu_List, w_List, cylindricShift_:Infinity, rowFlags_:{}]
 	If[m == 0, Return[If[l === mu, {GTPattern[{l}]}, {}]]];
 
 	(* Pad flags to n rows; {1, Infinity} imposes no constraint. *)
-	flags = PadRight[rowFlags, n, {1, Infinity}];
+	flags = PadRight[rowFlags, n, {{1, Infinity}}];
 
 	(* Create all partitions 'between' lambda and mu, in layers. *)
 	rowSums = Accumulate@w;
