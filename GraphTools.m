@@ -16,6 +16,7 @@ TilingGraph;
 
 ConnectedSimpleGraphs;
 TreeGraphs;
+RootedTreeGraphs;
 
 KeepLoops;
 KeepMultipleEdges;
@@ -94,6 +95,18 @@ TreeGraphs[n_Integer] := With[{result = Which[
       result,
       TreeGraphs[n] = result]
 ];
+
+
+RootedTreeGraphs::usage = "RootedTreeGraphs[n] returns all non-isomorphic rooted trees on n vertices, for 1 <= n <= 10 (OEIS A000081), as directed graphs on 1, ..., n with root 1 and edges directed from parent to child; other n give Missing[\"NotAvailable\", n]. The data are read from Data/trees/rooted-trees-1-10.wl (formerly TreesData`GetRootedTrees).";
+
+RootedTreeGraphs::nodata = "Data file `1` was not found.";
+RootedTreeGraphs[n_Integer] := If[1 <= n <= 10,
+	With[{file = FileNameJoin[{graphToolsDataDirectory, "trees", "rooted-trees-1-10.wl"}]},
+		If[!FileExistsQ[file],
+			Message[RootedTreeGraphs::nodata, file]; $Failed,
+			Graph[Range[n], DirectedEdge @@@ #] & /@
+				Select[Get[file], If[# === {}, n == 1, Max[#] == n] &]]],
+	Missing["NotAvailable", n]];
 
 
 CompleteBipartiteGraph::usage = "CompleteBipartiteGraph[a,b] or CompleteBipartiteGraph[{a,b,c,..}] returns the complete bipartite or n-partite graph with prescribed sizes, as lists of edges.";
