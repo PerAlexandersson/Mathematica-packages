@@ -5,6 +5,22 @@ Packages for computing with symmetric functions, and  combinatorics
 These are all work in progress, but some of these packages might be useful
 for those who prefers Mathematica over Sage.
 
+## Installation
+
+The repository is a single paclet. Either load it from a checkout,
+
+```wolfram
+PacletDirectoryLoad["/path/to/Mathematica-packages"];
+Needs["SymmetricFunctions`"]
+```
+
+or build an archive with `wolframscript -file Scripts/BuildPaclet.wls` and install it
+with `PacletInstall["build/PerAlexandersson__MathematicaPackages-0.1.0.paclet"]`.
+Supported and experimental packages live in `Kernel/`, legacy packages (kept loadable
+for existing notebooks) in `Legacy/`, datasets in `Data/`, and notebooks in `Examples/`.
+Tested with Wolfram Language 14.3. Run the tests with
+`wolframscript -file Tests/RunTests.wls`.
+
 ## SymmetricFunctions.m
 
 This is a package for working with symmetric functions, see https://www.symmetricfunctions.com/. 
@@ -15,7 +31,7 @@ This also has support for working multiple alphabets, which is useful when deali
 
 Compare with Stembridge's sf package for Maple, or Curtis Greene's symfun13 package.
 
-See the SymmetricFunctions-Introduction.nb for a brief introduction.
+See `Examples/SymmetricFunctions-Introduction.nb` for a brief introduction.
 
 *Updates*
 - 2023-08-08 Code added for storing transition matrices between sessions.

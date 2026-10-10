@@ -1,5 +1,5 @@
 testRoot = DirectoryName[DirectoryName[$InputFileName]];
-If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
+PacletDirectoryLoad[testRoot];
 
 (* GitHub issue #3: packages keep helpers in their own private contexts, so the
    result of one package's helper cannot depend on which other packages were

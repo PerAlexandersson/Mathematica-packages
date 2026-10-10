@@ -1,5 +1,5 @@
 testRoot = DirectoryName[DirectoryName[$InputFileName]];
-If[!MemberQ[$Path, testRoot], PrependTo[$Path, testRoot]];
+PacletDirectoryLoad[testRoot];
 
 (* GitHub issue #21: every public symbol of every package has a usage string.
    Legacy packages still export duplicated names (issue #9), so only

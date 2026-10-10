@@ -18,8 +18,14 @@ packages do not interfere through shared contexts.
 ## Conventions
 
 - One file per package, named `<Package>.wlt`.
-- Start the file with the `$Path` setup used by the existing files, followed by a
-  load test, which fails if loading emits any message:
+- Start the file by loading the working tree as a paclet, followed by a load test,
+  which fails if loading emits any message:
+
+  ```wolfram
+  testRoot = DirectoryName[DirectoryName[$InputFileName]];
+  PacletDirectoryLoad[testRoot];
+  ```
+
 
   ```wolfram
   VerificationTest[
