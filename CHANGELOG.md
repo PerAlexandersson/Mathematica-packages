@@ -138,6 +138,11 @@ supported replacement, and `LegacyConversions` converts legacy data.
 
 ### Fixed
 
+- `DualGrothendieckPolynomial`, `SetPartitionsTypeB`, `SetPartitionsNoZeroBlock` and
+  `PosetNaturalLabeling` were documented but not exported (they were only reachable by full
+  private names). A new test checks that every documented name in `Kernel/` is exported; test
+  files could not catch this, because parsing a test file creates the public symbols it
+  mentions.
 SymmetricFunctions
 - `MacdonaldHSymmetric`, `ToMacdonaldHBasis`, `DeltaOperator`, `DeltaPrimOperator`,
   `NablaOperator`, `SkewKostkaCoefficient` and `KroneckerCoefficient` no longer abort with
