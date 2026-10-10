@@ -75,3 +75,38 @@ VerificationTest[
   {},
   TestID -> "PolynomialTools-FindPolynomialRecurrence-localizes-formatter"
 ]
+
+(* GitHub issue #51: port the sequence interpolator and make it reject
+   underdetermined low-degree fits. *)
+VerificationTest[
+  SequenceToPolynomial[(# - 1) (# - 2) (# - 3) &, x],
+  Expand[(x - 1) (x - 2) (x - 3)],
+  TestID -> "PolynomialTools-SequenceToPolynomial-uses-enough-values"
+]
+
+(* GitHub issue #51, review round 2: non-polynomial sequences must terminate
+   after the documented degree bound. *)
+VerificationTest[
+  Module[{messages = {}, result},
+    result = Block[{Message = (AppendTo[messages, {##}] &)},
+      SequenceToPolynomial[2^# &, x, 5]];
+    {result, Length[messages] == 1 &&
+      StringContainsQ[First[First[messages]], "No polynomial of degree"]}],
+  {$Failed, True},
+  TestID -> "PolynomialTools-SequenceToPolynomial-degree-bound"
+]
+
+VerificationTest[
+  HVector[1 + 3 x + 2 x^2, x],
+  PadRight[CoefficientList[HStarPolynomial[1 + 3 x + 2 x^2, x], x], 3],
+  TestID -> "PolynomialTools-HVector-agrees-with-HStarPolynomial"
+]
+
+(* GitHub issue #51: the zero sequence gives the zero polynomial, and a cubic with three
+   leading zeros is not mistaken for 0. *)
+VerificationTest[
+  {SequenceToPolynomial[0 &, t], SequenceToPolynomial[(# - 1) (# - 2) (# - 3) &, t],
+   SequenceToPolynomial[7 &, t]},
+  {0, Expand[(t - 1) (t - 2) (t - 3)], 7},
+  TestID -> "PolynomialTools-SequenceToPolynomial-zero-and-leading-zeros"
+]

@@ -89,6 +89,13 @@ PartitionStrictDominatesQ;
 PartitionN;
 PartitionPath;
 
+SkewShapeQ;
+ShapeUnion;
+YoungLatticePaths;
+PermutationOfType;
+SetPartitionRefinementQ;
+SageForm;
+
 ZCoefficient;
 PartitionAddBox;
 PartitionRemoveBox;
@@ -102,6 +109,7 @@ PartitionLeg;
 DiagramBoxes;
 Durfee;
 MacdonaldPsi;
+MacdonaldPsiPrime;
 JackPsi;
 JackPsiPrime;
 
@@ -813,7 +821,8 @@ ZCoefficient[{}]:=1;
 ZCoefficient[lam:iList] := Times@@MapIndexed[ (#1!) * First[#2]^#1 &, PartitionPartCount@lam];
 
 
-PartitionAddBox::usage = "PartitionAddBox[lam] returns all partitions with one box more than lambda.";
+PartitionAddBox::usage = "PartitionAddBox[lam] returns all partitions with one box more than lambda.
+PartitionAddBox[lam, top] returns only those partitions contained in the bounding partition top. An empty top is unbounded.";
 PartitionAddBox[lam:iList] := With[{lamP = DeleteCases[lam, 0]},
    Append[
     Table[
@@ -824,6 +833,22 @@ PartitionAddBox[lam:iList] := With[{lamP = DeleteCases[lam, 0]},
     ,
     Append[lamP, 1](* Can create new row with one box.*)
     ]
+];
+PartitionAddBox[lam:iList, top:iList] := Module[{lamP, topP, n},
+   lamP = DeleteCases[lam, 0];
+   If[lamP === {}, Return[If[top === {} || First[top] > 0, {{1}}, {}]]];
+   If[top === {}, Return[PartitionAddBox[lam]]];
+   n = Max[Length[lamP] + 1, Length[top]];
+   lamP = PadRight[lamP, n];
+   topP = PadRight[DeleteCases[top, 0], n];
+   Select[
+      Table[
+         If[(r == 1 || lamP[[r]] < lamP[[r - 1]]) &&
+            lamP[[r]] < topP[[r]],
+            DeleteCases[ReplacePart[lamP, r -> lamP[[r]] + 1], 0],
+            Nothing],
+         {r, n}],
+      ListQ]
 ];
 UnitTest[PartitionAddBox] := SameQ[
    PartitionAddBox[{5, 4, 4, 3, 3, 1, 1, 0}],
@@ -836,7 +861,8 @@ UnitTest[PartitionAddBox] := SameQ[
 }];
 
 
-PartitionRemoveBox::usage = "PartitionRemoveBox[lam] lists all partitions obtainable from lambda with one box removed.";
+PartitionRemoveBox::usage = "PartitionRemoveBox[lam] lists all partitions obtainable from lambda with one box removed.
+PartitionRemoveBox[lam, bot] returns only those partitions containing the lower bounding partition bot. An empty bot is unbounded.";
 PartitionRemoveBox[{}] := {};
 PartitionRemoveBox[{lam__, 0}] := PartitionRemoveBox[{lam}];
 PartitionRemoveBox[lam:iList] := With[{ll = Length[lam]},
@@ -849,6 +875,21 @@ PartitionRemoveBox[lam:iList] := With[{ll = Length[lam]},
      True, Nothing]
     ,
 {r, ll}]];
+PartitionRemoveBox[lam:iList, bot:iList] := Module[{mu, botP, n},
+   mu = DeleteCases[lam, 0];
+   If[mu === {}, Return[{}]];
+   If[bot === {}, Return[PartitionRemoveBox[lam]]];
+   n = Max[Length[mu], Length[bot]];
+   mu = PadRight[mu, n];
+   botP = PadRight[DeleteCases[bot, 0], n];
+   Select[
+      Table[
+         If[(r == n || mu[[r + 1]] < mu[[r]]) && mu[[r]] > botP[[r]],
+            DeleteCases[ReplacePart[mu, r -> mu[[r]] - 1], 0],
+            Nothing],
+         {r, n}],
+      ListQ]
+];
 UnitTest[PartitionRemoveBox] := SameQ[
    PartitionRemoveBox[{5, 4, 4, 3, 3, 1, 1, 0}],
    {
@@ -857,6 +898,91 @@ UnitTest[PartitionRemoveBox] := SameQ[
     {5, 4, 4, 3, 2, 1, 1},
     {5, 4, 4, 3, 3, 1}
     }];
+
+
+SkewShapeQ::usage = "SkewShapeQ[lam, mu] returns True when mu is contained in lam.
+SkewShapeQ[lam, mu, w] additionally requires the skew shape to have size Total[w].";
+SkewShapeQ[lam:iList, mu:iList] := With[{n = Max[Length[lam], Length[mu]]},
+   And @@ Thread[PadRight[lam, n] >= PadRight[mu, n]]
+];
+SkewShapeQ[lam:iList, mu:iList, w:iList] :=
+   SkewShapeQ[lam, mu] && Total[lam] - Total[mu] == Total[w];
+
+
+(* Normalize only the two components of a skew shape; trailing zeros are kept
+   here because they are useful when comparing legacy shape data. *)
+normalizeShape[{lam_List, mu_List}] := With[{n = Max[Length[lam], Length[mu]]},
+   PadRight[{lam, mu}, {2, n}]
+];
+
+ShapeUnion::usage = "ShapeUnion[{lam1,mu1}, {lam2,mu2}, ...] places skew shapes side by side and returns their union.";
+ShapeUnion[{lam_List, mu_List : {}}] := {lam, mu};
+ShapeUnion[{lam1In_List, mu1In_List : {}}, {lam2In_List, mu2In_List : {}}] :=
+   Module[{shift, lam1, lam2, mu1, mu2},
+      {lam1, mu1} = normalizeShape[{lam1In, mu1In}];
+      {lam2, mu2} = normalizeShape[{lam2In, mu2In}];
+      shift = First[lam2];
+      {Join[lam1 + shift, lam2], Join[mu1 + shift, mu2]}
+   ];
+ShapeUnion[shapes__List] := With[{list = {shapes}},
+   Fold[ShapeUnion, First[list], Rest[list]]
+];
+
+
+youngLatticePaths[mu_List, nu_List] := If[mu === nu,
+   {{mu}},
+   Join @@ (Function[next,
+      Prepend[#, mu] & /@ youngLatticePaths[next, nu]
+   ] /@ PartitionAddBox[mu, nu])
+];
+
+YoungLatticePaths::usage = "YoungLatticePaths[mu, nu] returns all saturated chains from mu to nu in Young's lattice.";
+YoungLatticePaths[mu:iList, nu:iList] := If[
+   SkewShapeQ[nu, mu] && Total[mu] <= Total[nu],
+   youngLatticePaths[DeleteCases[mu, 0], DeleteCases[nu, 0]],
+   {}
+];
+
+
+PermutationOfType::usage = "PermutationOfType[mu] returns a canonical one-line permutation with cycle type mu.";
+PermutationOfType[type_List] := PermutationList[
+   Cycles[(Range[#1 + 1, #2] & @@@
+      Partition[Prepend[Accumulate[type], 0], 2, 1])],
+   Total[type]
+];
+
+SetPartitionRefinementQ::usage = "SetPartitionRefinementQ[p1, p2] returns True when every block of p1 is contained in a block of p2.";
+SetPartitionRefinementQ[p1_List, p2_List] := Module[{isSubsetOf},
+   isSubsetOf[block_] := Or @@ (Complement[block, #] === {} & /@ p2);
+   And @@ (isSubsetOf /@ p1)
+];
+
+
+sageList[list_List] := "[" <> StringRiffle[sageString /@ list, ","] <> "]";
+sageString[entry_Integer] := ToString[entry];
+sageString[None] := "None";
+sageString[list_List] := sageList[list];
+sageString[expr_] := Module[{head = Head[expr], name, basis, index},
+   name = SymbolName[head];
+   If[name === "YoungTableau",
+      Return["Tableau(" <> sageList[First[expr]] <> ")"]
+   ];
+   basis = <|
+      "SchurSymbol" -> "s", "PowerSumSymbol" -> "p",
+      "CompleteHSymbol" -> "h", "ElementaryESymbol" -> "e",
+      "MonomialSymbol" -> "m", "ForgottenSymbol" -> "f",
+      "FundamentalQSymbol" -> "F", "MonomialQSymbol" -> "M",
+      "PowerSumQSymbol" -> "Psi", "ZPowerSumQSymbol" -> "ZPsi"
+   |>;
+   If[KeyExistsQ[basis, name],
+      index = First[expr];
+      Return[basis[name] <> sageList[index]]
+   ];
+   ToString[expr, InputForm]
+];
+
+SageForm::usage = "SageForm[expr] returns a modest SageMath syntax string for integer lists, Young tableaux, and supported symmetric-function basis symbols.";
+SageForm[expr_] := sageString[expr];
 
 
 PartitionRemoveHorizontalStrip::usage = "PartitionRemoveHorizontalStrip[lam, k] returns all partitions obtainable from lam, by removing a horizontal strip of size k.";

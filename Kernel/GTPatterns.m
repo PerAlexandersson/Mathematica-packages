@@ -10,6 +10,8 @@ BeginPackage["GTPatterns`",{"CombinatoricTools`","NewTableaux`"}];
 
 GTPattern;
 GTPatternForm;
+ShapeTriplets;
+BoxCountMatrix;
 
 (* Extensions ported from OldYoungTableaux (GitHub issue #51). *)
 BZPattern;
@@ -188,7 +190,7 @@ GTPatterns[lam_List, mu_List, w_List,
 (* Public option values are strings: Tiles, Snakes, FreeTiles and
    ShadedTiles are not introduced as new symbols in the System context. *)
 GTPartition::usage = "GTPartition is an option for GTPatternForm and GTPatternTikz. Its values are \"Tiles\", \"Snakes\", \"FreeTiles\", \"ShadedTiles\", or None.";
-EnableSkew::usage = "EnableSkew is an option for GT graphics functions controlling whether skew cells are included.";
+EnableSkew::usage = "EnableSkew is an option for ShapeTriplets, GTTiles, GTPatternForm, and GTPatternTikz controlling whether skew cells are included.";
 BZPattern::usage = "BZPattern[data] represents a Berenstein-Zelevinsky pattern.";
 BZPatterns::usage = "BZPatterns[lam, mu, nu] returns BZ-patterns counted by the Littlewood-Richardson coefficient c^lam_{mu,nu}.";
 BZPlus::usage = "BZPlus[b1,b2,...] adds BZ-patterns entrywise.";
@@ -203,10 +205,57 @@ LatticePathForm::usage = "LatticePathForm[g] or LatticePathForm[tab] returns gra
 LatticePathTikz::usage = "LatticePathTikz[g] or LatticePathTikz[tab] returns TikZ code for the non-intersecting lattice paths.";
 ContainingFaceDimension::usage = "ContainingFaceDimension[g] returns the dimension of the face of the GT polytope containing g.";
 TilingMatrix::usage = "TilingMatrix[g] returns the tiling matrix of a GT-pattern.";
-WeightRange::usage = "WeightRange is an option for functions that enumerate tableau shapes by weight.";
-KostkaRange::usage = "KostkaRange is an option for functions that filter by Kostka coefficient.";
+WeightRange::usage = "WeightRange is an option for ShapeTriplets specifying the minimum and maximum number of parts in a weight.";
+KostkaRange::usage = "KostkaRange is an option for ShapeTriplets specifying the minimum and maximum allowed Kostka multiplicity.";
 UpperBoundKostkaDegree::usage = "UpperBoundKostkaDegree[lam,mu,w] returns an upper bound for the degree of the stretched Kostka polynomial.";
 GTEhrhartPolynomial::usage = "GTEhrhartPolynomial[lam,mu,w,k] counts GT-patterns of (k lam,k mu,k w) when k is an integer; a symbolic k returns the interpolating Ehrhart polynomial.";
+
+ShapeTriplets::usage = "ShapeTriplets[lambda, options] returns {lambda, mu, w} triples for skew shapes lambda/mu and weights w. EnableSkew, WeightRange, and KostkaRange control skew shapes, weight sizes, and Kostka multiplicities.";
+BoxCountMatrix::usage = "BoxCountMatrix[GTPattern[rows]] returns the matrix whose entry in row i and column j counts entries j in tableau row i, with GT rows ordered bottom to top.";
+
+generateSkewShapes[lambda_List] := generateSkewShapes[lambda] = If[lambda === {},
+   {{}},
+   Join @@ Table[
+      With[{newLambda = Rest[Min[k, #] & /@ lambda]},
+         Prepend[#, k] & /@ generateSkewShapes[newLambda]
+      ],
+      {k, 0, First[lambda]}]
+];
+
+Options[ShapeTriplets] = {
+   EnableSkew -> True, WeightRange -> {1, Infinity}, KostkaRange -> {0, Infinity}
+};
+ShapeTriplets[lambda_List, OptionsPattern[]] := Module[
+   {pairs, minBox, maxBox, minKostka, maxKostka, triplets},
+   pairs = If[TrueQ[OptionValue[EnableSkew]],
+      With[{muList = If[lambda === {}, {{}},
+         generateSkewShapes[Max[0, #] & /@ (Most[lambda] - 1)]]},
+         ({lambda, #} & /@ muList)],
+      {{lambda, ConstantArray[0, Length[lambda]]}}
+   ];
+   {minBox, maxBox} = OptionValue[WeightRange];
+   triplets = Join @@ (
+      Function[pair,
+         With[{n = Total[pair[[1]]] - Total[pair[[2]]]},
+            ({pair[[1]], pair[[2]], #} & /@
+               IntegerPartitions[n, {minBox, maxBox}])]
+      ] /@ pairs
+   );
+   {minKostka, maxKostka} = OptionValue[KostkaRange];
+   If[minKostka > 0 || maxKostka < Infinity,
+      triplets = Select[triplets,
+         minKostka <= Length[Apply[GTPatterns, #]] <= maxKostka &]
+   ];
+   triplets
+];
+
+BoxCountMatrix[GTPattern[gtp_List]] := Module[
+   {gtpList, maxBox},
+   If[gtp === {}, Return[{}]];
+   maxBox = Length[gtp] - 1;
+   gtpList = PadRight[#, Length[First[gtp]]] & /@ gtp;
+   Transpose@Table[gtpList[[j + 1]] - gtpList[[j]], {j, maxBox}]
+];
 
 (*
 The code uses the ideas in
