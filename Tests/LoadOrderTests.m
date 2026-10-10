@@ -37,7 +37,7 @@ VerificationTest[
   Module[{supported = {"AlgebraicBases", "CombinatoricTools", "NewTableaux", "SymmetricFunctions",
       "GTPatterns", "PolynomialTools", "PermutationTools", "QuasiSymmetricFunctions",
       "GraphTools", "MatroidTools", "CatalanObjects", "UnicellularChromatics",
-      "RookTools", "PosetData", "MacdonaldPolynomials"}, short},
+      "RookTools", "PosetData", "NonsymmetricPolynomials"}, short},
     Scan[Needs[# <> "`"] &, supported];
     short = Flatten[(Last@StringSplit[#, "`"] & /@ Names[# <> "`*"]) & /@ supported];
     Select[Tally[short], Last[#] > 1 &]],

@@ -18,7 +18,7 @@ a function needs a different representation internally, it converts at its bound
 | Graph | System `Graph`; edge-list forms use pairs `{u, v}` | GraphTools |
 | Symmetric function | basis symbols such as `SchurSymbol[lam, x]` (alphabet `x` defaults to `None`) | SymmetricFunctions |
 | Quasisymmetric function | basis symbols such as `FundamentalQSymbol[alpha, x]` | QuasiSymmetricFunctions |
-| Nonsymmetric polynomial basis | basis symbols such as `KeySymbol[alpha, x]` (planned, #51) | NonsymmetricPolynomials |
+| Nonsymmetric polynomial basis | basis symbols such as `KeySymbol[alpha, x]`, `AtomSymbol[alpha, x]`, `SchubertSymbol[w, x]`; the alphabet `x` is the variable symbol | NonsymmetricPolynomials |
 | Polynomial in finitely many variables | expression in `x[1], ..., x[n]` with `x` a symbol and `n` explicit | – |
 
 ## Indexing and parameter conventions

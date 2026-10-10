@@ -7,6 +7,7 @@ and no supported package loads them. Prefer the replacements below in new code.
 | Package | Replacement |
 |---|---|
 | `OldYoungTableaux` | `NewTableaux` (tableaux, RSK, crystals), `GTPatterns`, `CombinatoricTools` (partitions, Kostka numbers), `SymmetricFunctions` |
+| `MacdonaldPolynomials` | `NonsymmetricPolynomials` (keys, atoms, t-keys, t-atoms, Schubert; the remaining families are being ported, #51). Note: its key functions index compositions in reverse; the new ones use the standard convention, `KeyPolynomial[alpha]` = old `KeyPolynomial[Reverse[alpha]]` |
 | `ChromaticFunctions` | `UnicellularChromatics`, which contains its useful functions with the 0-first area-list convention of `CatalanObjects` (ChromaticFunctions area lists end with 0) |
 | `TreesData` | `GraphTools`TreeGraphs` (unrooted, n <= 20) and `GraphTools`RootedTreeGraphs` (n <= 10) |
 | `RunSortedWords` | `CombinatoricTools`RunSortedPermutations` and `SetPartitionToRunSortedPermutation`; the package is now a shim |
@@ -25,6 +26,7 @@ first in `$ContextPath` wins for newly typed input; use full names
   `PermutationType`.
   `ConjugatePartition`, `UnimodalQ` and `ZCoefficient` are no longer duplicated: the
   package uses the CombinatoricTools versions.
+- `MacdonaldPolynomials`: `KeyPolynomial`, `AtomPolynomial`, `SchubertPolynomial` (NonsymmetricPolynomials; keys reversed in the legacy package).
 - `ChromaticFunctions`: its functions that now live in `UnicellularChromatics` (with the
   opposite area-list convention), `AreaBounce`, `AreaListPlot`, `AreaToBounceShape`,
   `Labels` (CatalanObjects), and `GraphOrientations`, `GraphAcyclicOrientations`

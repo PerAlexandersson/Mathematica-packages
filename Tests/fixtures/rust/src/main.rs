@@ -14,7 +14,9 @@ use num_rational::Ratio;
 use polytool::{check_weak_interlacing, is_real_rooted};
 use serde_json::{json, Value};
 use sym_poly_core::UnivariatePolynomial;
-use sym_poly_multipoly::{atom_polynomial, key_polynomial, schubert_polynomial, MultiPoly};
+use sym_poly_multipoly::{
+    atom_polynomial, key_polynomial, schubert_polynomial, t_atom_polynomial, t_key_polynomial, MultiPoly,
+};
 use sym_poly_qsym::QSymFunction;
 use sym_poly_sym::kostka::{kostka_coefficient, sn_character};
 use sym_poly_sym::{
@@ -429,31 +431,53 @@ fn write_qsym(directory: &Path) {
 }
 
 fn write_nonsymmetric(directory: &Path) {
-    let compositions: Vec<Vec<u32>> = vec![
-        vec![0, 2],
-        vec![1, 2],
-        vec![2, 1],
-        vec![1, 0, 2],
-        vec![0, 1, 2],
-    ];
+    // All weak compositions with three parts and size at most 4, plus two-part examples.
+    let mut compositions: Vec<Vec<u32>> = vec![vec![0, 2], vec![1, 2], vec![2, 1]];
+    for a in 0..=4u32 {
+        for b in 0..=(4 - a) {
+            for c in 0..=(4 - a - b) {
+                compositions.push(vec![a, b, c]);
+            }
+        }
+    }
+    let t_values: [i64; 2] = [2, -1];
     let mut key_atom = Vec::new();
     for alpha in &compositions {
-        let key = key_polynomial::<i64>(&alpha);
-        let atom = atom_polynomial::<i64>(&alpha);
+        let key = key_polynomial::<i64>(alpha);
+        let atom = atom_polynomial::<i64>(alpha);
+        let t_terms = t_values
+            .iter()
+            .map(|t| {
+                json!({
+                    "t": t,
+                    "t_key_terms": terms_multipoly(&t_key_polynomial::<i64>(alpha, t)),
+                    "t_atom_terms": terms_multipoly(&t_atom_polynomial::<i64>(alpha, t))
+                })
+            })
+            .collect::<Vec<_>>();
         key_atom.push(json!({
             "alpha": alpha,
             "key_terms": terms_multipoly(&key),
-            "atom_terms": terms_multipoly(&atom)
+            "atom_terms": terms_multipoly(&atom),
+            "t_specializations": t_terms
         }));
     }
-    let permutations = [
-        [1, 2, 3],
-        [2, 1, 3],
-        [1, 3, 2],
-        [2, 3, 1],
-        [3, 1, 2],
-        [3, 2, 1],
-    ];
+    // All permutations of 1..4.
+    let mut permutations: Vec<Vec<usize>> = Vec::new();
+    for a in 1..=4usize {
+        for b in 1..=4usize {
+            for c in 1..=4usize {
+                for d in 1..=4usize {
+                    let w = vec![a, b, c, d];
+                    let mut sorted = w.clone();
+                    sorted.sort();
+                    if sorted == vec![1, 2, 3, 4] {
+                        permutations.push(w);
+                    }
+                }
+            }
+        }
+    }
     let schubert = permutations
         .into_iter()
         .map(|permutation| {
@@ -467,9 +491,9 @@ fn write_nonsymmetric(directory: &Path) {
         directory,
         "nonsymmetric.json",
         json!({
-            "family": "key, atom, and Schubert polynomials",
-            "rust_function": "sym_poly_multipoly::{key_polynomial,atom_polynomial,schubert_polynomial}",
-            "convention": "exponent vectors are in x_1,...,x_n order; key(alpha) uses the standard weak-composition key convention and Schubert permutations are one-line, one-indexed.",
+            "family": "key, atom, t-key, t-atom and Schubert polynomials",
+            "rust_function": "sym_poly_multipoly::{key_polynomial,atom_polynomial,t_key_polynomial,t_atom_polynomial,schubert_polynomial}",
+            "convention": "exponent vectors are in x_1,...,x_n order; key(alpha) uses the standard weak-composition key convention; t-deformations are evaluated at the integers listed in t_specializations; Schubert permutations are one-line, one-indexed.",
             "key_atom": key_atom,
             "schubert": schubert
         }),
