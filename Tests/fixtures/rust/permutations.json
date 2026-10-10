@@ -1,0 +1,8010 @@
+{
+  "avoidance_counts": [
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "123",
+      "pattern": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "132",
+      "pattern": [
+        1,
+        3,
+        2
+      ]
+    },
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "213",
+      "pattern": [
+        2,
+        1,
+        3
+      ]
+    },
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "231",
+      "pattern": [
+        2,
+        3,
+        1
+      ]
+    },
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "312",
+      "pattern": [
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "counts": [
+        1,
+        1,
+        2,
+        5,
+        14,
+        42
+      ],
+      "name": "321",
+      "pattern": [
+        3,
+        2,
+        1
+      ]
+    }
+  ],
+  "convention": "Permutations are one-line one-indexed vectors. Descent, peak, and valley positions are one-indexed; coefficient-free scalar statistics use the standard permutation conventions. Foata maps use the package's documented maj/inv-preserving convention.",
+  "family": "permutation statistics, cycle type, Foata maps, and pattern avoidance",
+  "records": [
+    {
+      "cycle_type": [],
+      "foata": [],
+      "foata_cycle_word": [],
+      "foata_cycle_word_inverse": [],
+      "permutation": [],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 0,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 0,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        1
+      ],
+      "foata": [
+        1
+      ],
+      "foata_cycle_word": [
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        1
+      ],
+      "permutation": [
+        1
+      ],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 1,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2
+      ],
+      "permutation": [
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 2,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2
+      ],
+      "foata": [
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1
+      ],
+      "permutation": [
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 0,
+        "inversions": 1,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        3
+      ],
+      "permutation": [
+        1,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 3,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        2
+      ],
+      "permutation": [
+        1,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 1,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        3
+      ],
+      "permutation": [
+        2,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 1,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3
+      ],
+      "foata": [
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        1
+      ],
+      "permutation": [
+        2,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 2,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3
+      ],
+      "foata": [
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        2
+      ],
+      "permutation": [
+        3,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 0,
+        "inversions": 2,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        1
+      ],
+      "permutation": [
+        3,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "permutation": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 4,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "permutation": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 1,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        2,
+        4
+      ],
+      "permutation": [
+        1,
+        3,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 1,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        4,
+        2
+      ],
+      "permutation": [
+        1,
+        3,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        1,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        2,
+        3
+      ],
+      "permutation": [
+        1,
+        4,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        3,
+        2
+      ],
+      "permutation": [
+        1,
+        4,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 3,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "permutation": [
+        2,
+        1,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 1,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2
+      ],
+      "foata": [
+        4,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        4,
+        3
+      ],
+      "permutation": [
+        2,
+        1,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 2,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "permutation": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "permutation": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        2,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        1,
+        3
+      ],
+      "permutation": [
+        2,
+        4,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        3,
+        1
+      ],
+      "permutation": [
+        2,
+        4,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        1,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        2,
+        4
+      ],
+      "permutation": [
+        3,
+        1,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        3,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        4,
+        2
+      ],
+      "permutation": [
+        3,
+        1,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        1,
+        4
+      ],
+      "permutation": [
+        3,
+        2,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        4,
+        1
+      ],
+      "permutation": [
+        3,
+        2,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2
+      ],
+      "foata": [
+        1,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        1,
+        2
+      ],
+      "permutation": [
+        3,
+        4,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        3,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        2,
+        1
+      ],
+      "permutation": [
+        3,
+        4,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        2,
+        3
+      ],
+      "permutation": [
+        4,
+        1,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        3,
+        2
+      ],
+      "permutation": [
+        4,
+        1,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        1,
+        3
+      ],
+      "permutation": [
+        4,
+        2,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "permutation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 5,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4
+      ],
+      "foata": [
+        1,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "permutation": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2
+      ],
+      "foata": [
+        4,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        2,
+        1
+      ],
+      "permutation": [
+        4,
+        3,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 6,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "permutation": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 5,
+        "descents": 0,
+        "excedances": 0,
+        "fixed_points": 5,
+        "inversions": 0,
+        "major_index": 0,
+        "peaks": 0,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "permutation": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 1,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        2,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        4,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        4,
+        3,
+        5
+      ],
+      "permutation": [
+        1,
+        2,
+        4,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 1,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        2,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        5,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        4,
+        5,
+        3
+      ],
+      "permutation": [
+        1,
+        2,
+        4,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        5,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        5,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        5,
+        3,
+        4
+      ],
+      "permutation": [
+        1,
+        2,
+        5,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        4,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        2,
+        4,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        2,
+        5,
+        4,
+        3
+      ],
+      "permutation": [
+        1,
+        2,
+        5,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 3,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        2,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        2,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        2,
+        4,
+        5
+      ],
+      "permutation": [
+        1,
+        3,
+        2,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 1,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        3,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        2,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        2,
+        5,
+        4
+      ],
+      "permutation": [
+        1,
+        3,
+        2,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        4,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        2,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        4,
+        2,
+        5
+      ],
+      "permutation": [
+        1,
+        3,
+        4,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        4,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        4,
+        5,
+        2
+      ],
+      "permutation": [
+        1,
+        3,
+        4,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        2,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        5,
+        2,
+        4
+      ],
+      "permutation": [
+        1,
+        3,
+        5,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        3,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        5,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        3,
+        5,
+        4,
+        2
+      ],
+      "permutation": [
+        1,
+        3,
+        5,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        4,
+        2,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        3,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        2,
+        3,
+        5
+      ],
+      "permutation": [
+        1,
+        4,
+        2,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        5,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        2,
+        5,
+        3
+      ],
+      "permutation": [
+        1,
+        4,
+        2,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        3,
+        1,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        4,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        3,
+        2,
+        5
+      ],
+      "permutation": [
+        1,
+        4,
+        3,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 3,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        5,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
+      "permutation": [
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        1,
+        4,
+        2,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        2,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        5,
+        2,
+        3
+      ],
+      "permutation": [
+        1,
+        4,
+        5,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        5,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        4,
+        5,
+        3,
+        2
+      ],
+      "permutation": [
+        1,
+        4,
+        5,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        2,
+        5,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        2,
+        3,
+        4
+      ],
+      "permutation": [
+        1,
+        5,
+        2,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        1,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        5,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        2,
+        4,
+        3
+      ],
+      "permutation": [
+        1,
+        5,
+        2,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        5,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        5,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        3,
+        2,
+        4
+      ],
+      "permutation": [
+        1,
+        5,
+        3,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        1,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        3,
+        4,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        3,
+        4,
+        2
+      ],
+      "permutation": [
+        1,
+        5,
+        3,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 5,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        5,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        1,
+        5,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        4,
+        2,
+        3
+      ],
+      "permutation": [
+        1,
+        5,
+        4,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        4,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        1,
+        5,
+        4,
+        3,
+        2
+      ],
+      "permutation": [
+        1,
+        5,
+        4,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3,
+          4
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 6,
+        "major_index": 9,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        3,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        3,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        3,
+        4,
+        5
+      ],
+      "permutation": [
+        2,
+        1,
+        3,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 1,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        2,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        3,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        3,
+        5,
+        4
+      ],
+      "permutation": [
+        2,
+        1,
+        3,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        4,
+        2,
+        1,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        4,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        4,
+        3,
+        5
+      ],
+      "permutation": [
+        2,
+        1,
+        4,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 2,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        4,
+        2,
+        1,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        5,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        4,
+        5,
+        3
+      ],
+      "permutation": [
+        2,
+        1,
+        4,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        2,
+        5,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        5,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        5,
+        3,
+        4
+      ],
+      "permutation": [
+        2,
+        1,
+        5,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        4,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        1,
+        4,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        1,
+        5,
+        4,
+        3
+      ],
+      "permutation": [
+        2,
+        1,
+        5,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        3,
+        1,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        2,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        1,
+        4,
+        5
+      ],
+      "permutation": [
+        2,
+        3,
+        1,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        5,
+        2,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        2,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        1,
+        5,
+        4
+      ],
+      "permutation": [
+        2,
+        3,
+        1,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        2,
+        3,
+        4,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        2,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        4,
+        1,
+        5
+      ],
+      "permutation": [
+        2,
+        3,
+        4,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "permutation": [
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 4,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        3,
+        1,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        5,
+        1,
+        4
+      ],
+      "permutation": [
+        2,
+        3,
+        5,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        5,
+        2,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        1,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        3,
+        5,
+        4,
+        1
+      ],
+      "permutation": [
+        2,
+        3,
+        5,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        4,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        1,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        1,
+        3,
+        5
+      ],
+      "permutation": [
+        2,
+        4,
+        1,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        2,
+        5,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        1,
+        5,
+        3
+      ],
+      "permutation": [
+        2,
+        4,
+        1,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        2,
+        3,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        1,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        3,
+        1,
+        5
+      ],
+      "permutation": [
+        2,
+        4,
+        3,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        2,
+        3,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        1,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "permutation": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        2,
+        1,
+        4,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        2,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        5,
+        1,
+        3
+      ],
+      "permutation": [
+        2,
+        4,
+        5,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        2,
+        5,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        4,
+        5,
+        3,
+        1
+      ],
+      "permutation": [
+        2,
+        4,
+        5,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        1,
+        3,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        1,
+        3,
+        4
+      ],
+      "permutation": [
+        2,
+        5,
+        1,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        5,
+        2,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        1,
+        4,
+        3
+      ],
+      "permutation": [
+        2,
+        5,
+        1,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        2,
+        5,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        3,
+        1,
+        4
+      ],
+      "permutation": [
+        2,
+        5,
+        3,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        5,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        5,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        3,
+        4,
+        1
+      ],
+      "permutation": [
+        2,
+        5,
+        3,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        5,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        4,
+        1,
+        3
+      ],
+      "permutation": [
+        2,
+        5,
+        4,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        5,
+        4,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        5,
+        1,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        2,
+        5,
+        4,
+        3,
+        1
+      ],
+      "permutation": [
+        2,
+        5,
+        4,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3,
+          4
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 9,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        1,
+        3,
+        2,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        1,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        2,
+        4,
+        5
+      ],
+      "permutation": [
+        3,
+        1,
+        2,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 2,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        5,
+        1,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        1,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        2,
+        5,
+        4
+      ],
+      "permutation": [
+        3,
+        1,
+        2,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 3,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        4,
+        1,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        1,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        4,
+        2,
+        5
+      ],
+      "permutation": [
+        3,
+        1,
+        4,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        3,
+        4,
+        1,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        4,
+        5,
+        2
+      ],
+      "permutation": [
+        3,
+        1,
+        4,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        3,
+        1,
+        5,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        5,
+        2,
+        4
+      ],
+      "permutation": [
+        3,
+        1,
+        5,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        5,
+        3,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        1,
+        5,
+        4,
+        2
+      ],
+      "permutation": [
+        3,
+        1,
+        5,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        1,
+        4,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        1,
+        4,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        1,
+        4,
+        5
+      ],
+      "permutation": [
+        3,
+        2,
+        1,
+        4,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 3,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        3,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        1,
+        5,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        1,
+        5,
+        4
+      ],
+      "permutation": [
+        3,
+        2,
+        1,
+        5,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        4,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        1,
+        3,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        4,
+        1,
+        5
+      ],
+      "permutation": [
+        3,
+        2,
+        4,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        4,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        1,
+        3,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        4,
+        5,
+        1
+      ],
+      "permutation": [
+        3,
+        2,
+        4,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        1,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        5,
+        1,
+        4
+      ],
+      "permutation": [
+        3,
+        2,
+        5,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        3,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        5,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        2,
+        5,
+        4,
+        1
+      ],
+      "permutation": [
+        3,
+        2,
+        5,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        1,
+        3,
+        4,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        4,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        1,
+        2,
+        5
+      ],
+      "permutation": [
+        3,
+        4,
+        1,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 4,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        3,
+        4,
+        5,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        5,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        1,
+        5,
+        2
+      ],
+      "permutation": [
+        3,
+        4,
+        1,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        4,
+        2,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        3,
+        2,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        2,
+        1,
+        5
+      ],
+      "permutation": [
+        3,
+        4,
+        2,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        3,
+        4,
+        2,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        2,
+        5,
+        1
+      ],
+      "permutation": [
+        3,
+        4,
+        2,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        3,
+        4,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        5,
+        1,
+        2
+      ],
+      "permutation": [
+        3,
+        4,
+        5,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 3,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        3,
+        4,
+        5,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        5,
+        1,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        4,
+        5,
+        2,
+        1
+      ],
+      "permutation": [
+        3,
+        4,
+        5,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        1,
+        3,
+        2,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        5,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        1,
+        2,
+        4
+      ],
+      "permutation": [
+        3,
+        5,
+        1,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        3,
+        5,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        1,
+        4,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        1,
+        4,
+        2
+      ],
+      "permutation": [
+        3,
+        5,
+        1,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 6,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        3,
+        2,
+        5,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        2,
+        1,
+        4
+      ],
+      "permutation": [
+        3,
+        5,
+        2,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        2,
+        5,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        2,
+        4,
+        1
+      ],
+      "permutation": [
+        3,
+        5,
+        2,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 7,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        1,
+        5,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        3,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        4,
+        1,
+        2
+      ],
+      "permutation": [
+        3,
+        5,
+        4,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        5,
+        3,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        3,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        3,
+        5,
+        4,
+        2,
+        1
+      ],
+      "permutation": [
+        3,
+        5,
+        4,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3,
+          4
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 9,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        2,
+        4,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        2,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        2,
+        3,
+        5
+      ],
+      "permutation": [
+        4,
+        1,
+        2,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 3,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        1,
+        5,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        2,
+        5,
+        3
+      ],
+      "permutation": [
+        4,
+        1,
+        2,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        3,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        2,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        3,
+        2,
+        5
+      ],
+      "permutation": [
+        4,
+        1,
+        3,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        1,
+        3,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        3,
+        5,
+        2
+      ],
+      "permutation": [
+        4,
+        1,
+        3,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        1,
+        4,
+        5,
+        2,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        1,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        5,
+        2,
+        3
+      ],
+      "permutation": [
+        4,
+        1,
+        5,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 5,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        5,
+        3,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        1,
+        5,
+        3,
+        2
+      ],
+      "permutation": [
+        4,
+        1,
+        5,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        1,
+        3,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        3,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        1,
+        3,
+        5
+      ],
+      "permutation": [
+        4,
+        2,
+        1,
+        3,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 4,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        5,
+        2,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        1,
+        5,
+        3
+      ],
+      "permutation": [
+        4,
+        2,
+        1,
+        5,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        3,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        4,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        3,
+        1,
+        5
+      ],
+      "permutation": [
+        4,
+        2,
+        3,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 5,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        5,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        3,
+        5,
+        1
+      ],
+      "permutation": [
+        4,
+        2,
+        3,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        2,
+        4,
+        1,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        1,
+        5,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        5,
+        1,
+        3
+      ],
+      "permutation": [
+        4,
+        2,
+        5,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 6,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        5,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        1,
+        4,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        2,
+        5,
+        3,
+        1
+      ],
+      "permutation": [
+        4,
+        2,
+        5,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 7,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        4,
+        3,
+        2,
+        5
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        3,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        1,
+        2,
+        5
+      ],
+      "permutation": [
+        4,
+        3,
+        1,
+        2,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        3,
+        5,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        3,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "permutation": [
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        4,
+        3,
+        2,
+        1,
+        5
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        4,
+        1,
+        5
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        2,
+        1,
+        5
+      ],
+      "permutation": [
+        4,
+        3,
+        2,
+        1,
+        5
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 6,
+        "major_index": 6,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        4,
+        3,
+        2,
+        5,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        5,
+        1,
+        4
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        2,
+        5,
+        1
+      ],
+      "permutation": [
+        4,
+        3,
+        2,
+        5,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        1,
+        4,
+        3,
+        5,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        5,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        5,
+        1,
+        2
+      ],
+      "permutation": [
+        4,
+        3,
+        5,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        4,
+        3,
+        5,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        4,
+        2,
+        3
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        3,
+        5,
+        2,
+        1
+      ],
+      "permutation": [
+        4,
+        3,
+        5,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        2,
+        4,
+        5,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        1,
+        2,
+        3
+      ],
+      "permutation": [
+        4,
+        5,
+        1,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 2,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        4,
+        1,
+        5,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        1,
+        3,
+        2
+      ],
+      "permutation": [
+        4,
+        5,
+        1,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        2,
+        4,
+        5,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        1,
+        5,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        2,
+        1,
+        3
+      ],
+      "permutation": [
+        4,
+        5,
+        2,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        4,
+        5,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        5,
+        1,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        2,
+        3,
+        1
+      ],
+      "permutation": [
+        4,
+        5,
+        2,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          4
+        ],
+        "peak_set": [
+          2,
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 6,
+        "peaks": 2,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        1,
+        4,
+        5,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        1,
+        5,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        3,
+        1,
+        2
+      ],
+      "permutation": [
+        4,
+        5,
+        3,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 8,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        4,
+        5,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        1,
+        4,
+        2
+      ],
+      "foata_cycle_word_inverse": [
+        4,
+        5,
+        3,
+        2,
+        1
+      ],
+      "permutation": [
+        4,
+        5,
+        3,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          2,
+          3,
+          4
+        ],
+        "peak_set": [
+          2
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 9,
+        "major_index": 9,
+        "peaks": 1,
+        "valleys": 0
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ],
+      "permutation": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 1,
+        "excedances": 1,
+        "fixed_points": 0,
+        "inversions": 4,
+        "major_index": 1,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        5,
+        1,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        2,
+        4,
+        3
+      ],
+      "permutation": [
+        5,
+        1,
+        2,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        5,
+        3,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        3,
+        2,
+        4
+      ],
+      "permutation": [
+        5,
+        1,
+        3,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        3,
+        1,
+        5,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        5,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        3,
+        4,
+        2
+      ],
+      "permutation": [
+        5,
+        1,
+        3,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        5,
+        2,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        4,
+        2,
+        3
+      ],
+      "permutation": [
+        5,
+        1,
+        4,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        5,
+        2,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        1,
+        4,
+        3,
+        2
+      ],
+      "permutation": [
+        5,
+        1,
+        4,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        5,
+        3,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        1,
+        3,
+        4
+      ],
+      "permutation": [
+        5,
+        2,
+        1,
+        3,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 1,
+        "inversions": 5,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        5,
+        2,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        5,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        1,
+        4,
+        3
+      ],
+      "permutation": [
+        5,
+        2,
+        1,
+        4,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        3,
+        5,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        5,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        3,
+        1,
+        4
+      ],
+      "permutation": [
+        5,
+        2,
+        3,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 2,
+        "inversions": 6,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "foata": [
+        2,
+        3,
+        5,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        3,
+        4,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        3,
+        4,
+        1
+      ],
+      "permutation": [
+        5,
+        2,
+        3,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 4,
+        "descents": 2,
+        "excedances": 1,
+        "fixed_points": 3,
+        "inversions": 7,
+        "major_index": 5,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        2,
+        1,
+        5,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        2,
+        5,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        4,
+        1,
+        3
+      ],
+      "permutation": [
+        5,
+        2,
+        4,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 7,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        2,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        2,
+        4,
+        3,
+        1
+      ],
+      "permutation": [
+        5,
+        2,
+        4,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 8,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        3,
+        5,
+        2,
+        4
+      ],
+      "foata_cycle_word": [
+        5,
+        4,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        1,
+        2,
+        4
+      ],
+      "permutation": [
+        5,
+        3,
+        1,
+        2,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 6,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        3,
+        5,
+        4,
+        1,
+        2
+      ],
+      "foata_cycle_word": [
+        4,
+        5,
+        2,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        1,
+        4,
+        2
+      ],
+      "permutation": [
+        5,
+        3,
+        1,
+        4,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 7,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        3,
+        5,
+        2,
+        1,
+        4
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        5,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        2,
+        1,
+        4
+      ],
+      "permutation": [
+        5,
+        3,
+        2,
+        1,
+        4
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 6,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        3,
+        5,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        2,
+        4,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        2,
+        4,
+        1
+      ],
+      "permutation": [
+        5,
+        3,
+        2,
+        4,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 8,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        1,
+        3,
+        5,
+        4,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        3,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        4,
+        1,
+        2
+      ],
+      "permutation": [
+        5,
+        3,
+        4,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 2,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 4,
+        "peaks": 1,
+        "valleys": 2
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        3,
+        5,
+        4,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        3,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        3,
+        4,
+        2,
+        1
+      ],
+      "permutation": [
+        5,
+        3,
+        4,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          3,
+          4
+        ],
+        "peak_set": [
+          3
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 3,
+        "fixed_points": 0,
+        "inversions": 9,
+        "major_index": 8,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        1,
+        2,
+        5,
+        4,
+        3
+      ],
+      "foata_cycle_word": [
+        4,
+        2,
+        5,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        1,
+        2,
+        3
+      ],
+      "permutation": [
+        5,
+        4,
+        1,
+        2,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 2,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 7,
+        "major_index": 3,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        5,
+        1,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        5,
+        2,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "permutation": [
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        5
+      ],
+      "foata": [
+        2,
+        5,
+        4,
+        1,
+        3
+      ],
+      "foata_cycle_word": [
+        5,
+        3,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        2,
+        1,
+        3
+      ],
+      "permutation": [
+        5,
+        4,
+        2,
+        1,
+        3
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 1,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 8,
+        "major_index": 6,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        3,
+        2
+      ],
+      "foata": [
+        2,
+        5,
+        4,
+        3,
+        1
+      ],
+      "foata_cycle_word": [
+        4,
+        3,
+        2,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        2,
+        3,
+        1
+      ],
+      "permutation": [
+        5,
+        4,
+        2,
+        3,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          4
+        ],
+        "peak_set": [
+          4
+        ]
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 0,
+        "inversions": 9,
+        "major_index": 7,
+        "peaks": 1,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        4,
+        1
+      ],
+      "foata": [
+        1,
+        5,
+        4,
+        3,
+        2
+      ],
+      "foata_cycle_word": [
+        3,
+        5,
+        2,
+        4,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        3,
+        1,
+        2
+      ],
+      "permutation": [
+        5,
+        4,
+        3,
+        1,
+        2
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 2,
+        "descents": 3,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 9,
+        "major_index": 6,
+        "peaks": 0,
+        "valleys": 1
+      }
+    },
+    {
+      "cycle_type": [
+        2,
+        2,
+        1
+      ],
+      "foata": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "foata_cycle_word": [
+        3,
+        4,
+        2,
+        5,
+        1
+      ],
+      "foata_cycle_word_inverse": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "permutation": [
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "sets": {
+        "descent_set": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "peak_set": []
+      },
+      "stats": {
+        "cycles": 3,
+        "descents": 4,
+        "excedances": 2,
+        "fixed_points": 1,
+        "inversions": 10,
+        "major_index": 10,
+        "peaks": 0,
+        "valleys": 0
+      }
+    }
+  ],
+  "rust_function": "combpoly::{permutation,statistics}"
+}

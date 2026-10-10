@@ -1,0 +1,124 @@
+{
+  "convention": "Rust vertices are zero-based and covers are directed from smaller to larger elements. Order values are Omega(P,k) for k=0,...,n. Rust P-Eulerian coefficients count t^des, while PosetData's PEulerianPolynomial uses t^(1+des); the Mathematica test removes that leading zero coefficient.",
+  "family": "poset linear extensions, order polynomials, and P-Eulerian polynomials",
+  "records": [
+    {
+      "covers": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "linear_extensions": 1,
+      "name": "chain4",
+      "order_values": [
+        0,
+        1,
+        5,
+        15,
+        35
+      ],
+      "p_eulerian": [
+        1
+      ],
+      "vertices": 4
+    },
+    {
+      "covers": [],
+      "linear_extensions": 24,
+      "name": "antichain4",
+      "order_values": [
+        0,
+        1,
+        16,
+        81,
+        256
+      ],
+      "p_eulerian": [
+        1,
+        11,
+        11,
+        1
+      ],
+      "vertices": 4
+    },
+    {
+      "covers": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "linear_extensions": 2,
+      "name": "diamond",
+      "order_values": [
+        0,
+        1,
+        6,
+        20,
+        50
+      ],
+      "p_eulerian": [
+        1,
+        1
+      ],
+      "vertices": 4
+    },
+    {
+      "covers": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "linear_extensions": 4,
+      "name": "permutation_2143",
+      "order_values": [
+        0,
+        1,
+        7,
+        26,
+        70
+      ],
+      "p_eulerian": [
+        1,
+        2,
+        1
+      ],
+      "vertices": 4
+    }
+  ],
+  "rust_function": "combinatoric_core::Poset::{num_linear_extensions,order_polynomial_values,p_eulerian_polynomial}"
+}

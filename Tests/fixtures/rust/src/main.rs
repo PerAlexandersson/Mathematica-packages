@@ -1,19 +1,27 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use combinatoric_core::{Composition, Graph, Partition};
+use combinatoric_core::poset::Poset;
+use combinatoric_core::{ordered_set_partitions, set_partitions, Composition, Graph, Partition};
+use combpoly::lattice_path_matroid::LatticePathMatroid;
+use combpoly::permutation as comb_permutation;
+use combpoly::statistics::{
+    compute as permutation_stat, compute_set as permutation_stat_set, SetStat, Stat,
+};
+use experiments::matroids::BasisMatroid;
 use num_rational::Ratio;
 use polytool::{check_weak_interlacing, is_real_rooted};
 use serde_json::{json, Value};
 use sym_poly_core::UnivariatePolynomial;
 use sym_poly_multipoly::{atom_polynomial, key_polynomial, schubert_polynomial, MultiPoly};
 use sym_poly_qsym::QSymFunction;
+use sym_poly_sym::kostka::{kostka_coefficient, sn_character};
 use sym_poly_sym::{
     chromatic_symmetric, lah_symmetric_elementary, lah_symmetric_monomial, nabla_eigenvalue,
-    petrie_symmetric, unicellular_llt,
-    unicellular_llt_q_plus_one_e_expansion, Basis, SymmetricFunction,
+    petrie_symmetric, unicellular_llt, unicellular_llt_q_plus_one_e_expansion, Basis,
+    SymmetricFunction,
 };
-use sym_poly_sym::kostka::{kostka_coefficient, sn_character};
 
 type Rational = Ratio<i64>;
 
@@ -43,6 +51,16 @@ fn terms_i64(function: &SymmetricFunction<i64>) -> Value {
             .terms()
             .iter()
             .map(|(shape, coefficient)| json!([shape.parts(), coefficient]))
+            .collect(),
+    )
+}
+
+fn terms_rational(function: &SymmetricFunction<Rational>) -> Value {
+    Value::Array(
+        function
+            .terms()
+            .iter()
+            .map(|(shape, coefficient)| json!([shape.parts(), rational_value(coefficient)]))
             .collect(),
     )
 }
@@ -250,7 +268,10 @@ fn write_transitions(directory: &Path) {
                         )
                     })
                     .collect();
-                matrices.insert(format!("{source_name}->{target_name}"), Value::Array(matrix));
+                matrices.insert(
+                    format!("{source_name}->{target_name}"),
+                    Value::Array(matrix),
+                );
             }
         }
         records.push(json!({
@@ -408,7 +429,13 @@ fn write_qsym(directory: &Path) {
 }
 
 fn write_nonsymmetric(directory: &Path) {
-    let compositions: Vec<Vec<u32>> = vec![vec![0, 2], vec![1, 2], vec![2, 1], vec![1, 0, 2], vec![0, 1, 2]];
+    let compositions: Vec<Vec<u32>> = vec![
+        vec![0, 2],
+        vec![1, 2],
+        vec![2, 1],
+        vec![1, 0, 2],
+        vec![0, 1, 2],
+    ];
     let mut key_atom = Vec::new();
     for alpha in &compositions {
         let key = key_polynomial::<i64>(&alpha);
@@ -419,7 +446,14 @@ fn write_nonsymmetric(directory: &Path) {
             "atom_terms": terms_multipoly(&atom)
         }));
     }
-    let permutations = [[1, 2, 3], [2, 1, 3], [1, 3, 2], [2, 3, 1], [3, 1, 2], [3, 2, 1]];
+    let permutations = [
+        [1, 2, 3],
+        [2, 1, 3],
+        [1, 3, 2],
+        [2, 3, 1],
+        [3, 1, 2],
+        [3, 2, 1],
+    ];
     let schubert = permutations
         .into_iter()
         .map(|permutation| {
@@ -508,6 +542,416 @@ fn write_lah_petrie(directory: &Path) {
     );
 }
 
+fn shifted_blocks(blocks: &[Vec<usize>]) -> Vec<Vec<usize>> {
+    blocks
+        .iter()
+        .map(|block| block.iter().map(|&value| value + 1).collect())
+        .collect()
+}
+
+fn all_subsets(labels: &[usize]) -> Vec<Vec<usize>> {
+    (0..(1usize << labels.len()))
+        .map(|mask| {
+            labels
+                .iter()
+                .enumerate()
+                .filter_map(|(index, &label)| ((mask >> index) & 1 == 1).then_some(label))
+                .collect()
+        })
+        .collect()
+}
+
+fn write_combinatorics(directory: &Path) {
+    let mut partitions = Vec::new();
+    for n in 0..=5 {
+        for lambda in Partition::all_of_size(n) {
+            partitions.push(json!({
+                "partition": lambda.parts(),
+                "conjugate": lambda.conjugate_partition().parts(),
+                "hook_lengths": lambda.hook_lengths(),
+                "add_box": lambda.partition_add_box().iter().map(partition_value).collect::<Vec<_>>(),
+                "remove_box": lambda.partition_remove_box().iter().map(partition_value).collect::<Vec<_>>()
+            }));
+        }
+    }
+
+    let mut partition_relations = Vec::new();
+    for n in 0..=4 {
+        let parts = Partition::all_of_size(n);
+        for left in &parts {
+            for right in &parts {
+                partition_relations.push(json!({
+                    "left": left.parts(),
+                    "right": right.parts(),
+                    "contained": left.partition_less_equal(right),
+                    "right_dominates_left": left.dominated_by(right)
+                }));
+            }
+        }
+    }
+
+    let mut compositions = Vec::new();
+    for n in 1..=4 {
+        for composition in Composition::integer_compositions(n) {
+            let descent_set: Vec<_> = composition
+                .composition_to_descent_set()
+                .into_iter()
+                .collect();
+            compositions.push(json!({
+                "composition": composition.parts(),
+                "partition": composition.to_partition().parts(),
+                "descent_set": descent_set,
+                "refinements": composition.composition_refinements().iter().map(|c| c.parts()).collect::<Vec<_>>(),
+                "word": composition.composition_word()
+            }));
+        }
+    }
+
+    let mut set_partition_records = Vec::new();
+    let mut bell_counts = Vec::new();
+    let mut stirling_counts = Vec::new();
+    for n in 0..=4 {
+        let records: Vec<_> = set_partitions(n)
+            .map(|partition| {
+                let blocks = shifted_blocks(partition.blocks());
+                json!({
+                    "blocks": blocks,
+                    "block_sizes": partition.block_sizes()
+                })
+            })
+            .collect();
+        let mut by_blocks = BTreeMap::<usize, usize>::new();
+        for record in &records {
+            let blocks = record["blocks"].as_array().expect("blocks array");
+            *by_blocks.entry(blocks.len()).or_default() += 1;
+        }
+        bell_counts.push(records.len());
+        stirling_counts.push(
+            (0..=n)
+                .map(|k| json!([k, by_blocks.get(&k).copied().unwrap_or(0)]))
+                .collect::<Vec<_>>(),
+        );
+        set_partition_records.push(json!({"n": n, "records": records}));
+    }
+
+    let mut ordered_counts = Vec::new();
+    for n in 0..=4 {
+        ordered_counts.push(ordered_set_partitions(n).count());
+    }
+
+    write_json(
+        directory,
+        "combinatorics.json",
+        json!({
+            "family": "partitions, compositions, and set partitions",
+            "rust_function": "combinatoric_core::{Partition,Composition,set_partitions,ordered_set_partitions}",
+            "convention": "Partition and composition parts use Mathematica's one-based-independent list convention; Rust set-partition labels are zero-based and are shifted to Mathematica's ground set {1,...,n}. Relations are keyed by displayed vectors.",
+            "partitions": partitions,
+            "partition_relations": partition_relations,
+            "compositions": compositions,
+            "set_partitions": set_partition_records,
+            "bell_counts": bell_counts,
+            "stirling_counts": stirling_counts,
+            "ordered_set_partition_counts": ordered_counts
+        }),
+    );
+}
+
+fn write_permutations(directory: &Path) {
+    let stats = [
+        ("descents", Stat::Des),
+        ("major_index", Stat::Maj),
+        ("inversions", Stat::Inv),
+        ("excedances", Stat::Exc),
+        ("peaks", Stat::Peak),
+        ("valleys", Stat::Valley),
+        ("fixed_points", Stat::Fix),
+        ("cycles", Stat::Cyc),
+    ];
+    let set_stats = [
+        ("descent_set", SetStat::DesSet),
+        ("peak_set", SetStat::PeakSet),
+    ];
+    let mut records = Vec::new();
+    for n in 0..=5 {
+        for permutation in comb_permutation::all_permutations(n) {
+            let stat_object = stats
+                .iter()
+                .map(|(name, stat)| ((*name).to_string(), permutation_stat(&permutation, *stat)))
+                .collect::<BTreeMap<_, _>>();
+            let set_object = set_stats
+                .iter()
+                .map(|(name, stat)| {
+                    (
+                        (*name).to_string(),
+                        permutation_stat_set(&permutation, *stat)
+                            .into_iter()
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<BTreeMap<_, _>>();
+            records.push(json!({
+                "permutation": permutation,
+                "cycle_type": comb_permutation::cycle_type(&permutation),
+                "stats": stat_object,
+                "sets": set_object,
+                "foata": comb_permutation::foata_map(&permutation),
+                "foata_cycle_word": comb_permutation::foata_cycle_word_map(&permutation),
+                "foata_cycle_word_inverse": comb_permutation::inverse_foata_cycle_word_map(&comb_permutation::foata_cycle_word_map(&permutation))
+            }));
+        }
+    }
+
+    let patterns = [
+        [1u8, 2, 3],
+        [1, 3, 2],
+        [2, 1, 3],
+        [2, 3, 1],
+        [3, 1, 2],
+        [3, 2, 1],
+    ];
+    let avoidance_counts = patterns
+        .iter()
+        .map(|pattern| {
+            let name = pattern.iter().map(u8::to_string).collect::<String>();
+            let counts = (0..=5)
+                .map(|n| comb_permutation::avoiding_permutations(n, &[pattern.to_vec()]).len())
+                .collect::<Vec<_>>();
+            json!({"pattern": pattern, "counts": counts, "name": name})
+        })
+        .collect::<Vec<_>>();
+
+    write_json(
+        directory,
+        "permutations.json",
+        json!({
+            "family": "permutation statistics, cycle type, Foata maps, and pattern avoidance",
+            "rust_function": "combpoly::{permutation,statistics}",
+            "convention": "Permutations are one-line one-indexed vectors. Descent, peak, and valley positions are one-indexed; coefficient-free scalar statistics use the standard permutation conventions. Foata maps use the package's documented maj/inv-preserving convention.",
+            "records": records,
+            "avoidance_counts": avoidance_counts
+        }),
+    );
+}
+
+fn graph_record(name: &str, graph: Graph) -> Value {
+    json!({
+        "name": name,
+        "vertices": graph.num_vertices(),
+        "edges": graph.edges(),
+        "independence": graph.independence_polynomial(),
+        "matching": graph.matching_polynomial(),
+        "chromatic": graph.chromatic_polynomial()
+    })
+}
+
+fn write_graphs(directory: &Path) {
+    let records = vec![
+        graph_record("empty4", Graph::empty(4)),
+        graph_record("path4", Graph::path(4)),
+        graph_record("cycle4", Graph::cycle(4)),
+        graph_record("complete3", Graph::complete(3)),
+        graph_record("star3", Graph::star(3)),
+        graph_record("complete_bipartite_2_2", Graph::complete_bipartite(2, 2)),
+    ];
+    write_json(
+        directory,
+        "graphs.json",
+        json!({
+            "family": "graph independence, matching, and chromatic polynomials",
+            "rust_function": "combinatoric_core::Graph::{independence_polynomial,matching_polynomial,chromatic_polynomial}",
+            "convention": "Graph vertices and edges are zero-based in the fixture; the Mathematica consumer shifts them by one. Polynomial coefficient lists are ascending powers.",
+            "records": records
+        }),
+    );
+}
+
+fn poset_record(name: &str, poset: &Poset) -> Value {
+    json!({
+        "name": name,
+        "vertices": poset.num_elements(),
+        "covers": poset.covers(),
+        "linear_extensions": poset.num_linear_extensions(),
+        "order_values": poset.order_polynomial_values(poset.num_elements()),
+        "p_eulerian": poset.p_eulerian_polynomial()
+    })
+}
+
+fn write_posets(directory: &Path) {
+    let diamond = Poset::new(4, &[(0, 1), (0, 2), (1, 3), (2, 3)]);
+    let permutation = Poset::from_permutation(&[2, 1, 4, 3]);
+    let records = vec![
+        poset_record("chain4", &Poset::chain(4)),
+        poset_record("antichain4", &Poset::antichain(4)),
+        poset_record("diamond", &diamond),
+        poset_record("permutation_2143", &permutation),
+    ];
+    write_json(
+        directory,
+        "posets.json",
+        json!({
+            "family": "poset linear extensions, order polynomials, and P-Eulerian polynomials",
+            "rust_function": "combinatoric_core::Poset::{num_linear_extensions,order_polynomial_values,p_eulerian_polynomial}",
+            "convention": "Rust vertices are zero-based and covers are directed from smaller to larger elements. Order values are Omega(P,k) for k=0,...,n. Rust P-Eulerian coefficients count t^des, while PosetData's PEulerianPolynomial uses t^(1+des); the Mathematica test removes that leading zero coefficient.",
+            "records": records
+        }),
+    );
+}
+
+fn matroid_tutte_terms(matroid: &BasisMatroid) -> Vec<Value> {
+    let rank = matroid.rank();
+    let mut terms = BTreeMap::<(usize, usize), usize>::new();
+    for subset in all_subsets(matroid.ground()) {
+        let subset_rank = matroid
+            .bases()
+            .iter()
+            .map(|basis| basis.iter().filter(|label| subset.contains(label)).count())
+            .max()
+            .unwrap_or(0);
+        let key = (rank - subset_rank, subset.len() - subset_rank);
+        *terms.entry(key).or_default() += 1;
+    }
+    terms
+        .into_iter()
+        .map(|((x_degree, y_degree), coefficient)| json!([x_degree, y_degree, coefficient]))
+        .collect()
+}
+
+fn matroid_record(name: &str, matroid: BasisMatroid, rank_queries: &[Vec<usize>]) -> Value {
+    let ground = matroid.ground().to_vec();
+    let deletion_label = ground.first().copied().unwrap_or(0);
+    let contraction_label = ground.last().copied().unwrap_or(0);
+    let rank_data = rank_queries
+        .iter()
+        .map(|set| json!([set, matroid.rank_of(set).expect("rank query is valid")]))
+        .collect::<Vec<_>>();
+    json!({
+        "name": name,
+        "ground": ground,
+        "bases": matroid.bases(),
+        "independent_sets": matroid.independent_sets(),
+        "rank": matroid.rank(),
+        "is_matroid": matroid.is_matroid(),
+        "loops": matroid.loops(),
+        "coloops": matroid.coloops(),
+        "dual_bases": matroid.dual().bases(),
+        "rank_queries": rank_data,
+        "delete_label": deletion_label,
+        "delete_bases": matroid.delete(deletion_label).bases(),
+        "contract_label": contraction_label,
+        "contract_bases": matroid.contract(contraction_label).bases(),
+        "tutte_terms": matroid_tutte_terms(&matroid)
+    })
+}
+
+fn write_matroids(directory: &Path) {
+    let uniform = BasisMatroid::uniform(2, (1..=4).collect()).expect("uniform matroid");
+    let graphic = BasisMatroid::from_graph_edges(3, &[(0, 1), (1, 2), (0, 2), (0, 0)])
+        .expect("graphic matroid");
+    let transversal =
+        BasisMatroid::from_complete_transversal_system(&[vec![1, 2], vec![2, 3], vec![3, 4]])
+            .expect("transversal matroid");
+    let records = vec![
+        matroid_record(
+            "uniform_U24",
+            uniform,
+            &all_subsets(&(1..=4).collect::<Vec<_>>()),
+        ),
+        matroid_record(
+            "graphic_triangle_with_loop",
+            graphic,
+            &all_subsets(&(1..=4).collect::<Vec<_>>()),
+        ),
+        matroid_record(
+            "transversal_12_23_34",
+            transversal,
+            &all_subsets(&(1..=4).collect::<Vec<_>>()),
+        ),
+    ];
+    write_json(
+        directory,
+        "matroids.json",
+        json!({
+            "family": "basis-list matroids",
+            "rust_function": "experiments::matroids::BasisMatroid",
+            "convention": "Matroid labels are one-based, matching MatroidTools. Bases and independent sets are compared after sorting their inner and outer lists. Tutte terms are [x_degree,y_degree,coefficient] in the rank-subset expansion coefficient*(x-1)^x_degree*(y-1)^y_degree.",
+            "records": records
+        }),
+    );
+}
+
+fn write_lattice_path_matroids(directory: &Path) {
+    let mut records = Vec::new();
+    for n in 1..=4 {
+        for area in combpoly::catalan::all_area_sequences(n) {
+            let lpm = LatticePathMatroid::from_area_sequence(&area).expect("valid area sequence");
+            let intervals = lpm.intervals();
+            let lower: Vec<u32> = intervals
+                .iter()
+                .enumerate()
+                .map(|(index, &(start, _))| (n + index + 1 - start) as u32)
+                .collect();
+            let upper: Vec<u32> = intervals
+                .iter()
+                .enumerate()
+                .map(|(index, &(_, end))| (n + index + 1 - end) as u32)
+                .collect();
+            let lambda = Partition::from_sorted(lower).conjugate_partition();
+            let mu = Partition::from_sorted(upper).conjugate_partition();
+            records.push(json!({
+                "area": area,
+                "lambda": lambda.parts(),
+                "mu": mu.parts(),
+                "intervals": lpm.intervals(),
+                "bases": lpm.bases(),
+                "num_bases": lpm.num_bases_exact().to_string()
+            }));
+        }
+    }
+    write_json(
+        directory,
+        "lattice-path-matroids.json",
+        json!({
+            "family": "lattice-path matroids",
+            "rust_function": "combpoly::lattice_path_matroid::LatticePathMatroid::from_area_sequence",
+            "convention": "The Rust area sequence is Dyck-area order; peak intervals and bases use one-based ground labels. The associated lambda/mu skew shape is included so the Mathematica test can compare PathSetSystem and PathBases directly.",
+            "records": records
+        }),
+    );
+}
+
+fn write_plethysm(directory: &Path) {
+    let inputs: &[(&[u32], &[u32])] = &[
+        (&[2], &[2]),
+        (&[2], &[1, 1]),
+        (&[2, 1], &[2]),
+        (&[3], &[2, 1]),
+    ];
+    let records = inputs
+        .iter()
+        .map(|(outer_parts, inner_parts)| {
+            let outer = SymmetricFunction::<Rational>::schur_symmetric(p(outer_parts));
+            let inner = SymmetricFunction::<Rational>::schur_symmetric(p(inner_parts));
+            let result = outer.plethysm(&inner).to_schur_basis();
+            json!({
+                "outer": outer_parts,
+                "inner": inner_parts,
+                "schur_terms": terms_rational(&result)
+            })
+        })
+        .collect::<Vec<_>>();
+    write_json(
+        directory,
+        "plethysm.json",
+        json!({
+            "family": "symmetric-function plethysm",
+            "rust_function": "SymmetricFunction::plethysm",
+            "convention": "Both inputs are Schur functions and output terms are in the Schur basis; the Mathematica comparison uses Plethysm followed by ToSchurBasis.",
+            "records": records
+        }),
+    );
+}
+
 fn main() {
     let directory = Path::new(env!("CARGO_MANIFEST_DIR"));
     write_kostka(directory);
@@ -521,5 +965,12 @@ fn main() {
     write_nonsymmetric(directory);
     write_eulerian(directory);
     write_lah_petrie(directory);
+    write_combinatorics(directory);
+    write_permutations(directory);
+    write_graphs(directory);
+    write_posets(directory);
+    write_matroids(directory);
+    write_lattice_path_matroids(directory);
+    write_plethysm(directory);
     println!("wrote Rust cross-check fixtures to {}", directory.display());
 }
