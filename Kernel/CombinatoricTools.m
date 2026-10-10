@@ -145,6 +145,9 @@ LinearlyIndependentRows;
 
 SetsStabilizer;
 
+StrictEdges;
+WeakEdges;
+
 
 Begin["`Private`"];
 
@@ -1537,6 +1540,10 @@ SetsStabilizer[sets_List] := With[{pi = Ordering[Join @@ sets]},
         1];
      ]][[-1, 1]];
 *)
+
+
+StrictEdges::usage = "StrictEdges is an option for functions on graphs, posets and colorings (UnicellularChromatics, PosetData); its value is a list of edges {a, b} that must be strict, for example a coloring with c[a] < c[b] or an orientation a -> b.";
+WeakEdges::usage = "WeakEdges is an option for functions on graphs, posets and colorings (UnicellularChromatics, PosetData); its value is a list of edges {a, b} that must be weak, for example a coloring with c[a] <= c[b].";
 
 
 (**TESTING**)
