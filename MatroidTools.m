@@ -58,6 +58,7 @@ Begin["`Private`"];
 IsMatroidQ::usage = "Given a list of sets, see if they satisfy the basis exchange axioms.";
 
 IsMatroidQ[bases_List] := Module[{AA, BB, aSet, bSet, a, b,basesSorted},
+  If[bases === {} || Length[Union[Length /@ bases]] =!= 1, Return[False]];
   basesSorted = Sort/@bases;
    And @@ Join[
      Table[
@@ -73,7 +74,7 @@ IsMatroidQ[bases_List] := Module[{AA, BB, aSet, bSet, a, b,basesSorted},
            ]
           , {b, bSet}]
         , {a, aSet}]
-      , {ss, Subsets[bases, {2}]}]]
+      , {ss, Tuples[bases, 2]}]]
 ];
 
 
@@ -149,7 +150,7 @@ MatroidDeletion[bb_List, e_Integer] := With[{del = Select[bb, !MemberQ[#, e] &]}
 (* Keep only bases that avoids es, and then remove all coloops. *) 
 MatroidDeletion[bb_List, es_List] := With[{coloops = Intersection[es,Sequence@@bb]},
  (* Remove coloops in es, and only keep bases not intersecting remaining elements in es. *)
-  Complement[#,coloops]& /@ Select[bb, !IntersectingQ[#, Complement[es,coloops]] &];
+  Complement[#,coloops]& /@ Select[bb, !IntersectingQ[#, Complement[es,coloops]] &]
 ];
 
 MatroidContraction::usage = "MatroidContraction[bases,e] contracts with respect to element(s) e in the matroid.";
@@ -158,9 +159,11 @@ MatroidContraction::usage = "MatroidContraction[bases,e] contracts with respect 
 MatroidContraction[bb_List, e_Integer] := With[{contr = Select[bb, MemberQ[#, e] &]},
   If[Length@contr==0, bb, DeleteCases[#, e, 1, 1] & /@ contr]
 ];
-MatroidContraction[bb_List, es_List] :=  With[
-  {contr = Complement[es, Complement[es, Sequence@@bb]]},(* Remove loops, result is contr. *)
-  Complement[#,contr]& /@ Select[bb,SubsetQ[#,contr] &]
+MatroidContraction[bb_List, es_List] := Module[{maxIntersection},
+  If[bb === {}, Return[{}]];
+  maxIntersection = Max[Length[Intersection[#, es]] & /@ bb];
+  Union[Complement[#, es] & /@
+    Select[bb, Length[Intersection[#, es]] == maxIntersection &]]
 ];
 
 
@@ -367,4 +370,3 @@ MConvexSetQ[set_List] := Module[{convexQ, aa, bb, e, n},
 
 End[(* End private *)];
 EndPackage[];
-

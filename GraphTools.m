@@ -52,6 +52,8 @@ KnGraph[n_Integer] := Join @@ Table[{i, j}, {i, n}, {j, i + 1, n}];
 ConnectedSimpleGraphs::usage = "ConnectedSimpleGraphs[n] returns a list of all simple connected graphs on n vertices.";
 
 ConnectedSimpleGraphs[n_Integer] := Which[
+   n == 1,
+   {Graph[{1}, {}]},
    n == 2,
    List@Import[
      "~/Dropbox/mathematica-packages/graph" <>
@@ -60,7 +62,7 @@ ConnectedSimpleGraphs[n_Integer] := Which[
    Import["~/Dropbox/mathematica-packages/graph" <>
      ToString[n] <> "c.g6"]
    ,
-   True, Missing
+   True, Missing["NotAvailable", n]
 ];
 
 TreeGraphs::usage = "TreeGraphs[n] returns a list of all non-isomorphic unlabeled trees on n vertices. 
@@ -74,12 +76,16 @@ TreeGraphs[4] := {
   Graph[{1,2,3,4},{UndirectedEdge[1,2],UndirectedEdge[1,3],UndirectedEdge[1,4]}]
 };
 
-TreeGraphs[n_Integer] := TreeGraphs[n] = Which[
+TreeGraphs[n_Integer] := With[{result = Which[
    5 <= n <= 20,
    Import["~/Dropbox/mathematica-packages/trees" <>
      ToString[n] <> ".g6"]
    ,
-   True, Missing
+   True, Missing["NotAvailable", n]
+   ]},
+   If[result === $Failed || Head[result] === Missing,
+      result,
+      TreeGraphs[n] = result]
 ];
 
 
@@ -182,7 +188,9 @@ GraphDeleteEdge[gg_Graph, e_,opts:OptionsPattern[]] := With[{
     ee = EdgeList@gg
 },
 	If[!OptionValue[KeepMultipleEdges],
-		Graph[verts, Select[ee, First@#!=e[[1]] || Last@#!=e[[2]] & ] ]
+		(* Remove every copy; an undirected edge may be given in either orientation. *)
+		Graph[verts, DeleteCases[ee,
+			e | If[Head[e] === UndirectedEdge, UndirectedEdge[e[[2]], e[[1]]], e]] ]
 		,
 		Graph[verts, DeleteCases[ee,  a_[e[[1]], e[[2]]] |  a_[e[[2]], e[[1]]]  , 1, 1] ]
 	]
@@ -304,7 +312,7 @@ GraphIndependentTriangles[edges_List] :=
       ,
       Append[#, First@ed] & /@ 
        gmFnc[Select[ed, Intersection[#, First@ed] == {} &]]};
-   gmFnc[edges]
+   gmFnc[tri]
 ];
 
 
