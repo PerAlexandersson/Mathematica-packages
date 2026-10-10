@@ -165,8 +165,8 @@ createQSymBasis[bb_, symb_String, opts:OptionsPattern[]] := Module[
 
 
 createQSymBasis[MonomialQSymbol, "M", 
-	MultiplicationFunction -> None,
-	PowerFunction->None
+	MultiplicationFunction -> QMonomialProduct,
+	PowerFunction -> "Mult"
 ];
 
 
@@ -184,6 +184,8 @@ createQSymBasis[ZPowerSumQSymbol, "z\[Psi]",
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
+
+MonomialQSymmetric[alpha_List, x_: None] := MonomialQSymbol[alpha, x];
 
 
 FundamentalQSymmetric[alpha_List, x_: None] := 
@@ -218,7 +220,7 @@ ZPowerSumQSymmetric[alpha_List, x_: None] := ZPowerSumQSymmetric[alpha, x] =
 
 
 PowerSumAltQSymmetric[alpha_List, x_: None] := PowerSumAltQSymmetric[alpha, x] = Module[{spi},
-	spi[comp_List] := Length[comp!] (Times @@ comp);
+	spi[comp_List] := Length[comp]! (Times @@ comp);
 	Expand[
 		ZCoefficient[alpha]
 		Sum[

@@ -184,7 +184,7 @@ ReducedWord[pi_List] := With[{onePos = Ordering[pi, 1][[1]]},
 PermutationFromWord::usage = "PermutationFromWord[perm,n] returns a permutation of [n] from a word of simple transpositions. ";
 
 PermutationFromWord[{}, n_Integer] := Range[n];
-PermutationFromWord[word_List, n_Integer] := PermutationFromWord[word] = Module[{perms, prod},
+PermutationFromWord[word_List, n_Integer] := PermutationFromWord[word, n] = Module[{perms, prod},
 	perms = Cycles[{{#, # + 1}}] & /@ Reverse[word];
 	prod = PermutationProduct @@ perms;
 	If[n > 0, 
@@ -396,13 +396,13 @@ SplitSeparablePermutation[pi_List, skew_ : True] := Module[
     Join @@ Table[
       SplitSeparablePermutation[
        pi[[ii[[1]] + 1 ;; ii[[2]]]]
-       ]
+       , skew]
       , {ii, Partition[Join[{0}, splits, {n}], 2, 1]}]
     ]
    ];
 
 SeparablePermutationQ::usage = "SeparablePermutationQ[pi] returns true if the permutation is separable.";
-SeparablePermutationQ[pi_List] :=(Length[SplitSeparablePermutation[pi]] > 1);
+SeparablePermutationQ[pi_List] := AllTrue[SplitSeparablePermutation[pi], Length[#] == 1 &];
 
 
 
@@ -519,7 +519,7 @@ GeneratePAPS[n_Integer, Is123AvoidingQ] :=
 *)
 
 GeneratePAPS[n_Integer, Is231AvoidingQ] := 
-  GeneratePAPS[n, Is123AvoidingQ] = Module[{a, b},
+  GeneratePAPS[n, Is231AvoidingQ] = Module[{a, b},
     {a, b} = {Ceiling[n/2], Floor[n/2]};
     Select[
      Join @@ Table[
@@ -690,4 +690,3 @@ StirlingPermutations[n_Integer] :=
   
 End[(* End private *)];
 EndPackage[];
-
