@@ -12,6 +12,8 @@ this refactoring is tagged `pre-refresh-2026-10`.
 
 ### Breaking changes
 
+- `ShiftedJackPSymmetric` moved from `SymmetricFunctions` to the new
+  `ShiftedSymmetricFunctions` package (unchanged behaviour); load that package to use it (#51).
 - `MacdonaldPolynomials` is a legacy package. Its key, atom and Schubert polynomials are in
   the new `NonsymmetricPolynomials`, which indexes keys by weak compositions in the
   standard way: new `KeyPolynomial[alpha, x]` equals legacy `KeyPolynomial[Reverse[alpha], x]`
@@ -68,6 +70,11 @@ this refactoring is tagged `pre-refresh-2026-10`.
   `ShapeTriplets` and `BoxCountMatrix` (GTPatterns); `SequenceToPolynomial` (with a degree
   bound) and `HVector` (PolynomialTools); `HasOuterCornerQ` and the `YTableauTeX` options
   `LineBreaks` and `UseArray` (NewTableaux) (#51).
+- New package `ShiftedSymmetricFunctions` (Okounkov-Olshanski): `ShiftedSchurPolynomial`,
+  `ShiftedSchurEvaluate`, `ShiftedJackPPolynomial`, `ShiftedJackJPolynomial`,
+  `ShiftedJackPEvaluate`, `ShiftedJackJEvaluate`, `NormalizedCharacter` and
+  `StanleyCharacterPolynomial` (Feray-Sniady formula in multirectangular coordinates;
+  legacy `ChNormalizedCharacter` = (-1)^(|mu| - length(mu)) times it) (#51).
 - `UnicellularChromatics`, ported from legacy `ChromaticFunctions`: `GraphAreaLists`
   (0-first area lists, including circular ones), `AreaConjugate`, `ValleyEdges`,
   `DiagramRookPlacements`, `OrientationPlot`, `PArrayPlot`, `UnitIntervalPlot` (#51).
