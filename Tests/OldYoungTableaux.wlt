@@ -37,3 +37,18 @@ VerificationTest[
   {{1}},
   TestID -> "OldYoungTableaux-AddBoxToPartition-empty"
 ]
+
+(* GitHub issue #9: OldYoungTableaux uses the CombinatoricTools versions of the
+   functions it duplicated, and loading it adds no definitions to CombinatoricTools. *)
+VerificationTest[
+  Module[{before},
+    before = Length /@ DownValues /@ Unevaluated[{CombinatoricTools`ConjugatePartition,
+       CombinatoricTools`DescentSet, CombinatoricTools`ZCoefficient}];
+    Get["OldYoungTableaux`"];
+    {Names["OldYoungTableaux`ConjugatePartition"], Names["OldYoungTableaux`UnimodalQ"],
+     Names["OldYoungTableaux`ZCoefficient"],
+     before === (Length /@ DownValues /@ Unevaluated[{CombinatoricTools`ConjugatePartition,
+       CombinatoricTools`DescentSet, CombinatoricTools`ZCoefficient}])}],
+  {{}, {}, {}, True},
+  TestID -> "OldYoungTableaux-uses-CombinatoricTools-duplicates"
+]

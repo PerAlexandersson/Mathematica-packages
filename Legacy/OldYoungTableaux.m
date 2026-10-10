@@ -3,7 +3,8 @@
 (* MathKernel -script file.m *)
 
 Clear["OldYoungTableaux`*"];
-BeginPackage["OldYoungTableaux`"];
+(* ConjugatePartition, UnimodalQ and ZCoefficient come from CombinatoricTools (issue #9). *)
+BeginPackage["OldYoungTableaux`", {"CombinatoricTools`"}];
 
 
 
@@ -14,7 +15,6 @@ UseArray::usage = "Give as an argument to TeXForm, to enable or disable (default
 
 SageForm::usage="Returns Sage representation of object.";
 
-UnimodalQ::usage = "Returns true if the list is unimodal, that is, increasing, then decreasing.";
 
 HVector::usage = "HVector[poly, x] returns the H-vector obtained from the polynomial.";
 
@@ -35,8 +35,6 @@ SequenceToPolynomial::usage = "SequenceToPolynomial[func,x] gives the polynomial
 
 EhrhartPolynomial::usage = "EhrhartPolynomial[polytopeFunc, params={1}, x, (timeout=6) ]";
 
-ConjugatePartition::usage = 
-"Returns the conjugate of a partition.";
 
 PartitionList::usage = "PartitionList[list,mu] partitions the list into non-overlapping pieces of sizes given by mu.";
 
@@ -139,7 +137,6 @@ KostkaCoefficient::usage =
 
 ChiCoefficient::usage = "Returns the Chi coefficient, Chi[lambda, mu]. Notice, indexed with partition, not cycle type.";
 
-ZCoefficient::usage = "Returns the Z-coefficient, as p. 299, Enumerative Combinatorics II, Stanley";
 (* n!/Zp is the number of permutations of cycle type p *)
 
 LCoefficient::usage="";
@@ -191,7 +188,6 @@ Begin["`Private`"];
 IntegerList = {_Integer ...};
 IntegerSets = {{_Integer ...} ...};
 
-UnimodalQ[list_List] := With[{dd = Reverse@DeleteCases[Sign@Differences[list], 0]}, dd === Sort[dd]];
 
 
 PartitionList[lst_List, mu_List] := 
@@ -330,7 +326,6 @@ NormalizePartitions[partitions_List]:=With[{len=Max[Length/@partitions]},
 	
 TrimPartition[part_List]:=DeleteCases[part,0];
 	
-ConjugatePartition[p_List]:=If[Length@p == 0, {}, Table[Count[p, j_ /; j >= m], {m, First[p]}]];
 
 DominatesQ[pp1_List, pp2_List] := Module[{p1,p2},
 	{p1,p2} = NormalizePartitions[pp1,pp2];
@@ -691,13 +686,6 @@ KostkaCoefficient[lambda_List,weight_List]:=
 
 	
 
-ZCoefficient[part_List]:=Module[{cycle},
-	If[part==={}, 1
-	,
-		cycle = ToCycleForm[part];
-		Times@@MapIndexed[ (#1!) * First[#2]^#1 &, cycle]
-	]
-];
 
 
 (* Memoized and optimized. *)
