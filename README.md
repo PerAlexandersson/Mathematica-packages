@@ -14,12 +14,12 @@ PacletDirectoryLoad["/path/to/Mathematica-packages"];
 Needs["SymmetricFunctions`"]
 ```
 
-or build an archive with `wolframscript -file Scripts/BuildPaclet.wls` and install it
+or build an archive with `wolframscript -file Scripts/BuildPaclet.m` and install it
 with `PacletInstall["build/PerAlexandersson__MathematicaPackages-0.1.0.paclet"]`.
 Supported and experimental packages live in `Kernel/`, legacy packages (kept loadable
 for existing notebooks) in `Legacy/`, datasets in `Data/`, and notebooks in `Examples/`.
 Tested with Wolfram Language 14.3. Run the tests with
-`wolframscript -file Tests/RunTests.wls`.
+`wolframscript -file Tests/RunTests.m`.
 
 ## SymmetricFunctions.m
 

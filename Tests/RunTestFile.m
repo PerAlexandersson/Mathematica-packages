@@ -1,5 +1,5 @@
 #!/usr/bin/env wolframscript
-(* Runs one .wlt file in this (fresh) kernel and prints a machine-readable summary. *)
+(* Runs one test file in this (fresh) kernel and prints a machine-readable summary. *)
 
 file = $ScriptCommandLine[[2]];
 report = TestReport[file];
