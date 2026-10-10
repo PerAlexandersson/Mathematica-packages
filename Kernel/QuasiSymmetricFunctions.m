@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-BeginPackage["QuasiSymmetricFunctions`",{"AlgebraicBases`","CombinatoricTools`"}];
+BeginPackage["QuasiSymmetricFunctions`",{"AlgebraicBases`","CombinatoricTools`","SymmetricFunctions`"}];
 
 
 Unprotect["`*"]
@@ -18,6 +18,7 @@ MonomialQSymbol;
 FundamentalQSymbol;
 PowerSumQSymbol;
 ZPowerSumQSymbol;
+QuasiSchurQSymbol;
 
 
 ToOtherQSymmetricBasis; (* Use sparingly *)
@@ -25,6 +26,10 @@ ToOtherQSymmetricBasis; (* Use sparingly *)
 ToFundamentalBasis;
 ToPowerSumQSymBasis;
 ToZPowerSumQSymBasis;
+QuasiSymmetricFunctionToPolynomial;
+PolynomialToQuasiSymmetricFunction;
+ToQuasiSymmetric;
+QuasiSchurQSymmetric;
 
 
 Begin["`Private`"];
@@ -225,6 +230,113 @@ ToPowerSumQSymBasis[poly_,x_: None] :=
 ToZPowerSumQSymBasis::usage = "ToZPowerSumQSymBasis[poly, x] converts poly to the z-normalized quasisymmetric power-sum basis. The alphabet x defaults to None.";
 ToZPowerSumQSymBasis[poly_,x_: None] := 
 	ToOtherQSymmetricBasis[ZPowerSumQSymmetric, poly, ZPowerSumQSymbol, x];
+
+
+QuasiSymmetricFunctionToPolynomial::usage = "QuasiSymmetricFunctionToPolynomial[expr, x, n] expresses a quasisymmetric function in the variables x[1] through x[n].";
+QuasiSymmetricFunctionToPolynomial[expr_, x_, n_Integer] := Module[{mExpression},
+	mExpression = Expand[expr /. {
+		HoldPattern[FundamentalQSymbol[alpha_List, _]] :> FundamentalQSymmetric[alpha],
+		HoldPattern[PowerSumQSymbol[alpha_List, _]] :> PowerSumQSymmetric[alpha],
+		HoldPattern[ZPowerSumQSymbol[alpha_List, _]] :> ZPowerSumQSymmetric[alpha],
+		HoldPattern[QuasiSchurQSymbol[alpha_List, _]] :> QuasiSchurQSymmetric[alpha],
+		HoldPattern[MonomialQSymbol[alpha_List, _]] :>
+			Total[Times @@ MapThread[Power, {x /@ #, alpha}] & /@ Subsets[Range[n], {Length[alpha]}]]
+	}];
+	Expand[mExpression /. HoldPattern[MonomialQSymbol[alpha_List, _]] :>
+		Total[Times @@ MapThread[Power, {x /@ #, alpha}] & /@ Subsets[Range[n], {Length[alpha]}]]]
+];
+
+qSymmetricPolynomialVariableIndices[poly_, x_] := Union@Cases[Variables[Expand[poly]],
+	HoldPattern[x[i_]] :> i, Infinity];
+
+(* Coefficients of poly in x[1], ..., x[n], grouped by the composition of nonzero exponents.
+   poly is quasisymmetric iff each group has all Binomial[n, l] placements with equal
+   coefficients. *)
+qSymmetricOrbitGroups[poly_, x_, n_Integer] :=
+	GroupBy[CoefficientRules[Expand[poly], x /@ Range[n]], DeleteCases[First[#], 0] & -> Last];
+
+qSymmetricPolynomialQ[groups_Association, n_Integer] := And @@ KeyValueMap[
+	Function[{alpha, cs},
+		Length[cs] == Binomial[n, Length[alpha]] &&
+		AllTrue[cs, Expand[# - First[cs]] === 0 &]],
+	groups];
+
+PolynomialToQuasiSymmetricFunction::usage = "PolynomialToQuasiSymmetricFunction[poly, x, basisSymbol] converts a quasisymmetric polynomial in x[1], x[2], ... to the MonomialQSymbol or FundamentalQSymbol basis; the basis defaults to MonomialQSymbol.";
+PolynomialToQuasiSymmetricFunction::nonquasisymmetric = "The polynomial is not quasisymmetric in the variables `1`[1], ..., `1`[`2`].";
+PolynomialToQuasiSymmetricFunction::basis = "Unknown quasisymmetric-function basis symbol `1`.";
+PolynomialToQuasiSymmetricFunction[poly_, x_, n_Integer] :=
+	PolynomialToQuasiSymmetricFunction[poly, x, MonomialQSymbol, n];
+PolynomialToQuasiSymmetricFunction[poly_, x_, basisSymbol_: MonomialQSymbol] := Module[
+	{n = Max[0, Select[qSymmetricPolynomialVariableIndices[poly, x], IntegerQ]]},
+	PolynomialToQuasiSymmetricFunction[poly, x, basisSymbol, n]
+];
+PolynomialToQuasiSymmetricFunction[poly_, x_, basisSymbol_, n_Integer] := Module[
+	{groups, monomial},
+	groups = qSymmetricOrbitGroups[poly, x, n];
+	If[! SubsetQ[Range[n], qSymmetricPolynomialVariableIndices[poly, x]] ||
+			! qSymmetricPolynomialQ[groups, n],
+		Message[PolynomialToQuasiSymmetricFunction::nonquasisymmetric, x, n]; Return[$Failed]];
+	monomial = Total[KeyValueMap[
+		If[#1 === {}, First[#2], First[#2] MonomialQSymbol[#1, None]] &, groups]];
+	Switch[basisSymbol,
+		MonomialQSymbol, monomial,
+		FundamentalQSymbol, ToFundamentalBasis[monomial],
+		_, Message[PolynomialToQuasiSymmetricFunction::basis, basisSymbol]; $Failed]
+];
+
+
+ToQuasiSymmetric::usage = "ToQuasiSymmetric[expr] embeds a SymmetricFunctions expression in QSym by sending m_lambda to the sum of M_alpha over all distinct rearrangements alpha of lambda.";
+toQuasiSymmetricAlphabet[expr_] := Module[{alphabets},
+	 alphabets = DeleteDuplicates@Join[
+		Cases[expr, HoldPattern[MonomialSymbol[_, a_]] :> a, {0, Infinity}],
+		Cases[expr, HoldPattern[SchurSymbol[_, a_]] :> a, {0, Infinity}],
+		Cases[expr, HoldPattern[ElementaryESymbol[_, a_]] :> a, {0, Infinity}],
+		Cases[expr, HoldPattern[CompleteHSymbol[_, a_]] :> a, {0, Infinity}],
+		Cases[expr, HoldPattern[PowerSumSymbol[_, a_]] :> a, {0, Infinity}],
+		Cases[expr, HoldPattern[ForgottenSymbol[_, a_]] :> a, {0, Infinity}]];
+	If[alphabets === {}, None, First[alphabets]]
+];
+ToQuasiSymmetric[expr_, x_: None] := Module[{source, target},
+	source = toQuasiSymmetricAlphabet[expr];
+	target = If[x === None, source, x];
+	Expand[ToMonomialBasis[expr, source] /. HoldPattern[MonomialSymbol[lam_List, _]] :>
+		Total[MonomialQSymbol[#, target] & /@ DeleteDuplicates[Permutations[lam]]]]
+];
+
+
+(* The quasisymmetric Schur function S_alpha restricted to x[1], ..., x[n] is the sum of the
+   Demazure atoms A_gamma over weak compositions gamma of length n whose nonzero parts form
+   alpha (Haglund-Luoto-Mason-van Willigenburg), with the standard indexing of
+   NonsymmetricPolynomials (CONVENTIONS.md). Taking n = |alpha| variables determines S_alpha.
+   The atoms are generated by operators. NonsymmetricPolynomials is loaded here rather than
+   in BeginPackage so that its names are not put on $ContextPath of every QSym user (the
+   legacy MacdonaldPolynomials package defines some of the same names). *)
+Needs["NonsymmetricPolynomials`"];
+
+quasiSchurMonomialExpansion[{}] := 1;
+quasiSchurMonomialExpansion[alpha_List] := quasiSchurMonomialExpansion[alpha] = Module[
+	{n = Total[alpha], z},
+	PolynomialToQuasiSymmetricFunction[
+		Total[NonsymmetricPolynomials`AtomPolynomial[
+			ReplacePart[ConstantArray[0, n], Thread[# -> alpha]], z] & /@
+			Subsets[Range[n], {Length[alpha]}]],
+		z, MonomialQSymbol, n]
+];
+
+QuasiSchurQSymbol::usage = "QuasiSchurQSymbol[alpha, x] represents the HLMW quasisymmetric Schur basis element indexed by composition alpha in alphabet x. The alphabet x defaults to None.";
+CreateBasis[QuasiSchurQSymbol, "S", IndexType -> "Composition",
+	MultiplicationFunction -> None,
+	PowerFunction -> None
+];
+
+QuasiSchurQSymmetric::usage = "QuasiSchurQSymmetric[alpha, basisSymbol] returns the HLMW quasisymmetric Schur function indexed by composition alpha in the MonomialQSymbol basis, or in the FundamentalQSymbol basis when requested.";
+QuasiSchurQSymmetric[alpha_List, basisSymbol_: MonomialQSymbol] := Module[{monomial},
+	monomial = quasiSchurMonomialExpansion[alpha];
+	Switch[basisSymbol,
+		MonomialQSymbol, monomial,
+		FundamentalQSymbol, ToFundamentalBasis[monomial],
+		_, Message[PolynomialToQuasiSymmetricFunction::basis, basisSymbol]; $Failed]
+];
 
 
 End[(* End private *)];

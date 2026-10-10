@@ -84,6 +84,7 @@ JackUpperHook;
 
 SymmetricFunctionDegree;
 SymmetricFunctionToPolynomial;
+PolynomialToSymmetricFunction;
 
 PrincipalSpecialization;
 Plethysm;
@@ -951,7 +952,54 @@ SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] :=
 		ToElementaryEBasis[expr,yy]
 		,
 		ElementaryESymbol[mu_List, yy] :> 
-		SymmetricFunctionToPolynomial[ElementaryESymbol[mu, None], x, n]
+			SymmetricFunctionToPolynomial[ElementaryESymbol[mu, None], x, n]
+];
+
+
+PolynomialToSymmetricFunction::usage = "PolynomialToSymmetricFunction[poly, x, basisSymbol, n] converts a symmetric polynomial in x[1], ..., x[n] to the requested basis (MonomialSymbol, SchurSymbol, ElementaryESymbol, CompleteHSymbol, PowerSumSymbol or ForgottenSymbol). The basis defaults to SchurSymbol and n is inferred from the variables present when omitted. Only partitions with at most n parts can occur.";
+PolynomialToSymmetricFunction::nonsymmetric = "The polynomial is not symmetric in the variables `1`[1], ..., `1`[`2`].";
+PolynomialToSymmetricFunction::basis = "Unknown symmetric-function basis symbol `1`.";
+
+polynomialVariableIndices[poly_, x_] := Union@Cases[Variables[Expand[poly]],
+	HoldPattern[x[i_]] :> i, Infinity];
+
+(* Coefficients of poly as a polynomial in x[1], ..., x[n], grouped by the sorted exponent
+   vector. poly is symmetric iff each group is a full orbit with equal coefficients. *)
+symmetricOrbitGroups[poly_, x_, n_Integer] :=
+	GroupBy[CoefficientRules[Expand[poly], x /@ Range[n]], Sort[First[#], Greater] & -> Last];
+
+polynomialSymmetricQ[groups_Association, n_Integer] := And @@ KeyValueMap[
+	Function[{lam, cs},
+		Length[cs] == Multinomial @@ Tally[lam][[All, 2]] &&
+		AllTrue[cs, Expand[# - First[cs]] === 0 &]],
+	groups];
+
+PolynomialToSymmetricFunction[poly_, x_, n_Integer] :=
+	PolynomialToSymmetricFunction[poly, x, SchurSymbol, n];
+
+PolynomialToSymmetricFunction[poly_, x_, basisSymbol_: SchurSymbol] := Module[
+	{n = Max[0, Select[polynomialVariableIndices[poly, x], IntegerQ]]},
+	PolynomialToSymmetricFunction[poly, x, basisSymbol, n]
+];
+
+PolynomialToSymmetricFunction[poly_, x_, basisSymbol_, n_Integer] := Module[
+	{groups, monomial},
+	groups = symmetricOrbitGroups[poly, x, n];
+	If[! SubsetQ[Range[n], polynomialVariableIndices[poly, x]] ||
+			! polynomialSymmetricQ[groups, n],
+		Message[PolynomialToSymmetricFunction::nonsymmetric, x, n]; Return[$Failed]];
+	monomial = Total[KeyValueMap[
+		With[{lam = DeleteCases[#1, 0]},
+			If[lam === {}, First[#2], First[#2] MonomialSymbol[lam, None]]] &,
+		groups]];
+	Switch[basisSymbol,
+		MonomialSymbol, monomial,
+		SchurSymbol, ToSchurBasis[monomial],
+		ElementaryESymbol, ToElementaryEBasis[monomial],
+		CompleteHSymbol, ToCompleteHBasis[monomial],
+		PowerSumSymbol, ToPowerSumBasis[monomial],
+		ForgottenSymbol, toOtherSymmetricBasis[{ForgottenSymmetric, ForgottenSymbol}, monomial],
+		_, Message[PolynomialToSymmetricFunction::basis, basisSymbol]; $Failed]
 ];
 
 

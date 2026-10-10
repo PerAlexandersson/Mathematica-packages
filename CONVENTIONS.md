@@ -27,6 +27,10 @@ a function needs a different representation internally, it converts at its bound
   κ_(0,1) = x[1] + x[2] (as in the literature and the Rust `sym-poly` library).
 - Modified Macdonald functions follow Haglund: H~_(2) = s_2 + q s_11, and
   B_mu = sum over cells (r, c) of q^(c-1) t^(r-1).
+- Quasisymmetric Schur functions (`QuasiSchurQSymmetric`) are those of
+  Haglund–Luoto–Mason–van Willigenburg: S_alpha is the sum of the atoms A_gamma over weak
+  compositions gamma whose nonzero parts form alpha, so
+  S_(2,1,3) = F_(2,1,3) + F_(2,2,2) + F_(1,2,1,2) (Tewari–van Willigenburg, Example 2.7).
 - Jack parameter `a` (alpha), Hall–Littlewood parameter `t`, K-theory parameter `beta`.
 - Coefficient lists of univariate polynomials are in ascending degree.
 
@@ -36,6 +40,7 @@ a function needs a different representation internally, it converts at its bound
   an alternative form is common (for example `Graph` versus an edge list), both are
   accepted.
 - Conversions between algebras go through explicit bridge functions
-  (`SymmetricFunctionToPolynomial`, and the planned polynomial-to-basis bridges), not
+  (`SymmetricFunctionToPolynomial`, `PolynomialToSymmetricFunction`, their QSym
+  analogues and `ToQuasiSymmetric`), not
   through ad hoc substitution rules.
 - Two supported packages never export the same name (`Tests/LoadOrderTests.m`).

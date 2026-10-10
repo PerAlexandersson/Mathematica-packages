@@ -319,3 +319,47 @@ VerificationTest[
   {0, 0},
   TestID -> "SymmetricFunctions-DeltaOperator-Haglund-B"
 ]
+
+(* GitHub issue #51: finite symmetric polynomials round-trip through every core basis. *)
+VerificationTest[
+  And @@ Flatten@Table[
+    With[{f = basis[lam], p = SymmetricFunctionToPolynomial[basis[lam], z, n]},
+      Expand[PolynomialToSymmetricFunction[p, z, basis, n] - f] === 0],
+    {basis, {MonomialSymbol, SchurSymbol, ElementaryESymbol, CompleteHSymbol,
+      PowerSumSymbol, ForgottenSymbol}}, {d, 0, 4}, {n, Max[1, d], 5},
+    {lam, Select[IntegerPartitions[d], Length[#] <= n &]}],
+  True,
+  TestID -> "SymmetricFunctions-PolynomialToSymmetricFunction-all-core-bases"
+]
+
+(* GitHub issue #51: the bridge infers the variable count and rejects asymmetric input. *)
+VerificationTest[
+  PolynomialToSymmetricFunction[z[1]^2 + z[2]^2, z, MonomialSymbol],
+  MonomialSymbol[{2}, None],
+  TestID -> "SymmetricFunctions-PolynomialToSymmetricFunction-infers-variable-count"
+]
+
+VerificationTest[
+  Quiet[PolynomialToSymmetricFunction[z[1] z[2] + z[1] z[3], z, MonomialSymbol],
+    PolynomialToSymmetricFunction::nonsymmetric],
+  $Failed,
+  TestID -> "SymmetricFunctions-PolynomialToSymmetricFunction-rejects-nonsymmetric"
+]
+
+VerificationTest[
+  Quiet[PolynomialToSymmetricFunction[z[1]^2 + z[2], z, MonomialSymbol, 2],
+    PolynomialToSymmetricFunction::nonsymmetric],
+  $Failed,
+  TestID -> "SymmetricFunctions-PolynomialToSymmetricFunction-explicit-count"
+]
+
+(* GitHub issue #51: variables outside x[1], ..., x[n] are not treated as coefficients, and
+   symmetric coefficients may be symbolic. *)
+VerificationTest[
+  Quiet[{PolynomialToSymmetricFunction[x[1]^2 + x[2]^2 + x[3]^2, x, MonomialSymbol, 2],
+     PolynomialToSymmetricFunction[x[1] + x[a], x],
+     PolynomialToSymmetricFunction[t (x[1]^2 + x[2]^2) + (1 + t) x[1] x[2], x, MonomialSymbol]},
+    PolynomialToSymmetricFunction::nonsymmetric],
+  {$Failed, $Failed, t MonomialSymbol[{2}, None] + (1 + t) MonomialSymbol[{1, 1}, None]},
+  TestID -> "SymmetricFunctions-polynomial-bridge-rejects-extra-variables"
+]
