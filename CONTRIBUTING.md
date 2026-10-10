@@ -11,6 +11,9 @@
 
 ## Package conventions
 
+- Use the shared object representations of `CONVENTIONS.md`; accept them as input and
+  return them as output. `Tests/CompatibilityTests.m` checks the contract.
+
 - `BeginPackage["Name`", {dependencies}]`, declare every public symbol before
   `Begin["`Private`"]` (note the leading backtick: never use the shared top-level
   ``Private` `` context), and keep helpers in the private section.

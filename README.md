@@ -57,7 +57,8 @@ Legacy packages (in `Legacy/`) remain loadable for old notebooks; `Legacy/README
 lists their replacements: `OldYoungTableaux``, `ChromaticFunctions``, `TreesData`` and
 `RunSortedWords``.
 
-Every public symbol has a usage message, e.g. `?SchurSymmetric`.
+Every public symbol has a usage message, e.g. `?SchurSymmetric`. Objects are shared
+between packages using the representations in `CONVENTIONS.md`.
 
 ## Example
 
