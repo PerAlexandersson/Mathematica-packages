@@ -60,6 +60,9 @@ supported replacement, and `LegacyConversions` converts legacy data.
   Haglund-Haiman-Loehr filling formula, the legacy package and sym-poly), permuted basements
   `MacdonaldEPolynomial[alpha, sigma, x, q, t]`, `NonsymmetricJackPolynomial` and
   `IntegralMacdonaldE` (#51).
+- The divided-difference family of operators is applied monomial by monomial in x[i], x[i+1]
+  with memoized expanded formulas instead of forming and cancelling quotients (keys about 2.4
+  times faster, t-keys and Lascoux polynomials about 2.6-2.9 times) (#51).
 - `AlgebraicBases` supports permutation-indexed bases.
 - Polynomial bridges: `PolynomialToSymmetricFunction` (to any core basis, validating
   symmetry), `QuasiSymmetricFunctionToPolynomial`, `PolynomialToQuasiSymmetricFunction`,

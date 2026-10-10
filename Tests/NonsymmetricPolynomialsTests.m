@@ -405,3 +405,30 @@ VerificationTest[
   True,
   TestID -> "NonsymmetricPolynomials-MacdonaldE-cache-clears"
 ]
+
+(* Issue #51: the operators are applied monomial by monomial (memoized pair rules) instead of
+   forming the quotient (f - s_i f)/(x[i] - x[i+1]); they agree with the quotient definitions
+   on random polynomials with parameter coefficients, and non-polynomial input still works.
+   (Full names: an earlier test loads the legacy MacdonaldPolynomials, which shadows them.) *)
+VerificationTest[
+  Module[{rnd, sw, dq},
+    SeedRandom[7];
+    rnd[] := Expand@Sum[RandomInteger[{-3, 3}] (1 + RandomChoice[{0, q, t, q/(1 - t)}]) *
+        (Times @@ ((x /@ Range[4])^RandomInteger[{0, 4}, 4])), {12}];
+    sw[f_, i_] := f /. {x[i] -> x[i + 1], x[i + 1] -> x[i]};
+    dq[f_, i_] := Together[(f - sw[f, i])/(x[i] - x[i + 1])];
+    And[
+      And @@ Flatten@Table[With[{f = rnd[]}, {
+          Together[NonsymmetricPolynomials`DividedDifference[f, x, i] - dq[f, i]] === 0,
+          Together[NonsymmetricPolynomials`DemazureOperator[f, x, i] - dq[x[i] f, i]] === 0,
+          Together[NonsymmetricPolynomials`DemazureAtomOperator[f, x, i] - (dq[x[i] f, i] - f)] === 0,
+          Together[NonsymmetricPolynomials`TDemazureOperator[f, x, t, i] - ((1 - t) dq[x[i] f, i] + t sw[f, i])] === 0,
+          Together[NonsymmetricPolynomials`TDemazureAtomOperator[f, x, t, i] -
+            ((1 - t) (dq[x[i] f, i] - f) + t sw[f, i])] === 0,
+          Together[NonsymmetricPolynomials`KDividedDifference[f, x, b, i] - dq[(1 + b x[i + 1]) f, i]] === 0,
+          Together[NonsymmetricPolynomials`KDemazureOperator[f, x, b, i] - dq[(1 + b x[i + 1]) x[i] f, i]] === 0}],
+        {10}, {i, 3}],
+      Together[NonsymmetricPolynomials`DividedDifference[1/x[1], x, 1] - dq[1/x[1], 1]] === 0]],
+  True,
+  TestID -> "NonsymmetricPolynomials-expanded-operators-match-quotients"
+]

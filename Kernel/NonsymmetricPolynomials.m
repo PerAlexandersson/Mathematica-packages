@@ -71,35 +71,77 @@ applyWord[op_, f_, word_List] := Fold[op[#1, #2] &, f, Reverse[word]];
 VariableTransposition::usage = "VariableTransposition[f, x, i] interchanges x[i] and x[i+1] in f.";
 VariableTransposition[f_, x_, i_Integer] := f /. {x[i] -> x[i + 1], x[i + 1] -> x[i]};
 
+(* The operators act on the two variables x[i], x[i+1] only, so they are applied monomial by
+   monomial in those variables, with the other variables (and parameters) as coefficients. On
+   x[i]^a x[i+1]^b they are short explicit sums ("pair rules"), memoized per exponent pair:
+     d_i:  sum_(k=0)^(a-b-1) x[i]^(a-1-k) x[i+1]^(b+k) for a > b, minus the mirror sum for a < b;
+     pi_i = d_i x[i];  theta_i = pi_i - 1;  s_i swaps a and b.
+   This avoids forming and cancelling the quotient (f - s_i f)/(x[i] - x[i+1]); the quotient is
+   used only for non-polynomial input. *)
+pairRule["d", a_Integer, b_Integer] := cached[{"pair", "d", a, b}, Which[
+	a > b, Table[{{a - 1 - k, b + k}, 1}, {k, 0, a - b - 1}],
+	a < b, Table[{{a + k, b - 1 - k}, -1}, {k, 0, b - a - 1}],
+	True, {}]];
+pairRule["pi", a_Integer, b_Integer] := pairRule["d", a + 1, b];
+pairRule["theta", a_Integer, b_Integer] := cached[{"pair", "theta", a, b},
+	Append[pairRule["pi", a, b], {{a, b}, -1}]];
+
+(* Applies a linear combination {{rule, scalar}, ...} of pair rules ("s" is the transposition)
+   to f in the variables x[i], x[i+1]. *)
+applyPairRules[rules_List, f_, x_, i_Integer] := Module[{p = Expand[f], acc = <||>, add},
+	If[p === 0, Return[0]];
+	add[e_, c_] := (acc[e] = Lookup[acc, Key[e], 0] + c);
+	Do[With[{a = term[[1, 1]], b = term[[1, 2]], c = term[[2]]},
+			Do[If[r[[1]] === "s", add[{b, a}, r[[2]] c],
+				Do[add[m[[1]], r[[2]] m[[2]] c], {m, pairRule[r[[1]], a, b]}]],
+			{r, rules}]],
+		{term, CoefficientRules[p, {x[i], x[i + 1]}]}];
+	Expand[Total[KeyValueMap[#2 x[i]^#1[[1]] x[i + 1]^#1[[2]] &, acc]]]];
+
+pairPolynomialQ[f_, x_, i_Integer] := PolynomialQ[f, {x[i], x[i + 1]}];
+
 DividedDifference::usage = "DividedDifference[f, x, i] applies the divided difference operator (f - s_i f)/(x[i] - x[i+1]).\nDividedDifference[f, x, {i1, ..., ik}] applies the composition with i_k acting first.";
-DividedDifference[f_, x_, i_Integer] :=
-	Expand@Cancel[Together[(f - VariableTransposition[f, x, i])/(x[i] - x[i + 1])]];
+DividedDifference[f_, x_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"d", 1}}, f, x, i],
+	Expand@Cancel[Together[(f - VariableTransposition[f, x, i])/(x[i] - x[i + 1])]]];
 DividedDifference[f_, x_, word_List] := applyWord[DividedDifference[#1, x, #2] &, f, word];
 
 DemazureOperator::usage = "DemazureOperator[f, x, i] applies the isobaric divided difference (Demazure operator) pi_i f = DividedDifference[x[i] f, x, i].\nDemazureOperator[f, x, {i1, ..., ik}] applies the composition with i_k acting first.";
-DemazureOperator[f_, x_, i_Integer] := DividedDifference[x[i] f, x, i];
+DemazureOperator[f_, x_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"pi", 1}}, f, x, i], DividedDifference[x[i] f, x, i]];
 DemazureOperator[f_, x_, word_List] := applyWord[DemazureOperator[#1, x, #2] &, f, word];
 
 DemazureAtomOperator::usage = "DemazureAtomOperator[f, x, i] applies theta_i = pi_i - 1, the operator generating Demazure atoms.\nDemazureAtomOperator[f, x, {i1, ..., ik}] applies the composition with i_k acting first.";
-DemazureAtomOperator[f_, x_, i_Integer] := Expand[DemazureOperator[f, x, i] - f];
+DemazureAtomOperator[f_, x_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"theta", 1}}, f, x, i], Expand[DemazureOperator[f, x, i] - f]];
 DemazureAtomOperator[f_, x_, word_List] := applyWord[DemazureAtomOperator[#1, x, #2] &, f, word];
 
 TDemazureOperator::usage = "TDemazureOperator[f, x, t, i] applies the t-deformed Demazure operator (1 - t) pi_i f + t s_i f.\nTDemazureOperator[f, x, t, {i1, ..., ik}] applies the composition with i_k acting first.";
-TDemazureOperator[f_, x_, t_, i_Integer] :=
-	Expand[(1 - t) DemazureOperator[f, x, i] + t VariableTransposition[f, x, i]];
+TDemazureOperator[f_, x_, t_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"pi", 1 - t}, {"s", t}}, f, x, i],
+	Expand[(1 - t) DemazureOperator[f, x, i] + t VariableTransposition[f, x, i]]];
 TDemazureOperator[f_, x_, t_, word_List] := applyWord[TDemazureOperator[#1, x, t, #2] &, f, word];
 
 TDemazureAtomOperator::usage = "TDemazureAtomOperator[f, x, t, i] applies the t-deformed atom operator (1 - t) theta_i f + t s_i f.\nTDemazureAtomOperator[f, x, t, {i1, ..., ik}] applies the composition with i_k acting first.";
-TDemazureAtomOperator[f_, x_, t_, i_Integer] :=
-	Expand[(1 - t) DemazureAtomOperator[f, x, i] + t VariableTransposition[f, x, i]];
+TDemazureAtomOperator[f_, x_, t_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"theta", 1 - t}, {"s", t}}, f, x, i],
+	Expand[(1 - t) DemazureAtomOperator[f, x, i] + t VariableTransposition[f, x, i]]];
 TDemazureAtomOperator[f_, x_, t_, word_List] := applyWord[TDemazureAtomOperator[#1, x, t, #2] &, f, word];
 
+(* K-theoretic versions by linearity: d_i((1 + beta x[i+1]) f) = d_i f + beta d_i(x[i+1] f). *)
+pairRule["dshift", a_Integer, b_Integer] := pairRule["d", a, b + 1];
+pairRule["pishift", a_Integer, b_Integer] := pairRule["d", a + 1, b + 1];
+
 KDividedDifference::usage = "KDividedDifference[f, x, beta, i] applies the connective K-theoretic divided difference DividedDifference[(1 + beta x[i+1]) f, x, i]; beta = 0 gives DividedDifference.\nKDividedDifference[f, x, beta, {i1, ..., ik}] applies the composition with i_k acting first.";
-KDividedDifference[f_, x_, beta_, i_Integer] := DividedDifference[(1 + beta x[i + 1]) f, x, i];
+KDividedDifference[f_, x_, beta_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"d", 1}, {"dshift", beta}}, f, x, i],
+	DividedDifference[(1 + beta x[i + 1]) f, x, i]];
 KDividedDifference[f_, x_, beta_, word_List] := applyWord[KDividedDifference[#1, x, beta, #2] &, f, word];
 
 KDemazureOperator::usage = "KDemazureOperator[f, x, beta, i] applies the K-theoretic Demazure operator KDividedDifference[x[i] f, x, beta, i], which defines Lascoux polynomials; beta = 0 gives DemazureOperator.\nKDemazureOperator[f, x, beta, {i1, ..., ik}] applies the composition with i_k acting first.";
-KDemazureOperator[f_, x_, beta_, i_Integer] := KDividedDifference[x[i] f, x, beta, i];
+KDemazureOperator[f_, x_, beta_, i_Integer] := If[pairPolynomialQ[f, x, i],
+	applyPairRules[{{"pi", 1}, {"pishift", beta}}, f, x, i],
+	KDividedDifference[x[i] f, x, beta, i]];
 KDemazureOperator[f_, x_, beta_, word_List] := applyWord[KDemazureOperator[#1, x, beta, #2] &, f, word];
 
 
