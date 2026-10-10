@@ -10,7 +10,8 @@ Wolfram Language packages for symmetric functions and algebraic combinatorics:
 symmetric and quasisymmetric functions, tableaux, Gelfand–Tsetlin patterns, Catalan
 objects, permutations, posets, graphs and matroids. They grew out of research use and
 are offered to those who prefer Mathematica over Sage; see also
-<https://www.symmetricfunctions.com/>.
+<https://www.symmetricfunctions.com/>. If you find them useful, you can support the work
+on [Ko-fi](https://ko-fi.com/W7W41VN3WK).
 
 - [Tutorial](tutorial.html): a tour of the packages and how they fit together.
 - [Reference](reference/): every package and function, with background links to [symmetricfunctions.com](https://www.symmetricfunctions.com/).
