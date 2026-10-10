@@ -24,7 +24,11 @@ a function needs a different representation internally, it converts at its bound
 ## Indexing and parameter conventions
 
 - Keys and atoms are indexed by weak compositions in the standard convention:
-  κ_(0,1) = x[1] + x[2] (as in the literature and the Rust `sym-poly` library).
+  κ_(0,1) = x[1] + x[2] (as in the literature and the Rust `sym-poly` library). Lascoux
+  polynomials use the same index; locks are Kohnert polynomials of right-justified diagrams
+  (Assaf–Searles), so the lock of (2, 0) is x[1]^2.
+- K-theoretic families use the divided difference of (1 + beta x[i+1]) f, with beta = -1 by
+  default; beta = 0 gives Schubert and key polynomials.
 - Modified Macdonald functions follow Haglund: H~_(2) = s_2 + q s_11, and
   B_mu = sum over cells (r, c) of q^(c-1) t^(r-1).
 - Quasisymmetric Schur functions (`QuasiSchurQSymmetric`) are those of
