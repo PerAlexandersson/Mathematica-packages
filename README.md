@@ -1,97 +1,97 @@
 # Mathematica-packages
 
-Packages for computing with symmetric functions, and  combinatorics
-
-These are all work in progress, but some of these packages might be useful
-for those who prefers Mathematica over Sage.
+Wolfram Language packages for symmetric functions and algebraic combinatorics:
+symmetric and quasisymmetric functions, tableaux, Gelfand–Tsetlin patterns, Catalan
+objects, permutations, posets, graphs and matroids. They grew out of research use and
+are offered to those who prefer Mathematica over Sage; see also
+<https://www.symmetricfunctions.com/>.
 
 ## Installation
 
-The repository is a single paclet. Either load it from a checkout,
+The repository is one paclet, `PerAlexandersson/MathematicaPackages`. Load it from a
+checkout,
 
 ```wolfram
 PacletDirectoryLoad["/path/to/Mathematica-packages"];
 Needs["SymmetricFunctions`"]
 ```
 
-or build an archive with `wolframscript -file Scripts/BuildPaclet.m` and install it
-with `PacletInstall["build/PerAlexandersson__MathematicaPackages-0.1.0.paclet"]`.
-Supported and experimental packages live in `Kernel/`, legacy packages (kept loadable
-for existing notebooks) in `Legacy/`, datasets in `Data/`, and notebooks in `Examples/`.
-Tested with Wolfram Language 14.3. Run the tests with
-`wolframscript -file Tests/RunTests.m`.
+or build and install an archive:
 
-## SymmetricFunctions.m
+```bash
+wolframscript -file Scripts/BuildPaclet.m
+```
 
-This is a package for working with symmetric functions, see https://www.symmetricfunctions.com/. 
-It has the core bases, as well as Jack and Macdonald polynomials, LLT polynomials,
-SchurP and SchurQ functions, the Hall inner product, plethysm and the Delta operator.
+```wolfram
+PacletInstall["/path/to/Mathematica-packages/build/PerAlexandersson__MathematicaPackages-0.1.0.paclet"];
+Needs["SymmetricFunctions`"]
+```
 
-This also has support for working multiple alphabets, which is useful when dealing with plethysm calculus.
+Compatibility: tested with Wolfram Language 14.3 (the paclet requires 14.3 or later;
+earlier versions may work but are untested).
 
-Compare with Stembridge's sf package for Maple, or Curtis Greene's symfun13 package.
+## Packages
 
-See `Examples/SymmetricFunctions-Introduction.nb` for a brief introduction.
+Supported packages (in `Kernel/`):
 
-*Updates*
-- 2023-08-08 Code added for storing transition matrices between sessions.
-- 2020-08-25 Finished big refactoring. 
-  Many functions are now more intuitive, and basis conversion is quicker.
+| Context | Contents |
+|---|---|
+| `SymmetricFunctions`` | Monomial, elementary, complete homogeneous, power-sum, Schur and forgotten bases with fast transition matrices; several alphabets; Hall and Jack inner products; plethysm; Kostka, inverse Kostka, Littlewood–Richardson and Kronecker coefficients; skew Schur, Schur P and Q, Jack, Hall–Littlewood, Macdonald P/J and modified Macdonald H~ (Haglund's convention), LLT, k-Schur, Lah and Petrie functions; the Delta and nabla operators |
+| `CombinatoricTools`` | Partitions, compositions, set partitions, permutation statistics, q-analogs, characters of the symmetric group, Kostka numbers |
+| `NewTableaux`` | Standard and semistandard (skew) Young tableaux, RSK, promotion, evacuation, crystal operators, border strips |
+| `GTPatterns`` | Gelfand–Tsetlin patterns, including skew, row-flagged and cylindric patterns |
+| `QuasiSymmetricFunctions`` | Monomial, fundamental and power-sum quasisymmetric functions |
+| `PolynomialTools`` | Real-rootedness, interlacing, log-concavity, Eulerian and h*-polynomials, recurrence finding, Hilbert functions |
+| `PermutationTools`` | Pattern avoidance, Foata and related maps, Bruhat and weak order, families of permutations |
+| `CatalanObjects`` | Dyck paths, non-crossing partitions and matchings, parking functions, trees and other Catalan families, with plots |
+| `UnicellularChromatics`` | Chromatic symmetric functions and LLT polynomials of unit interval graphs and area sequences, orientations and their statistics |
+| `GraphTools`` | Graph polynomials, orientations, and datasets of connected graphs (n <= 9), trees (n <= 20) and rooted trees (n <= 10) |
+| `MatroidTools`` | Matroids from bases: rank, duality, deletion/contraction, Tutte polynomials, transversal, lattice path and rook matroids |
 
+Experimental packages (in `Kernel/`): `MacdonaldPolynomials`` (key and atom polynomials,
+Schubert and Grothendieck polynomials, non-symmetric Macdonald polynomials, slide
+polynomials), `PosetData`` (connected posets up to 7 elements, linear extensions, order
+and P-Eulerian polynomials), and `RookTools``.
 
-## CombinatoricTools.m
+Legacy packages (in `Legacy/`) remain loadable for old notebooks; `Legacy/README.md`
+lists their replacements: `OldYoungTableaux``, `ChromaticFunctions``, `TreesData``,
+`RunSortedWords``, and the website tooling `Tex2WebUtilities``.
 
-Functions for permutation statistics (major index, inversions, Bruhat order, etc.), 
-compositions, partitions, q-analogs, the Foata map,
-and various helper functions.
+Every public symbol has a usage message, e.g. `?SchurSymmetric`.
 
+## Example
 
-## NewTableaux.m
+```wolfram
+Needs["SymmetricFunctions`"];
+ToSchurBasis[ElementaryESymmetric[{2, 1}]]
+(* s_21 + s_111 *)
+ToSchurBasis[MacdonaldHSymmetric[{2}, q, t]]
+(* s_2 + q s_11 *)
+```
 
-Functions for generating standard Young tableaux, semi-standard Young tableaux,
-RSK, promotion and crystal operators. 
+`Examples/SymmetricFunctions-Introduction.m` is a longer tour
+(`wolframscript -file Examples/SymmetricFunctions-Introduction.m`); the original notebook
+is next to it.
 
+## Tests
 
-## CatalanObjects.m
+```bash
+wolframscript -file Tests/RunTests.m
+```
 
-Various different families of Catalan objects,
-and ways to draw them.
+runs every `Tests/*Tests.m` file in a fresh kernel. Besides regression tests, the suite
+checks load-order independence, usage strings, a Code Inspector baseline, and agreement
+with the Rust libraries `sym-poly`, `combinatoric-core`, `combpoly` and `polytool` on
+about 25 families (`Tests/fixtures/rust/`). See `Tests/README.md`.
 
+## Layout
 
+`PacletInfo.wl`, `Kernel/`, `Legacy/`, `Data/` (datasets with provenance in
+`Data/README.md`), `Examples/`, `Tests/`, `Scripts/`.
 
-## ChromaticFunctions.m
+## Changes, contributing and license
 
-Chromatic (quasi)symmetric functions and LLT polynomials
-associated with unit interval graphs.
-Various functions related to unit-interval graphs.
-
-## GTPatterns.m
-
-Methods for generating GT-patterns (Gelfand-Tsetlin patterns) which are in bijection with
-semi-standard Young tableaux.
-
-
-## MacdonaldPolynomials.m
-
-This is an older package, and not very up to date.
-It has Schubert polynomials, permuted-basement Macdonald polynomials,
-and various non-symmetric polynomials.
-
-## Tex2WebUtilities.m
-
-I use this mainly for generating the bibliography on the Symmetric functions catalog.
-It can parse .bib-files and produce an associative array
-of the data. 
-There are also functions for converting `ytableau` syntax to HTML.
-
-
-## PosetData.m
-
-This is a file which mainly contains non-isomorphic posets.
-
-There are also plot functions, and functions for computing linear extensions or the Jordan-Hölder set.
-
-
-## TreesData.m
-
-This is a file which mainly contains non-isomorphic trees.
+See `CHANGELOG.md` (the 0.1.0 entry lists breaking changes, such as the switch to
+Haglund's convention for modified Macdonald functions), `CONTRIBUTING.md` for package,
+test and deprecation conventions, and `RELEASING.md`. Licensed under the MIT license
+(`LICENSE`).

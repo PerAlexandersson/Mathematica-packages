@@ -8,7 +8,7 @@ PacletObject[
     "Description" -> "Symmetric functions, tableaux, Gelfand-Tsetlin patterns, Catalan objects, permutations, posets, graphs and matroids.",
     "Creator" -> "Per Alexandersson",
     "PublisherID" -> "PerAlexandersson",
-    "License" -> "TBD",
+    "License" -> "MIT",
     "PrimaryContext" -> "SymmetricFunctions`",
     "Extensions" -> {
       (* Supported and experimental packages. *)
