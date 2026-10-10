@@ -1046,6 +1046,7 @@ MemoizedImport[file_String, type_, funcName_: None,
 	   "MEMOIZED"] := {None, None};
 MemoizedImport[file_String, type_, funcName_: None, "MEMOIZED", func_: (# &) ] := {None, None};
 
+MemoizedImport::usage = "MemoizedImport[file, opts] imports file and caches the result until the file's modification date changes. Options: \"Type\" (Import format, default \"Text\"), \"Function\" (applied to the imported data, default Identity-like #&), \"FunctionName\" (cache label) and \"Forced\" (re-import when True).";
 Options[MemoizedImport] = {
 	"Type" -> "Text", 
 	"Function" -> (# &),

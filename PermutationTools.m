@@ -91,17 +91,24 @@ Begin["`Private`"];
 (* Pattern for list of integers *)
 iList = {RepeatedNull[_Integer]};
 
+Si::usage="Si[pi, i] swaps entries i and i+1 in a permutation pi. Si[i][pi] is the equivalent curried form.";
 Si[pi_List, i_Integer] := ReplacePart[pi, {i -> pi[[i + 1]], i + 1 -> pi[[i]]}];
 Si[i_Integer][pi_List] := ReplacePart[pi, {i -> pi[[i + 1]], i + 1 -> pi[[i]]}];
 
 
 
 
+Is213AvoidingQ::usage="Is213AvoidingQ[permutation] returns True if the permutation avoids the pattern 213.";
 Is213AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; c > a > b];
+Is231AvoidingQ::usage="Is231AvoidingQ[permutation] returns True if the permutation avoids the pattern 231.";
 Is231AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; b > a > c];
+Is123AvoidingQ::usage="Is123AvoidingQ[permutation] returns True if the permutation avoids the pattern 123.";
 Is123AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; c > b > a];
+Is132AvoidingQ::usage="Is132AvoidingQ[permutation] returns True if the permutation avoids the pattern 132.";
 Is132AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; b > c > a];
+Is312AvoidingQ::usage="Is312AvoidingQ[permutation] returns True if the permutation avoids the pattern 312.";
 Is312AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > c > b];
+Is321AvoidingQ::usage="Is321AvoidingQ[permutation] returns True if the permutation avoids the pattern 321.";
 Is321AvoidingQ[p_List] := !MatchQ[p, {___, a_, ___, b_, ___, c_, ___} /; a > b > c];
 
 
@@ -115,7 +122,9 @@ Map from section 4,
 
 
 
+PermutationCharge::usage="PermutationCharge[permutation] returns the charge statistic of a permutation.";
 PermutationCharge[p_List] := PermutationCharge[p] = MajorIndex[Reverse@Ordering@p];
+PermutationCocharge::usage="PermutationCocharge[permutation] returns the cocharge statistic of a permutation.";
 PermutationCocharge[p_List] := PermutationCocharge[p] = Binomial[Max@p,2]-MajorIndex[Reverse@Ordering@p];
 
 
@@ -181,7 +190,7 @@ ReducedWord[pi_List] := With[{onePos = Ordering[pi, 1][[1]]},
 	]
 ];
 
-PermutationFromWord::usage = "PermutationFromWord[perm,n] returns a permutation of [n] from a word of simple transpositions. ";
+PermutationFromWord::usage = "PermutationFromWord[word, n] returns the permutation of [n] represented by a word of simple transpositions.";
 
 PermutationFromWord[{}, n_Integer] := Range[n];
 PermutationFromWord[word_List, n_Integer] := PermutationFromWord[word, n] = Module[{perms, prod},
@@ -271,6 +280,7 @@ ToSubExcedance[pi:iList] := ToSubExcedance[pi] = Append[(ToSubExcedance[Most[pi]
 (* With this definition, we can use FromSubexcedance on any word 
 where entries <= length.*)
 
+FromSubExcedance::usage="FromSubExcedance[f] returns the permutation associated with a sub-excedance word f. FromSubExcedance[f, pi] applies the word to the initial permutation pi.";
 FromSubExcedance[f:iList] := FromSubExcedance[f, Range[Length@f]];
 FromSubExcedance[{}, pi:iList] := pi;
 FromSubExcedance[f:iList, pi:iList] := With[{n = Length@f, fn = Last@f},
@@ -299,6 +309,7 @@ is greater-equal than p2 in strong Bruhat order. The identity is smaller than al
 
 StrongBruhatGreaterQ[p1_List,p2_List]:=StrongBruhatGreaterQ[p1,p2]=MemberQ[StrongBruhatDownSet[p1],p2];
 
+StrongBruhatDownSet::usage="StrongBruhatDownSet[permutation] returns all permutations below the given permutation in strong Bruhat order.";
 StrongBruhatDownSet[p_List] := ({p} /; p == Range[Max@p]);
 StrongBruhatDownSet[p_List] := StrongBruhatDownSet[p] = Module[{ss, n = Max@p},
 	Union[
@@ -339,6 +350,7 @@ WeakLowerOrderIdeal[pi_List] := Module[{n = Length@pi, interval, toCheck, tau},
    Normal[interval]
 ];
 
+BruhatLowerOrderIdeal::usage="BruhatLowerOrderIdeal[permutation] returns all permutations below the given permutation in strong Bruhat order.";
 BruhatLowerOrderIdeal[pi_List] := Module[{n = Length@pi,
     interval, toCheck, tau},
    interval = CreateDataStructure["HashSet"];
@@ -431,7 +443,7 @@ SimsunPermutations[n_Integer] := SimsunPermutations[n] = Select[
      &];
 
 
-SkewMergedPermutations::usage = "See https://www.sciencedirect.com/science/article/pii/0012365X94902429";
+SkewMergedPermutations::usage = "SkewMergedPermutations[n] returns the permutations in S_n avoiding 2143 and 3412.";
 SkewMergedPermutations[n_Integer]:=Select[Permutations@Range@n, IsPermutationAvoidingQ[{2, 1, 4, 3}, #] &&  IsPermutationAvoidingQ[{3, 4, 1, 2}, #]&];
      
 WachsPermutations::usage = "WachsPermutations[n] returns a list of all Wachs permutations in S_n. See arxiv:2212.04932.";
@@ -474,16 +486,20 @@ AlternatingPermutations[n] = Module[{altLeft, altRight, cc, ss},
 (************************************************)
 
 
+PairToPAP::usage="PairToPAP[{p1, p2}] interleaves p1 and p2 after mapping their entries to odd and even values, respectively.";
 PairToPAP[{p1_List, p2_List}] := Riffle[2 p1 - 1, 2 p2];
+PAPToPair::usage="PAPToPair[pap] splits a parity-alternating permutation into its odd-position and even-position subsequences, undoing PairToPAP.";
 PAPToPair[{i_Integer}] := {{i}, {}};
 PAPToPair[pap_List] := {(pap[[1 ;; ;; 2]] + 1)/2, pap[[2 ;; ;; 2]]/2};
 
+IsPAPQ::usage="IsPAPQ[permutation] returns True if odd positions contain odd values and even positions contain even values.";
 IsPAPQ[pi_List] := And @@ Join[
     OddQ /@ pi[[1 ;; ;; 2]],
     EvenQ /@ pi[[2 ;; ;; 2]]
     ];
 
 
+GeneratePAPS::usage="GeneratePAPS[n] returns all parity-alternating permutations of size n. GeneratePAPS[n, condition] restricts both component permutations and the result using condition.";
 GeneratePAPS[1] := {{1}};
 GeneratePAPS[n_Integer] := GeneratePAPS[n] = Module[{a, b},
     {a, b} = {Ceiling[n/2], Floor[n/2]};
@@ -541,10 +557,15 @@ GeneratePAPS[n_Integer, cond_: True] :=
 ];
 
 
+PAPS123::usage="PAPS123[n] returns all parity-alternating permutations of size n that avoid 123.";
 PAPS123[n_] := PAPS123[n] = GeneratePAPS[n, Is123AvoidingQ];
+PAPS132::usage="PAPS132[n] returns all parity-alternating permutations of size n that avoid 132.";
 PAPS132[n_] := PAPS132[n] = GeneratePAPS[n, Is132AvoidingQ];
+PAPS213::usage="PAPS213[n] returns all parity-alternating permutations of size n that avoid 213.";
 PAPS213[n_] := PAPS213[n] = GeneratePAPS[n, Is213AvoidingQ];
+PAPS231::usage="PAPS231[n] returns all parity-alternating permutations of size n that avoid 231.";
 PAPS231[n_] := PAPS231[n] = GeneratePAPS[n, Is231AvoidingQ];
+PAPS312::usage="PAPS312[n] returns all parity-alternating permutations of size n that avoid 312.";
 PAPS312[n_] := PAPS312[n] = GeneratePAPS[n, Is312AvoidingQ];
 
 
@@ -553,6 +574,7 @@ PAPS321[n_] := PAPS321[n] = GeneratePAPS[n, Is321AvoidingQ];
 *)
 
 
+PAPS321::usage="PAPS321[n] returns all parity-alternating permutations of size n that avoid 321.";
 PAPS321[n_] := PAPS321[n] = Select[
 Join @@ Table[
       PairToPAP[{a, b}]
@@ -583,6 +605,7 @@ GeneratePAPS[n_Integer, f1_, f2_, fTot_] :=
 	
 
 
+TupleToRAP::usage="TupleToRAP[lists, r] interleaves a list of permutations into a restricted alternating permutation; r defaults to 1.";
 TupleToRAP[lists_List, r_: 1] := Module[
    {k = Length[lists],
     p = Length[lists[[1]]], z},
@@ -595,6 +618,7 @@ TupleToRAP[lists_List, r_: 1] := Module[
         {i, k}]]) /. {z -> Nothing}
    ];
 
+GenerateRAPS::usage="GenerateRAPS[n, k, r] returns the restricted alternating permutations generated from k component permutations; r defaults to 1.";
 Clear[GenerateRAPS];
 GenerateRAPS[1, k_Integer] := {{1}};
 GenerateRAPS[n_Integer, k_Integer, r_: 1] := 
@@ -661,7 +685,7 @@ ArrayPlot[
 ];
 
 
-NQueensPermutations::usage = "NQueensPermutations[n] returns the list of permutations that solves the n-queens problem on the nxn-board.";
+NQueensPermutations::usage = "NQueensPermutations[n] returns the permutations solving the n-queens problem on an n by n board.";
 NQueensPermutations[n_Integer]:=  NQueensPermutations[n] = Select[Permutations@Range@n, 
     And @@ (Join @@ 
         Table[Abs[#[[i]] - #[[j]]] != Abs[i - j], {i, n}, {j, i + 1, 
@@ -681,7 +705,7 @@ CanonPermutations[lam_List, All] := Join @@ Table[ CanonPermutations[lam, sigma]
 
 
 
-StirlingPermutations::usage="StirlingPermutations[n] returns all Stirling permutations, https://en.wikipedia.org/wiki/Stirling_permutation";
+StirlingPermutations::usage="StirlingPermutations[n] returns all Stirling permutations of order n.";
 StirlingPermutations[1] := {{1, 1}};
 StirlingPermutations[n_Integer] :=
   StirlingPermutations[n] = Join @@ Table[

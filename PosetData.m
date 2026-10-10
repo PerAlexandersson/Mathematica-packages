@@ -44,6 +44,8 @@ weight gives the multiplicity of the variables.";
 Begin["`Private`"];
 
 
+Poset::usage = "Poset[n, rels] represents a poset on the elements 1, ..., n; rels is a list of pairs {a, b} meaning a < b, typically the cover relations (Hasse diagram edges).";
+
 SkewShapePoset::usage = "SkewShapePoset[{lam,mu}] returns the poset corresponding to the skew shape.";
 
 SkewShapePoset[{lam_List, mu_List}] := Module[
@@ -66,6 +68,7 @@ SkewShapePoset[{lam_List, mu_List}] := Module[
 
 
 (* Poset on 17 elements,  with non-real-rooted W-polynomial. *)
+StembridgePoset::usage="StembridgePoset[] returns the 17-element poset used by Stembridge as an example with a non-real-rooted W-polynomial.";
 StembridgePoset[] := Poset[17, Join[
     Partition[{1, 3, 5, 7, 9, 11, 13, 14, 16}, 2, 1]
     ,
@@ -87,6 +90,7 @@ PermutationPoset[pi_List] := With[{n = Length@pi},
 PosetMinimalElements::usage = "PosetMinimalElements[poset] returns the list of minimal elements";
 PosetMinimalElements[Poset[n_, edg_]] := Complement[Range@n, Last /@ edg];
 
+PosetPlot::usage="PosetPlot[poset] returns a graphical representation of a Poset object.";
 PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
 	vrf[coord_, lbl_, {w_, h_}] := {White, EdgeForm[Black],
     Disk[coord, .1], Black, Text[lbl, coord]};
@@ -97,8 +101,11 @@ PosetPlot[Poset[n_Integer,edges_List]] := Module[{vrf, erf, allEdges = edges},
 		VertexShapeFunction -> vrf, EdgeShapeFunction -> erf]
 ];
 
-PosetPlotOld::usage = "PosetPlot[StrictEdges->{}, WeakEdges-{},EqualEdges->{}] plots the poset";
+PosetPlotOld::usage = "PosetPlotOld[opts] plots a poset specified by the StrictEdges, WeakEdges, and EqualEdges options.";
 
+StrictEdges::usage="StrictEdges is an option for PosetPlotOld, PosetColorings, and related coloring functions; its value is a list of strict relations.";
+WeakEdges::usage="WeakEdges is an option for PosetPlotOld, PosetColorings, and related coloring functions; its value is a list of weak relations.";
+EqualEdges::usage="EqualEdges is an option for PosetPlotOld and PosetColorings; its value is a list of equality relations.";
 Options[PosetPlotOld] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges -> {}};
 PosetPlotOld[opts : OptionsPattern[]] := Module[{vrf, erf, allEdges, weakEdges, strictEdges, equalEdges},
    vrf[coord_, lbl_] := {White, EdgeForm[Black], Disk[coord, .1], 
@@ -294,6 +301,8 @@ fastPosetColorings[n_Integer, weak_List : {}, strict_List : {}, equal_List : {},
 ];
 
 
+ColorWeight::usage="ColorWeight is an option for PosetColorings; its value is a list giving the multiplicity of each color, defaulting to {}.";
+PosetColorings::usage="PosetColorings[poset, opts] returns all colorings of a Poset object satisfying the StrictEdges, WeakEdges, and EqualEdges options. PosetColorings[n, opts] uses n labeled vertices; ColorWeight gives the color multiplicities.";
 Options[PosetColorings] = {StrictEdges -> {}, WeakEdges -> {}, EqualEdges->{}, ColorWeight->{}};
 PosetColorings[Poset[n_Integer,edges_List], opts:OptionsPattern[]]:=PosetColorings[n,
 Join[{WeakEdges->edges},{opts}]];

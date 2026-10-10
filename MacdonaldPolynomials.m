@@ -94,7 +94,7 @@ ToLockBasis::usage = "ToLockBasis[pol,x,pp] writes the polynomial in lock basis.
 
 SSYTToAtom::usage="Given an SSYT, it produces an atom filling with the same weight, using the insertion algorithm given by Mason.";
 
-RPPToAtom::usage=="Given an RPP, it produces an atom filling with the same weight, preserving column sets.";
+RPPToAtom::usage="RPPToAtom[rpp] takes a reverse plane partition rpp (with a basement), it produces an atom filling with the same weight, preserving column sets.";
 
 
 SSAFCrystalWord::usage = "SSAFCrystalWord[ssaf, i] extracts the i-word.";
@@ -123,10 +123,10 @@ SSAFWeightNormalize::usage="";
 
 SchubertPolynomial::usage="SchubertPolynomial[pi, x] returns the Schubert polynomial.";
 
-QSymMonomial::usade = "QSymMonomial[alpha_List, n_, [nvars], x_] ";
+QSymMonomial::usage = "QSymMonomial[alpha, n, x] returns the monomial quasisymmetric polynomial M_alpha in the variables x[1], ..., x[n].";
 
-GesselFundamental::usade = "GesselFundamental[des_List, n_, [nvars], x_] ";
-FundamentalSlide::usade = "FundamentalSlide[alpha, x] returns the fundamental slide polynomial.";
+GesselFundamental::usage = "GesselFundamental[S, n, x] returns Gessel's fundamental quasisymmetric polynomial F_{n,S} in x[1], ..., x[n]: the sum of x[i1]...x[in] over i1 <= ... <= in with i_j < i_(j+1) for every j in S.\nGesselFundamental[S, n, nvars, x] uses the variables x[1], ..., x[nvars].";
+FundamentalSlide::usage = "FundamentalSlide[alpha, x] returns the fundamental slide polynomial of the weak composition alpha in the variables x[1], ..., x[Length[alpha]].";
 
 ToFundamentalSlideBasis::usage = "ToFundamentalSlideBasis[pol,x,fs] returns the polynomial written in the fs basis.";
 ToGesselSubsetBasis::usage = "ToGesselSubsetBasis[poly, x, ff] returns the Gessel expansion of poly indexed by the descent set. Polynomial should be homogeneous.";

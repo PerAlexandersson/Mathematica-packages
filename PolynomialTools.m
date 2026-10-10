@@ -69,7 +69,8 @@ UltraLogConcaveQ[poly_, t_] := Module[{c},
 
 
 Clear[RealRootedQ];
-RealRootedQ::usage = "RealRootedQ[poly] returns true if the poly is a real-rooted univariate polynomial, or a constant.";
+RealRootedQ::usage = "RealRootedQ[poly] returns True if poly is a real-rooted univariate polynomial in its single variable, or a constant.
+RealRootedQ[poly,t] returns True if poly is a real-rooted univariate polynomial in t, or a constant.";
 RealRootedQ::poly = "Argument `1` should be a univariate polynomial.";
 RealRootedQ[0,t_]:=True;
 RealRootedQ[poly_,t_] := True/;NumberQ[poly]; 
@@ -122,8 +123,7 @@ StablePolynomialQ[poly_, samples_: 20]:=Module[{t, vars=Variables[poly]},
 	True]
 ];
 
-FindStablePolynomialCounterExample::usage = "FindStablePolynomialCounterexample[poly] uses
-Mathematicas FindInstance method to look for counterexample.";
+FindStablePolynomialCounterExample::usage = "FindStablePolynomialCounterExample[poly] uses FindInstance to look for a counterexample to stability.";
 
 FindStablePolynomialCounterExample[poly_]:=With[{vv=Variables@poly},
 	FindInstance[ 
@@ -212,8 +212,8 @@ TODO: Use this technique instead.
 https://mathoverflow.net/questions/403708/b%c3%a9zout-matrices-and-interlacing-roots
 *)
 
-InterleavingRootsQ::usage = "InterleavingRootsQ[P,Q,t] returns true 
-if the real roots interleave (weakly). Non-real-rooted input returns False. In particular, largest root of Q is greater than largest root of P.";
+InterleavingRootsQ::usage = "InterleavingRootsQ[P,Q,t] returns True if the real roots of P and Q weakly interleave, with the largest root of Q at least the largest root of P.
+InterleavingRootsQ[{p1,p2,...},t] returns True if every pair of polynomials in the list weakly interleaves. The WorkingPrecision option defaults to 30.";
 (*
 InterleavingRootsQ[pp_, qq_]:=InterleavingRootsQ[ pp, qq, First@Variables[{pp,qq}]];
 *)
@@ -312,9 +312,11 @@ SymmetricDecomposition[pp_, x_] := Module[{d = Exponent[pp, x], ii},
    ];
 
 (* Eulerian numbers. *)
+EulerianA::usage = "EulerianA[n,m] returns the Eulerian number counting permutations of n with m descents.";
 EulerianA[0, m_Integer] := Boole[m == 0];
 EulerianA[n_Integer, m_Integer] := EulerianA[n, m] = Sum[(-1)^k Binomial[n + 1, k] (m + 1 - k)^(n), {k, 0, m + 1}];
 
+EulerianAPolynomial::usage = "EulerianAPolynomial[n,t] returns Sum[EulerianA[n,m] t^m,{m,n}] as a polynomial in t.";
 EulerianAPolynomial[0, t_]:=1;
 EulerianAPolynomial[n_Integer, t_]:=EulerianAPolynomial[n,t] = Expand[
 Sum[ Binomial[n , k] EulerianAPolynomial[k,t] (t-1)^(n-1-k), {k, 0, n-1}]];
@@ -325,7 +327,7 @@ BinomialEulerianPolynomial[n_Integer, t_] := BinomialEulerianPolynomial[n,t] = E
 1 + t Sum[Binomial[n, m] EulerianAPolynomial[m, t], {m, n}]];
 
 
-RefinedEulerian::usage ="RefinedEulerian[n,j,t] is the des-generating polynomial for permutations in Sn with pi(1)=j.";
+RefinedEulerian::usage ="RefinedEulerian[n,j,t] returns the descent-generating polynomial for permutations in S_n with pi(1)=j.";
 RefinedEulerian[1, 1, t_] := 1;
 RefinedEulerian[n_Integer, j_Integer, t_] := RefinedEulerian[n, j, t] =
    If[1 <= j <= n,
@@ -368,7 +370,8 @@ GammaPolynomial[poly_, x_] := Module[{c, inGamma, i, n = Exponent[poly, x], vars
 ];
 
       
-HStarPolynomial::usage="HStarPolynomial[pol,x] returns the h*-polynomial.";
+HStarPolynomial::usage="HStarPolynomial[pol] returns the h*-polynomial using the first variable of pol.
+HStarPolynomial[pol,x] returns the h*-polynomial in the specified variable x.";
 
 HStarPolynomial[poly_]:=HStarPolynomial[poly,First@Variables@poly];
 HStarPolynomial[poly_, k_] := Expand@Module[
@@ -381,7 +384,7 @@ HStarVectorToEhrhart[vec_List, t_] := Module[{d = Length[vec] - 1},
    Expand@Sum[Binomial[t + d - j, d] vec[[j + 1]], {j, 0, d}]
 ];
 
-HVectorInequalitiesQ::usage = "HVectorInequalitiesQ[{1,h1,h2,..,hd}] returns true if it satisfies the inequalities expected of an h*-vector. These are only neccesary, not sufficient.";
+HVectorInequalitiesQ::usage = "HVectorInequalitiesQ[{1,h1,h2,...,hd}] returns True if the vector satisfies several necessary inequalities for an h*-vector; the conditions are not sufficient.";
 HVectorInequalitiesQ[hh_List] :=
   Module[{h, d = Length[hh] - 1, s, hibiQ, hibi2Q, stanleyQ,
     ballettiQ},
@@ -407,13 +410,14 @@ HVectorInequalitiesQ[hh_List] :=
    And[hibiQ, stanleyQ, hibi2Q, ballettiQ]
 ];
 
-VariableDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
-IndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
-DifferentialDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
-RecurrenceLength::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
-Homogeneous::usage = "Option for FindPolynomialRecurrence. True or False.";
-DenominatorVariableDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
-DenominatorIndexDegree::usage = "Option for FindPolynomialRecurrence. Non-negative integer value.";
+VariableDegree::usage = "VariableDegree is an option for FindPolynomialRecurrence; its default is 1 and its value is a non-negative integer.";
+IndexDegree::usage = "IndexDegree is an option for FindPolynomialRecurrence; its default is 1 and its value is a non-negative integer.";
+DifferentialDegree::usage = "DifferentialDegree is an option for FindPolynomialRecurrence; its default is 0 and its value is a non-negative integer.";
+RecurrenceLength::usage = "RecurrenceLength is an option for FindPolynomialRecurrence; its default is 2 and its value is a non-negative integer.";
+Homogeneous::usage = "Homogeneous is an option for FindPolynomialRecurrence; its default is True and its value is True or False.";
+DenominatorVariableDegree::usage = "DenominatorVariableDegree is an option for FindPolynomialRecurrence; its default is 0 and its value is a non-negative integer.";
+DenominatorIndexDegree::usage = "DenominatorIndexDegree is an option for FindPolynomialRecurrence; its default is 0 and its value is a non-negative integer.";
+RulesList::usage = "RulesList is an option for FindPolynomialRecurrence; its default is False, and True returns the recurrence coefficients as rules.";
 
 Options[FindPolynomialRecurrence] = {
 	VariableDegree -> 1,
@@ -547,7 +551,7 @@ ElementarySymmetricPolynomial[d_Integer, {a_Integer, b_Integer}, x_] :=
 
      
      
-HilbertFunctionValues::usage = "HilbertFunctionValues[polyIdeal,vars, d] returns the Hulbert function values up to degree d.";
+HilbertFunctionValues::usage = "HilbertFunctionValues[polyIdeal,vars,d] returns the Hilbert function values through degree d for an ideal generated by polyIdeal in vars.";
      
 (*Hilbert function values up to a chosen max degree*)
 Clear[HilbertFunctionValues];

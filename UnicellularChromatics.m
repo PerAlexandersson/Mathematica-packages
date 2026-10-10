@@ -17,6 +17,7 @@ UnitIntervalEdges;
 GraphColoringAscents;
 StrictEdges;
 WeakEdges;
+WeakEdges::usage="WeakEdges is an option for GraphOrientations; its value is a list of edges required to be oriented weakly.";
 UnicellularLLTSymmetric;
 UnicellularLLTSymmetricSchur;
 ChromaticSymmetric;
@@ -107,8 +108,10 @@ UnitIntervalEdges[area_List] :=With[
 ];
 
 
+GraphColoringAscents::usage="GraphColoringAscents[edges, coloring] returns the number of edges whose color increases along the ordered edge.";
 GraphColoringAscents[edges_List, col_List] := Sum[Boole[col[[e[[1]]]] < col[[e[[2]]]] ], {e, edges}];
 
+GraphColoringMonochromaticEdges::usage="GraphColoringMonochromaticEdges[edges, coloring] returns the number of edges whose endpoints have equal colors.";
 GraphColoringMonochromaticEdges[edges_List, col_List] := Sum[Boole[col[[e[[1]]]] == col[[e[[2]]]] ], {e, edges}];
 
 
@@ -142,6 +145,7 @@ UnicellularLLTSymmetric[area:{_Integer ..}, q_: 1, opts:OptionsPattern[]] :=
 UnicellularLLTSymmetric[UnitIntervalEdges@area, Length@area,q,opts];
 
 
+UnicellularLLTSymmetricSchur::usage="UnicellularLLTSymmetricSchur[area, q, ss] returns the LLT polynomial for an area sequence in the basis supplied by the function ss; q defaults to 1.";
 UnicellularLLTSymmetricSchur[area_List, q_: 1, ss_] := Module[{c,colorings,lam,n,attacking},
 	attacking = UnitIntervalEdges@area;
 	n = Length@area;
@@ -322,6 +326,7 @@ and convert to (area, strictEdges) pair.
 The diagonal steps do not contribute to area.
 *)
 
+SchroederWordToArea::usage="SchroederWordToArea[word] converts a Schroeder word, given as a string or list using -/n, +/e, and 0/d, to {area, strictEdges}.";
 SchroederWordToArea[""] := {{}, {}};
 SchroederWordToArea[word_String] := 
   SchroederWordToArea[Characters[word]];
@@ -355,14 +360,17 @@ SchroederWordToArea[word_List] :=
     {area, strictEdges}
 ];
 
+SchroederWordStrictEdges::usage="SchroederWordStrictEdges[word] returns the strict edge list extracted from a Schroeder word.";
 SchroederWordStrictEdges[w_]:=SchroederWordToArea[w][[2]];
 
+SchroederLLTSymmetric::usage="SchroederLLTSymmetric[word, q] returns the LLT symmetric polynomial associated with a Schroeder word and parameter q.";
 SchroederLLTSymmetric[word_, q_] := 
   SchroederLLTSymmetric[word, q] = Module[{area, strict},
     {area, strict} = SchroederWordToArea[word];
     UnicellularLLTSymmetric[area, q, StrictEdges -> strict]
     ];
 
+SchroederPlot::usage="SchroederPlot[word] returns a plot of the area and strict edges encoded by a Schroeder word.";
 SchroederPlot[word_] := Module[{aa, strict},
    {aa, strict} = SchroederWordToArea[word];
    AreaListPlot[aa, Circular -> False, Labels -> Join[
@@ -371,12 +379,14 @@ SchroederPlot[word_] := Module[{aa, strict},
       ]
     ]];
 
+SchroederOrientations::usage="SchroederOrientations[word] returns all orientations of the unit interval graph encoded by a Schroeder word, respecting its strict edges.";
 SchroederOrientations[word_] := 
   With[{data = SchroederWordToArea[word]},
    GraphOrientations[
 	UnitIntervalEdges@data[[1]], StrictEdges -> data[[2]]]
 ];
 
+SchroederAcyclicOrientations::usage="SchroederAcyclicOrientations[word] returns all acyclic orientations of the unit interval graph encoded by a Schroeder word, respecting its strict edges.";
 SchroederAcyclicOrientations[word_] := 
   With[{data = SchroederWordToArea[word]},
    GraphAcyclicOrientations[
@@ -385,6 +395,7 @@ SchroederAcyclicOrientations[word_] :=
 
 
 Options[SchroederColorings] = {Partition->True};
+SchroederColorings::usage="SchroederColorings[word, ncols, Partition -> True] returns colorings of the graph encoded by a Schroeder word satisfying its strict edges. ncols defaults to 0; with Partition -> False, colors range from 1 to ncols.";
 SchroederColorings[word_, ncols_: 0,opts:OptionsPattern[SchroederColorings]] := Module[
 	{area, strict, n, cols,colorings},
    {area, strict} = SchroederWordToArea[word];
@@ -428,6 +439,7 @@ SchroederPermutationColorings[word_, ncols_: 0] :=
      &]
    ];
 
+SchroederColoringAscents::usage="SchroederColoringAscents[word, coloring] returns the number of ascents of a coloring on the graph encoded by a Schroeder word.";
 SchroederColoringAscents[word_, col_] := 
   With[{data = SchroederWordToArea[word]},
    GraphColoringAscents[UnitIntervalEdges[data[[1]]], col]
@@ -440,6 +452,7 @@ SchroederColoringAscents[word_, col_] :=
 
 
 (* Returns y', where we have started a bounce path from row indexed by y  *)
+BounceEndpoint::usage="BounceEndpoint[word, y] returns the endpoint row reached by the bounce path starting at row y for a Schroeder word.";
 BounceEndpoint[word_, y_Integer] := Module[{aa, strict, strictRows, x, xlist},
    {aa, strict} = SchroederWordToArea[word];
    strictRows = Last /@ strict;
@@ -454,6 +467,7 @@ BounceEndpoint[word_, y_Integer] := Module[{aa, strict, strictRows, x, xlist},
 ];
 
 (* The x in the (x,y)-pairs of the bounce path. *)
+BounceList::usage="BounceList[word, y] returns the list of x-coordinates visited by the bounce path starting at row y for a Schroeder word.";
 BounceList[word_, y_Integer] := Module[{aa, strict, strictRows, x},
    {aa, strict} = SchroederWordToArea[word];
    strictRows = Last /@ strict;
@@ -528,6 +542,7 @@ RecursionVertices[word_, z_Integer, type_: 2] := Module[
 ];
 *)
 
+EdgesHRVRule::usage="EdgesHRVRule[edges] returns replacement rules assigning each vertex the list consisting of that vertex and all vertices reachable from it by ascending edge paths.";
 EdgesHRVRule[edges_List] := EdgesHRVRule[edges] = Module[
     {lrvSteps, stepLength, verts, ascEdges},
     verts = Union[Join @@ edges];

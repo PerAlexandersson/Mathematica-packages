@@ -100,6 +100,8 @@ CompleteBipartiteGraph[sizes_List] := With[
 ];
 
 
+FerrersBoardGraph::usage = "FerrersBoardGraph[lam] returns the bipartite graph of the Ferrers board lam.
+FerrersBoardGraph[lam,mu] returns the bipartite graph of the skew Ferrers board lam/mu.";
 FerrersBoardGraph[lam_List] := Module[{rows, cols},
    rows = Range[Length[lam]];
    cols = Length[lam] + Range[Max[lam]];
@@ -111,7 +113,6 @@ FerrersBoardGraph[lam_List] := Module[{rows, cols},
     ]
    ];
 
-FerrersBoardGraph::usage = "FerrersBoardGraph[lam,mu] returns the bipartite graph associated with a Ferrers board.";
 FerrersBoardGraph[lam_List, muIn_List] := Module[{rows, cols, mu},
    mu = PadRight[muIn, Length@lam];
    rows = Range[Length[lam]];
@@ -125,7 +126,7 @@ FerrersBoardGraph[lam_List, muIn_List] := Module[{rows, cols, mu},
 ];
 
 
-StirlingGraph::usage = "StirlingGraph[n] returns a bipartite graph, where matchings sizes are S(n,k).";
+StirlingGraph::usage = "StirlingGraph[n] returns the edge list of a bipartite graph whose k-edge matchings are counted by S(n,k).";
 StirlingGraph[n_Integer] := Join @@ Table[
 		If[i < j, {i, n + j}, Nothing], {i, n}, {j, n}];
 
@@ -158,7 +159,8 @@ TilingGraph[w_Integer, h_Integer, tile_List] :=
 
 		
 		
-GraphContractVertices::usage= "GraphContractVertices[Graph[g],v] constracts all vertices in v into a single vertex; the name of this vertex is the first entry in v. V can also be an edge.";
+KeepLoops::usage = "KeepLoops is an option for GraphContractVertices; its default is False, and True preserves loops and multiple edges created by contraction.";
+GraphContractVertices::usage= "GraphContractVertices[g,v] contracts all vertices in v into a single vertex named by the first entry of v. v can also be a directed edge, undirected edge, or rule. KeepLoops defaults to False.";
 
 Options[GraphContractVertices] := {KeepLoops -> False};
 GraphContractVertices[gg_Graph, DirectedEdge[u_,v_],opts:OptionsPattern[]]:=GraphContractVertices[gg,{u,v},opts];
@@ -181,7 +183,8 @@ GraphContractVertices[gg_Graph, contr_List,opts:OptionsPattern[]] := With[{
 	]
 ];
 
-GraphDeleteEdge::usage= "GraphDeleteEdge[Graph[g],e] removes the edge e from the graph.";
+KeepMultipleEdges::usage = "KeepMultipleEdges is an option for GraphDeleteEdge; its default is False, and True removes only one matching copy of an edge.";
+GraphDeleteEdge::usage= "GraphDeleteEdge[g,e] removes e from graph g. With KeepMultipleEdges -> True, only one matching copy is removed; the default is False.";
 Options[GraphDeleteEdge] := {KeepMultipleEdges -> False};
 GraphDeleteEdge[gg_Graph, e_,opts:OptionsPattern[]] := With[{
     verts = VertexList[gg],
@@ -197,7 +200,7 @@ GraphDeleteEdge[gg_Graph, e_,opts:OptionsPattern[]] := With[{
 ];
 
 
-GraphIndependetSets::usage = "GraphIndependetSets[g] returns a list of all independence sets in the graph.";
+GraphIndependetSets::usage = "GraphIndependetSets[g] returns a list of all independent vertex sets in graph g.";
 GraphIndependetSets[gg_Graph] := Module[{gmFnc, nbhd, vertices, edges},
    vertices = VertexList@gg;
    edges = EdgeList[gg] /. {DirectedEdge -> List, UndirectedEdge -> List};
@@ -262,6 +265,7 @@ Module[{edgesNonCross},
  	GraphMatchings[gg, edgesNonCross]
 ];
 
+GraphNonNestingMatchings::usage = "GraphNonNestingMatchings[g] returns all matchings of g with no pair of nested edges.";
 GraphNonNestingMatchings[gg_]:=
 Module[{edgesNonNest},
 	edgesNonNest[e1_,e2_]:=!Or[
@@ -301,6 +305,7 @@ GraphPerfectMatchings[gg_Graph] := Module[{gmFnc, edges, verts},
 
 
 (* Select all subsets of triangles, where no two triangle share a vertes. *)
+GraphIndependentTriangles::usage = "GraphIndependentTriangles[edges] returns all collections of pairwise vertex-disjoint triangles in the graph with edge list edges.";
 GraphIndependentTriangles[edges_List] := 
   Module[{tri = GraphTriangles@edges, gmFnc},
    (*Two cases, either first triangle is chosen, or not *)
@@ -406,7 +411,9 @@ OrientationSinks[gg_Graph] := With[
 	Complement[verts, outVerts]
 ];
 
+AcyclicSinkPolynomial::usage = "AcyclicSinkPolynomial[g,t] returns the polynomial whose coefficient of t^k counts acyclic orientations of g with k sinks.";
 AcyclicSinkPolynomial[g_Graph,t_] := AcyclicSinkPolynomial[g,t] = Sum[t^Length[OrientationSinks@ao], {ao, GraphAcyclicOrientations[g]}];
+OrientationsSinkPolynomial::usage = "OrientationsSinkPolynomial[g,t] returns the polynomial whose coefficient of t^k counts orientations of g with k sinks.";
 OrientationsSinkPolynomial[g_Graph,t_] := OrientationsSinkPolynomial[g,t] = Sum[t^Length[OrientationSinks@ao], {ao, GraphOrientations[g]}];
 
 

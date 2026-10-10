@@ -307,6 +307,7 @@ monomialProduct[lam_List, mu_List, x_: None] := Module[
 ];
 
 
+MExpand::usage = "MExpand[expr] expands products and powers of monomial symmetric functions in expr.";
 MExpand[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
 	
 	monomPower[lam_List, 0,x_] := 1;
@@ -331,6 +332,7 @@ MExpand[expr_]:=Module[{lam, mm,multRule,bb=MonomialSymbol},
 
 
 (* Create the three classical multiplicative bases. *)
+ElementaryESymbol::usage = "ElementaryESymbol[lam, x] represents the elementary symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[ElementaryESymbol, "e", 
 	MultiplicationFunction -> (ElementaryESymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction-> 
@@ -338,6 +340,7 @@ createBasis[ElementaryESymbol, "e",
 			ElementaryESymbol[Join@@(ConstantArray[#1, n]& /@a), x]]
 ];
 
+PowerSumSymbol::usage = "PowerSumSymbol[lam, x] represents the power-sum symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[PowerSumSymbol, "p", 
 	MultiplicationFunction -> (PowerSumSymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction-> 
@@ -345,6 +348,7 @@ createBasis[PowerSumSymbol, "p",
 			PowerSumSymbol[Join@@(ConstantArray[#1, n]& /@a), x]]
 ];
 
+CompleteHSymbol::usage = "CompleteHSymbol[lam, x] represents the complete homogeneous symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[CompleteHSymbol, "h", 
 	MultiplicationFunction -> (CompleteHSymbol[PartitionJoin[#1, #2], #3]&),
 	PowerFunction->
@@ -366,11 +370,13 @@ createBasis[ForgottenSymbol, "f",
 ];
 *)
 
+MonomialSymbol::usage = "MonomialSymbol[lam, x] represents the monomial symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[MonomialSymbol, "m", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
 ];
 
+ForgottenSymbol::usage = "ForgottenSymbol[lam, x] represents the forgotten symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[ForgottenSymbol, "f", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
@@ -378,6 +384,7 @@ createBasis[ForgottenSymbol, "f",
 
 
 (* We use slinky rule for the Schur functions. *)
+SchurSymbol::usage = "SchurSymbol[lam, x] represents the Schur symmetric-function basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[SchurSymbol, "s", 
 	MultiplicationFunction -> None,
 	PowerFunction -> None,
@@ -417,7 +424,7 @@ shiftedSchurDet[lambda_List, mu_List] := Module[
 ];
 
 
-LRCoefficient::usage="LRCoefficient[lam,mu,nu] gives the coefficient of S_nu in S_lam*S_mu.";
+LRCoefficient::usage="LRCoefficient[lam, mu, nu] gives the Littlewood-Richardson coefficient of Schur function S_nu in S_lam*S_mu. The arguments are partitions.";
 LRCoefficient[lambda_List, mu_List, nu_List] := Module[
 	{cleanLambda = DeleteCases[lambda, 0], cleanMu = DeleteCases[mu, 0],
 		cleanNu = DeleteCases[nu, 0]},
@@ -450,6 +457,7 @@ lrCoefficientInternal[lambda_List, mu_List, nu_List] := lrCoefficientInternal[la
 ];
 
 
+LRExpand::usage = "LRExpand[expr, x] expands products and powers of Schur symmetric functions in expr using the Littlewood-Richardson rule. The alphabet x defaults to None.";
 LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 	schurProduct[lam_List, mu_List] := Sum[
 		lrCoefficientInternal[lam, mu, nu] SchurSymbol[nu, x]
@@ -478,7 +486,7 @@ LRExpand[expr_, x_: None] := Module[{schurProduct, schurPower, rule},
 
 (********************************************************************)
 
-SkewKostkaCoefficient::usage = "SkewKostkaCoefficient[lam,mu,nu] returns the skew Kostka coefficient associated with shape lam/mu and type nu.";
+SkewKostkaCoefficient::usage = "SkewKostkaCoefficient[lam, mu, w] returns the skew Kostka coefficient for skew shape lam/mu and weight w. The weight w is sorted to a partition.";
 SkewKostkaCoefficient[lam_List, mu_List, w_List] :=
   With[{nu = sortToPartition[w], n = Tr[lam] - Tr[mu]},
    If[Tr[nu] != n, 0,
@@ -496,13 +504,16 @@ SkewKostkaCoefficient[lam_List, mu_List, w_List] :=
 (********************************************************************)
 
 
+FunctionAlphabets::usage = "FunctionAlphabets[expr] returns the list of alphabets occurring in a symmetric-function expression.";
 FunctionAlphabets[expr_]:=Cases[expr, (bb:coreBasesList)[mu__, x_] :> x, {0, Infinity}];
 
+ChangeFunctionAlphabet::usage = "ChangeFunctionAlphabet[expr, to, from] changes the symmetric-function expressions in expr from alphabet from to alphabet to. The source alphabet defaults to None.";
 ChangeFunctionAlphabet[expr_, to_, from_: None] := If[ 
 	to === from,
 	expr,
 	(expr /. (bb:coreBasesList)[mu__, from] :> bb[mu, to])];
 	
+SymmetricMonomialList::usage = "SymmetricMonomialList[expr] returns the list of symmetric-function monomials occurring in expr.";
 SymmetricMonomialList[expr_]:=With[{mm=Union@Cases[expr, (bb:coreBasesList)[mu__, x_],{0,Infinity}]},
 		MonomialList[expr,mm]
 ];
@@ -524,7 +535,7 @@ SymmetricFunctionDegree[expr_, yy_:None] := If[
 ];
 
 PositiveCoefficientsQ::notnumber = "The coefficient `1` is not a number.";
-PositiveCoefficientsQ::usage = "PositiveCoefficientsQ[expr, basis] returns true if all coeffs of basis[..] are positive. Only works for numbers.";
+PositiveCoefficientsQ::usage = "PositiveCoefficientsQ[expr, basis, extraSymbols] returns True if all coefficients of basis terms in expr are nonnegative numbers. The basis defaults to MonomialSymbol and extraSymbols defaults to {}.";
 
 PositiveCoefficientsQ[expr_List, basisSymbol_:MonomialSymbol, extraSymbols_:{}]:=And@@(
 	PositiveCoefficientsQ[#, basisSymbol, extraSymbols]&/@expr
@@ -835,6 +846,7 @@ basisInMonomial[bb_,lam_,x_]:=ChangeFunctionAlphabet[basisInMonomial[bb,lam],x];
 
 
 (* Support for several alphabets at once *)
+toOtherSymmetricBasis::usage = "toOtherSymmetricBasis[{basisFunc, basisSymbol}, poly, x] converts poly to the basis specified by basisFunc and basisSymbol. The alphabet x defaults to None; a list of alphabets is also accepted.";
 toOtherSymmetricBasis[{basisFunc_,basisSymbol_}, poly_, alphabet_List] :=Fold[
 	toOtherSymmetricBasis[{basisFunc,basisSymbol}, #1, #2]&,
 poly, alphabet];
@@ -879,14 +891,20 @@ toOtherSymmetricBasis[{basisFunc_, basisSymbol_}, poly_, x_: None] := Module[
 
 
 (* These are all listable. *)
+ToSchurBasis::usage = "ToSchurBasis[poly, x] converts poly to the Schur basis. The alphabet x defaults to None.";
 ToSchurBasis[poly_, x_: None] := toOtherSymmetricBasis[{SchurSymmetric,SchurSymbol},Expand@poly, x];
+ToPowerSumBasis::usage = "ToPowerSumBasis[poly, x] converts poly to the power-sum basis. The alphabet x defaults to None.";
 ToPowerSumBasis[poly_, x_: None] := toOtherSymmetricBasis[{PowerSumSymmetric,PowerSumSymbol},Expand@poly, x];
+ToElementaryEBasis::usage = "ToElementaryEBasis[poly, x] converts poly to the elementary basis. The alphabet x defaults to None.";
 ToElementaryEBasis[poly_, x_: None] := toOtherSymmetricBasis[{ElementaryESymmetric,ElementaryESymbol},Expand@poly, x];
+ToCompleteHBasis::usage = "ToCompleteHBasis[poly, x] converts poly to the complete homogeneous basis. The alphabet x defaults to None.";
 ToCompleteHBasis[poly_, x_: None] := toOtherSymmetricBasis[{CompleteHSymmetric, CompleteHSymbol},Expand@poly, x];
+ToMonomialBasis::usage = "ToMonomialBasis[poly, x] converts poly to the monomial basis. The alphabet x defaults to None.";
 ToMonomialBasis[poly_, x_: None] := toOtherSymmetricBasis[{MonomialSymmetric,MonomialSymbol},Expand@poly, x];
 
 
 (* A normalized version, where we multiply by the z-coefficient. *)
+ToPowerSumZBasis::usage = "ToPowerSumZBasis[poly, x] converts poly to the power-sum basis with each power-sum term multiplied by its z-coefficient. The alphabet x defaults to None.";
 ToPowerSumZBasis[poly_, x_: None] := 
 	(ToPowerSumBasis[poly,x]/.PowerSumSymbol[lam_,x] :> ZCoefficient[lam] PowerSumSymbol[lam,x]);
 
@@ -899,23 +917,28 @@ ToPowerSumZBasis[poly_, x_: None] :=
 *)
 
 
+MonomialSymmetric::usage = "MonomialSymmetric[lam, x] returns the monomial symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 MonomialSymmetric[lam_List,x_:None]:=MonomialSymbol[lam,x];
 
+AugmentedMonomialSymmetric::usage = "AugmentedMonomialSymmetric[lam, x] returns the augmented monomial symmetric function indexed by the integer vector lam in alphabet x. The alphabet x defaults to None.";
 AugmentedMonomialSymmetric[lam_] :=AugmentedMonomialSymmetric[lam,None];
 AugmentedMonomialSymmetric[lam_?VectorQ,x_] := Times @@ (PartitionPartCount[lam]!) MonomialSymbol[sortToPartition@lam,x];
 
+CompleteHSymmetric::usage = "CompleteHSymmetric[lam, x] returns the complete homogeneous symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 CompleteHSymmetric[a_]:=CompleteHSymmetric[a,None];
 CompleteHSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,CompleteHSymmetric[{d}, x]];
 CompleteHSymmetric[{}, x_] := 1;
 CompleteHSymmetric[lam_?VectorQ, x_] := 
 	If[Min[lam]>=0, basisInMonomial[CompleteHSymmetric, sortToPartition@lam, x],0];
 
+ElementaryESymmetric::usage = "ElementaryESymmetric[lam, x] returns the elementary symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 ElementaryESymmetric[a_]:=ElementaryESymmetric[a,None];
 ElementaryESymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,ElementaryESymmetric[{d}, x]];
 ElementaryESymmetric[{}, x_] := 1;
 ElementaryESymmetric[lam_?VectorQ, x_] := 
 	If[Min[lam]>=0, basisInMonomial[ElementaryESymmetric,sortToPartition@lam, x],0];
 
+PowerSumSymmetric::usage = "PowerSumSymmetric[lam, x] returns the power-sum symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 PowerSumSymmetric[a_]:=PowerSumSymmetric[a,None];
 PowerSumSymmetric[d_Integer, x_] := Which[d<0,0,d==0,1,True,PowerSumSymmetric[{d}, x]];
 PowerSumSymmetric[{}, x_] := 1;
@@ -923,11 +946,13 @@ PowerSumSymmetric[lam_?VectorQ, x_] :=
 	If[Min[lam]>=0, basisInMonomial[PowerSumSymmetric,sortToPartition@lam,x],0];
 
 
+ForgottenSymmetric::usage = "ForgottenSymmetric[lam, x] returns the forgotten symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 ForgottenSymmetric[mu_?VectorQ] := ForgottenSymmetric[mu, None];
 ForgottenSymmetric[mu_?VectorQ, x_] := 
 	If[Min[mu]>=0, basisInMonomial[ForgottenSymmetric,sortToPartition@mu, x],0];
 
 
+SchurSymmetric::usage = "SchurSymmetric[lam, x] returns the Schur symmetric function indexed by the partition lam in alphabet x. The alphabet x defaults to None.";
 SchurSymmetric[d_Integer,x_]:=SchurSymmetric[{d},x];
 SchurSymmetric[lam_?VectorQ]:=SchurSymmetric[lam, None];
 SchurSymmetric[{},x_]:=1;
@@ -949,7 +974,7 @@ SchurSymmetric[mu_?VectorQ, x_]:=basisInMonomial[SchurSymmetric,sortToPartition@
 (*********************************************************************************************)
 
 
-OmegaInvolution::usage = "OmegaInvolution[expr, [x]] applies the omega involution on the expression. \
+OmegaInvolution::usage = "OmegaInvolution[expr, x] applies the omega involution to expr. The alphabet x defaults to None. \
 Caution: It only acts on the common symmetric functions.";
 OmegaInvolution[poly_, x_: None] := (
 	poly /. {
@@ -975,7 +1000,7 @@ OmegaInvolution@ElementaryESymmetric[{4, 2, 1}] ===
 
 
 
-SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr,x,[n]] expresses the function as a polynomial in n variables.";
+SymmetricFunctionToPolynomial::usage = "SymmetricFunctionToPolynomial[expr, x, n, y] expresses expr as a polynomial in n variables x[1] through x[n], using alphabet y in expr. The alphabet x and variable count n default to None and the degree of expr, respectively; y defaults to None.";
 
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, 0] := 0;
 SymmetricFunctionToPolynomial[MonomialSymbol[mu_List, None], x_, n_Integer] := 
@@ -1020,9 +1045,7 @@ SymmetricFunctionToPolynomial[expr_, x_, n_Integer, yy_: None] :=
  PrincipalSpecialization[PowerSumSymbol[n], q, k] === (1 - q^(k n))/(1 - q^n) 
 *)
 
-PrincipalSpecialization::usage = "PrincipalSpecialization[poly,q,[k],[x]], 
-gives the principal specialization. The parameter k tells how many 
-variables to replace -- this can be infinity.";
+PrincipalSpecialization::usage = "PrincipalSpecialization[poly, q, k, x] gives the principal specialization of poly. The parameter k gives the number of variables and defaults to Infinity; the alphabet x defaults to None.";
 
 PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 	psMon[mu_List] := With[{
@@ -1050,8 +1073,8 @@ PrincipalSpecialization[poly_, q_, k_: Infinity, x_: None] := Module[{psMon},
 
 
 (* Use power-sum, as this is compatible with q,t-extension. *)
-HallInnerProduct::usage="HallInnerProduct[f,g] returns the Hall inner productof the two symmetric functions.
-HallInnerProduct[f,g,{q,t},x] computes the inner product with general q and t, and alphabet x.";
+HallInnerProduct::usage="HallInnerProduct[f, g] returns the Hall inner product of symmetric functions f and g.
+HallInnerProduct[f, g, {q, t}, x] computes the q,t inner product in alphabet x, which defaults to None.";
 
 HallInnerProduct[f_, g_] := HallInnerProduct[f, g, {0, 0}, None];
 HallInnerProduct[f_, g_, {q_, t_}, x_: None] := Module[{
@@ -1089,8 +1112,8 @@ Expand@Sum[
 ];
 
 
-JackInnerProduct::usage="JackInnerProduct[f,g,a] returns the Jack inner productof the two symmetric functions.
-JackInnerProduct[f,g,a,x] computes the inner product with general q and t, and alphabet x.";
+JackInnerProduct::usage="JackInnerProduct[f, g, a] returns the Jack inner product of symmetric functions f and g with parameter a, which defaults to 1.
+JackInnerProduct[f, g, a, x] computes the inner product in alphabet x, which defaults to None.";
 
 JackInnerProduct[f_, g_,a_:1] := JackInnerProduct[f, g, a, None];
 JackInnerProduct[f_, g_, a_, x_: None] := Module[{
@@ -1126,6 +1149,7 @@ Expand@Sum[
 	, {rF, rulesF}, {rG, rulesG}]
 ];
 
+JackLowerHook::usage = "JackLowerHook[mu, a, {r, c}] returns the Jack lower hook at box {r, c} of partition mu. JackLowerHook[mu, a] returns the product of lower hooks over mu. The parameter a defaults to 1.";
 JackLowerHook[mu_List,
    a_ : 1, {r_Integer, c_Integer}] :=
   (a PartitionArm[mu, {r, c}] +
@@ -1133,6 +1157,7 @@ JackLowerHook[mu_List,
 JackLowerHook[mu_List, a_ : 1] := Product[
    JackLowerHook[mu, a, box], {box, DiagramBoxes[mu]}];
 
+JackUpperHook::usage = "JackUpperHook[mu, a, {r, c}] returns the Jack upper hook at box {r, c} of partition mu. JackUpperHook[mu, a] returns the product of upper hooks over mu. The parameter a defaults to 1.";
 JackUpperHook[mu_List,
    a_ : 1, {r_Integer, c_Integer}] :=
   (a PartitionArm[mu, {r, c}] +
@@ -1147,6 +1172,7 @@ NegateAlphabet[f_, x_: None] := ToMonomialBasis[f] /. MonomialSymbol[mu__, x] :>
 
 
 (* Here, f is in the xx alphabet, and plethysm act on ALL given alphabets in the g-expression. *)
+Plethysm::usage = "Plethysm[f, g, xx] computes the plethysm of symmetric functions f and g, acting on all alphabets in g. The alphabet xx of f defaults to None.";
 Plethysm[f_, g_, xx_: None] := Module[
 	{PkPlethysmWithG, fInP, gInP,
 		gVars, auxVars, alphabets
@@ -1191,7 +1217,7 @@ KroneckerCoefficient[lam_List, mu_List, nu_List] := Module[{pleth, n = Tr@lam, x
     ]
 ];
 
-InternalProduct::usage = "InternalProduct[f,g] coputes the internal product of two symmetric functions. This is same as Kronecker product.";
+InternalProduct::usage = "InternalProduct[f, g, x] computes the internal (Kronecker) product of symmetric functions f and g in alphabet x. The alphabet x defaults to None.";
 InternalProduct[f_, g_, x_ : None] :=
   Module[{ff, gg, vars, rulesF, rulesG, vF, vG, rF,
     rG},(*Convert to Schur basis*)ff = ToPowerSumBasis[f, x];
@@ -1256,6 +1282,8 @@ InternalProduct[f_, g_, x_ : None] := Module[{ff, gg, lam, mu, nu, vars, rulesF,
 (*********************************************************************************************)
 
 
+SkewSchurSymmetric::usage = "SkewSchurSymmetric[lam, x] returns the Schur symmetric function of partition lam in alphabet x. The alphabet x defaults to None.
+SkewSchurSymmetric[{lam, mu}, x] returns the skew Schur symmetric function of shape lam/mu in alphabet x. The alphabet x defaults to None.";
 SkewSchurSymmetric[lam_List]:=SkewSchurSymmetric[{lam, {}}, None];
 SkewSchurSymmetric[lam_List, x_]:=SkewSchurSymmetric[{lam, {}}, x];
 SkewSchurSymmetric[{lam_List, mu_List}]:=SkewSchurSymmetric[{lam, mu}, None];
@@ -1286,12 +1314,12 @@ SkewSchurSymmetric[{lam_List, mu_List}, x_] := ChangeFunctionAlphabet[ SkewSchur
 
 
 (* This uses https://doi.org/10.37236/1539  *)
-JackPSymmetric::usage = "JackPSymmetric[lam,a] returns the Jack P normalization of Jack functions.";
+JackPSymmetric::usage = "JackPSymmetric[lam, a, x] returns the Jack P symmetric function indexed by partition lam with parameter a. The alphabet x defaults to None.";
 JackPSymmetric[lam_List,a_, x_: None] := cached[{JackPSymmetric, lam, a, x}, Sum[
 	KostkaCoefficient[lam,mu,a] MonomialSymbol[mu,x]
 ,{mu,IntegerPartitions[Tr@lam]}]];
 
-JackJSymmetric::usage = "JackJSymmetric[lam,a] returns the Jack J normalization of Jack functions.";
+JackJSymmetric::usage = "JackJSymmetric[lam, a, x] returns the Jack J symmetric function indexed by partition lam with parameter a. The alphabet x defaults to None.";
 JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Product[
 	a*PartitionArm[lam,s] + PartitionLeg[lam,s]+1
 ,{s,DiagramBoxes[lam]}]];
@@ -1302,7 +1330,7 @@ JackJSymmetric[lam_List,a_, x_: None] := Together[JackPSymmetric[lam,a,x] Produc
 (*
 http://igm.univ-mlv.fr/~fpsac/FPSAC02/ARTICLES/Tudose.pdf
 *)
-HallLittlewoodTSymmetric::usage = "HallLittlewoodTSymmetric is the transformed Hall-Littlewood polynomial.";
+HallLittlewoodTSymmetric::usage = "HallLittlewoodTSymmetric[lam, q, x] returns the transformed Hall-Littlewood symmetric function indexed by partition lam with parameter q. The alphabet x defaults to None.";
 HallLittlewoodTSymmetric[lam_List, q_, x_: None] := 
 cached[{HallLittlewoodTSymmetric, lam, q, x}, Module[{Rij,
 	res, operators, n = Tr@lam, applyIJ, hh, qq},
@@ -1335,7 +1363,7 @@ cached[{HallLittlewoodTSymmetric, lam, q, x}, Module[{Rij,
 ]];
 
 
-kSchurSymmetric::usage = "kSchurSymmetric[mu,k returns the k-Schur function. Note that one must have mu1<=k.";
+kSchurSymmetric::usage = "kSchurSymmetric[mu, k, t, x] returns the k-Schur function indexed by partition mu, with mu1 <= k. The parameter t defaults to 1 and the alphabet x defaults to None.";
 kSchurSymmetric[mu_List, kk_Integer, t_ : 1, x_ : None] := cached[{kSchurSymmetric, mu, kk, t, x}, Module[
     {Rij, res, operators, ll = Length@mu, n = Tr@mu, applyIJ, ss, qq},
      Rij[vec_List, i_Integer, j_Integer, k_Integer] :=
@@ -1393,15 +1421,17 @@ HallLittlewoodPSymmetricHelper[lam_List] := HallLittlewoodPSymmetricHelper[lam] 
 	HallLittlewoodPSymmetricHelper[lam]
 ];
 
-HallLittlewoodPSymmetric::usage = "HallLittlewoodPSymmetric[lam] is the usual Hall-Littlewood P function";
+HallLittlewoodPSymmetric::usage = "HallLittlewoodPSymmetric[lam, t, x] returns the Hall-Littlewood P symmetric function indexed by partition lam with parameter t. The alphabet x defaults to None.";
 HallLittlewoodPSymmetric[lam_List, t_, x_: None] := ChangeFunctionAlphabet[
 	HallLittlewoodPSymmetricHelper[lam], x] /. {SPECIALT -> t};
 
 
+ToHallLittlewoodPBasis::usage = "ToHallLittlewoodPBasis[poly, t, x, mh] converts poly to the Hall-Littlewood P basis with parameter t. The alphabet x defaults to None and the basis symbol mh defaults to HallLittlewoodPSymbol.";
 ToHallLittlewoodPBasis[poly_, t_, x_: None, mh_:HallLittlewoodPSymbol] := 
 Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[HallLittlewoodPSymmetric[#,t]]&, mh}, poly, x];
 
 
+HallLittlewoodPSymbol::usage = "HallLittlewoodPSymbol[lam, x] represents a Hall-Littlewood P basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[HallLittlewoodPSymbol, "P", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
@@ -1415,20 +1445,23 @@ SchursQSymmetric[lam_List, x_: None]:=cached[{SchursQSymmetric, lam, x}, ToMonom
 	, (1 - q) PowerSumSymmetric[{1},x]
 ] /. q -> -1]];
 
+SchursPSymmetric::usage = "SchursPSymmetric[lam, x] returns the Schur P symmetric function indexed by strict partition lam. The alphabet x defaults to None.";
 SchursPSymmetric[lam_List, x_: None]:=Together[SchursQSymmetric[lam,x]/2^Length[lam]];
 
 
 (* This is the modified Hall-Littlewood polynomial. *)
 
+HallLittlewoodMSymmetric::usage = "HallLittlewoodMSymmetric[lam, q, x] returns the Hall-Littlewood M symmetric function indexed by partition lam with parameter q. The alphabet x defaults to None.";
 HallLittlewoodMSymmetric[lam_List, q_, x_: None] := 
 	Together[q^PartitionN[lam] HallLittlewoodTSymmetric[lam, 1/q, x]];
 
+MacdonaldPSymmetric::usage = "MacdonaldPSymmetric[lam, q, t, x] returns the Macdonald P symmetric function indexed by partition lam with parameters q and t. The alphabet x defaults to None.";
 MacdonaldPSymmetric[lam_List, q_, t_, x_: None] := ChangeFunctionAlphabet[
 	MacdonaldPSymmetricHelper[lam, SPECIALQ, SPECIALT]
 	, x] /. {SPECIALQ -> q, SPECIALT -> t};
 
 
-MacdonaldJSymmetric::usage = "MacdonaldJSymmetric[lam,q,t] is the integral form Macdonald J polynomial.";
+MacdonaldJSymmetric::usage = "MacdonaldJSymmetric[lam, q, t, x] returns the integral-form Macdonald J symmetric function indexed by partition lam with parameters q and t. The alphabet x defaults to None.";
 MacdonaldJSymmetric[lam_List,q_,t_,x_:None]:=(
 	Together[
 		MacdonaldPSymmetric[lam,q,t,x] * 
@@ -1453,6 +1486,7 @@ Together@Sum[
  }];
 
 
+ShiftedJackPSymmetric::usage = "ShiftedJackPSymmetric[lam, a, x] returns the shifted Jack P symmetric function indexed by partition lam with parameter a. The alphabet x defaults to None.";
 ShiftedJackPSymmetric[lam_List, a_, x_: None] := ChangeFunctionAlphabet[
 	ShiftedJackPSymmetricHelper[lam, SPECIALA], x] /. {SPECIALA -> a};
 
@@ -1495,7 +1529,8 @@ Sum[
 
 
 
-MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam,q,t] is the modified Macdonald polynomial.";
+MacdonaldHSymmetric::usage = "MacdonaldHSymmetric[lam, q, t, x] returns the modified Macdonald H symmetric function indexed by partition lam with parameters q and t. The alphabet x defaults to None.
+MacdonaldHSymmetric[{lam, mu}, q, t, x] returns the corresponding skew modified Macdonald symmetric function. The alphabet x defaults to None.";
 MacdonaldHSymmetric[lam_List, q_, t_,x_: None] := MacdonaldHSymmetric[{lam, {}}, q, t,x];
 
 MacdonaldHSymmetric[{lam_List, mu_List}, q_, t_,x_:None] :=
@@ -1520,9 +1555,11 @@ MacdonaldHSymmetric[{lam_List, mu_List}, SPECIALQ, SPECIALT] := cached[{Macdonal
 ]];
 
 
+ToMacdonaldHBasis::usage = "ToMacdonaldHBasis[poly, q, t, x, mh] converts poly to the modified Macdonald H basis with parameters q and t. The alphabet x defaults to None and the basis symbol mh defaults to MacdonaldHSymbol.";
 ToMacdonaldHBasis[poly_, q_, t_, x_: None, mh_:MacdonaldHSymbol] := 
 Expand@Together@toOtherSymmetricBasis[{ToMonomialBasis[MacdonaldHSymmetric[#,q,t]]&, mh}, poly, x];
 
+MacdonaldHSymbol::usage = "MacdonaldHSymbol[lam, x] represents a modified Macdonald H basis element indexed by partition lam in alphabet x. The alphabet x defaults to None.";
 createBasis[MacdonaldHSymbol, "H", 
 	MultiplicationFunction -> None,
 	PowerFunction->None
@@ -1542,7 +1579,7 @@ PostfixedCharge[mu_List, w_List] := Module[{postFix, decomp},
 ];
 
 
-SkewMacdonaldESymmetric::usage = "SkewMacdonaldESymmetric[{lam,mu},q] gives the skew Macdonald polynomial.";
+SkewMacdonaldESymmetric::usage = "SkewMacdonaldESymmetric[{lam, mu}, q, x] returns the skew Macdonald E symmetric function of shape lam/mu with parameter q in alphabet x.";
 
 SkewMacdonaldESymmetric[lam_List, q_,x_] := SkewMacdonaldESymmetric[{lam,{}}, q, x];
 
@@ -1574,7 +1611,7 @@ SkewMacdonaldESymmetric[{lam_List, mu_List}, SPECIALQ] := cached[{SkewMacdonaldE
 
 
 
-LLTSymmetric::usage = "LLTSymmetric[nu,q] returns the LLT polynomial associated with the tuple of skew shapes.";
+LLTSymmetric::usage = "LLTSymmetric[nu, q, x] returns the LLT symmetric function associated with the tuple nu of shapes with parameter q. The alphabet x defaults to None.";
 
 LLTSymmetric[nu_List, q_,x_:None]:=ChangeFunctionAlphabet[LLTSymmetric[nu,q,None],x];
 LLTSymmetric[nu_List, q_,None] := cached[{LLTSymmetric, nu, q}, Module[
@@ -1657,7 +1694,7 @@ LLTSymmetric[nu_List, q_,None] := cached[{LLTSymmetric, nu, q}, Module[
 (****************************************************************************************************)
 (****************************************************************************************************)
 
-SymplecticSchurSymmetric::usage = "SymplecticSchurSymmetric[mu] gives the symplectic Schur function.";
+SymplecticSchurSymmetric::usage = "SymplecticSchurSymmetric[lam, x] returns the symplectic Schur symmetric function indexed by partition lam in alphabet x.";
 SymplecticSchurSymmetric[lam_,x_]:=ChangeFunctionAlphabet[SymplecticSchurSymmetric[lam],x];
 
 SymplecticSchurSymmetric[{}] := 1;
@@ -1668,7 +1705,7 @@ SymplecticSchurSymmetric[lam_List] := Expand[(1/2) Det@Table[
 	{j, Length@lam}]];
 
 
-OrthogonalSchurSymmetric::usage = "OrthogonalSchurSymmetric[mu] gives the orthogonal Schur function.";
+OrthogonalSchurSymmetric::usage = "OrthogonalSchurSymmetric[lam, x] returns the orthogonal Schur symmetric function indexed by partition lam in alphabet x.";
 OrthogonalSchurSymmetric[lam_,x_]:=ChangeFunctionAlphabet[OrthogonalSchurSymmetric[lam],x];
 OrthogonalSchurSymmetric[{}] := 1;
 OrthogonalSchurSymmetric[lam_List] := Det@Table[
@@ -1680,7 +1717,7 @@ OrthogonalSchurSymmetric[lam_List] := Det@Table[
 	
 bsHelper[n_] := bsHelper[n]=Sum[2^Length[lam] MonomialSymbol[lam, None], {lam,IntegerPartitions[n]}];
 
-BigSchurSymmetric::usage = "The big Schur function. https://arxiv.org/pdf/1705.06437.pdf."
+BigSchurSymmetric::usage = "BigSchurSymmetric[lam, x] returns the big Schur symmetric function indexed by partition lam in alphabet x.";
 BigSchurSymmetric[lam_,x_]:=ChangeFunctionAlphabet[BigSchurSymmetric[lam],x];
 BigSchurSymmetric[{}]:=1;
 BigSchurSymmetric[lam_List] := MExpand[
@@ -1690,7 +1727,7 @@ Det@Table[
 	{j, Length@lam}]];
 	
 
-PetrieSymmetric::usage = "PetrieSymmetric[k,m] gives the degree-m part of the kth Petrie symmetric function.";
+PetrieSymmetric::usage = "PetrieSymmetric[k, m, x] returns the degree-m part of the kth Petrie symmetric function in alphabet x. The alphabet x defaults to None.";
 PetrieSymmetric[k_Integer,0,x_:None]:= 1;
 PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 		MonomialSymbol[lam,x]
@@ -1698,7 +1735,7 @@ PetrieSymmetric[k_Integer,m_Integer,x_:None]:= Sum[
 
 
 (* Use F-expansion formula instead, if possible. *)
-CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam,mu}, d] gives a cylindric Schur function.";
+CylindricSchurSymmetric::usage = "CylindricSchurSymmetric[{lam, mu}, d, x] returns the cylindric Schur symmetric function of shape lam/mu and shift d in alphabet x. The shift d and alphabet x default to 0 and None.";
 CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:= Sum[
 	MonomialSymbol[YoungTableauWeight@ssyt,x]
 ,
@@ -1706,6 +1743,7 @@ CylindricSchurSymmetric[{lam_List, mu_List}, d_Integer: 0,x_:None]:= Sum[
 
 
 (* Based on 7.10c in https://arxiv.org/pdf/1907.02645.pdf *)
+LahSymmetricFunction::usage = "LahSymmetricFunction[n, k, x] returns the Lah symmetric function with parameters n and k in alphabet x. The alphabet x defaults to None.";
 LahSymmetricFunction[n_Integer, k_Integer,x_:None] := cached[{LahSymmetricFunction, n, k, x}, Expand[
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
@@ -1715,6 +1753,7 @@ LahSymmetricFunction[n_Integer, k_Integer,x_:None] := cached[{LahSymmetricFuncti
 			, {alpha, IntegerPartitions[n - k]}]
 ]];
 
+LahSymmetricFunctionNegative::usage = "LahSymmetricFunctionNegative[n, k, x] returns the negative Lah symmetric function with parameters n and k in alphabet x. The alphabet x defaults to None.";
 LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := cached[{LahSymmetricFunctionNegative, n, k, x}, Expand[
 	((n - 1)!/(k - 1)!) Sum[
 			With[{ll = Table[Count[alpha, j], {j, n - k}]},
@@ -1726,7 +1765,7 @@ LahSymmetricFunctionNegative[n_Integer, k_Integer,x_:None] := cached[{LahSymmetr
 
 
 
-LyndonSymmetric::usage="LyndonSymmetric[lam, [x]]. See https://doi.org/10.1016/0097-3165(93)90095-P for definition";
+LyndonSymmetric::usage="LyndonSymmetric[lam, x] returns the Lyndon symmetric function indexed by lam. The alphabet x defaults to None.";
 LyndonSymmetric[0, x_: None] := 1;
 LyndonSymmetric[n_Integer, x_: None] := 
   1/n Sum[MoebiusMu[d] PowerSumSymbol[d, x]^(n/d), {d, Divisors@n}];
@@ -1778,8 +1817,10 @@ DeltaOperator[f_, g_, q_, t_] := cached[{DeltaOperator, f, g, q, t}, Module[{x, 
 		Together[inH /. MacdonaldHSymbol[lam_List, None] :> val[lam] MacdonaldHSymmetric[lam, q, t]]
 ]];
 
+NablaOperator::usage = "NablaOperator[g, q, t] applies the nabla operator to symmetric function g with parameters q and t.";
 NablaOperator[g_, q_, t_] := DeltaOperator[ElementaryESymmetric[SymmetricFunctionDegree[g]], g, q, t];
 
+DeltaPrimOperator::usage = "DeltaPrimOperator[f, g, q, t] applies the primed Delta operator to symmetric functions f and g with parameters q and t.";
 DeltaPrimOperator[f_, g_, q_, t_] := cached[{DeltaPrimOperator, f, g, q, t}, Module[{x, val, inH, monoms},
 
 		(* Monomials defined by shape. *)
