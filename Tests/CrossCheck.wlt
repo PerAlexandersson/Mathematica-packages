@@ -19,9 +19,8 @@ VerificationTest[
   TestID -> "QuasiSymmetricFunctions-loads-cleanly"
 ]
 
-(* MacdonaldPolynomials still exports names owned by other packages (issue #9). *)
 VerificationTest[
-  Quiet[Needs["MacdonaldPolynomials`"], General::shdw],
+  Needs["MacdonaldPolynomials`"],
   Null,
   TestID -> "MacdonaldPolynomials-loads-cleanly"
 ]
