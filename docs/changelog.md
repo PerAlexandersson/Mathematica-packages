@@ -1,3 +1,8 @@
+---
+title: Changelog
+nav_order: 6
+---
+
 # Changelog
 
 All notable changes to this repository are documented here. The format follows
@@ -21,7 +26,7 @@ this refactoring is tagged `pre-refresh-2026-10`.
 
 ### Breaking changes
 
-The legacy packages are frozen; [`Legacy/MIGRATION.md`](Legacy/MIGRATION.md) maps every legacy name to its
+The legacy packages are frozen; [`Legacy/MIGRATION.md`](migration.html) maps every legacy name to its
 supported replacement, and `LegacyConversions` converts legacy data.
 
 - `ShiftedJackPSymmetric` moved from `SymmetricFunctions` to the new
